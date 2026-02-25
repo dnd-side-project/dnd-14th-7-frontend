@@ -5,7 +5,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { KebabIcon } from "@/components/ui/icons/KebabIcon";
+
 import { cn } from "@/lib/utils";
 
 export interface HomeInsightCardProps {
@@ -44,7 +44,12 @@ export function HomeInsightCard({
 								className="text-dnd-label-alternative p-1 hover:bg-dnd-bg-alternative rounded-full transition-colors"
 								aria-label="메뉴"
 							>
-								<KebabIcon />
+								<Image
+									src="/kebab-icon.svg"
+									alt="menu"
+									width={17}
+									height={17}
+								/>
 							</button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent

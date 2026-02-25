@@ -1,8 +1,8 @@
 "use client";
 
 import { ChevronsUpDown } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
-import { HistoryIcon } from "@/components/ui/icons/HistoryIcon";
 import { cn } from "@/lib/utils";
 import { AnswerCardsSection } from "./answer-cards-section";
 import { QuestionSection } from "./question-section";
@@ -75,7 +75,7 @@ function QuestionSectionHeader({ onExpand }: QuestionSectionHeaderProps) {
 			<h2 className="typo-headline-1 font-medium text-[var(--dnd-label-normal)]">
 				제안된 질문
 			</h2>
-			<HistoryIcon />
+			<Image src="/history-icon.svg" alt="history" width={20} height={20} />
 		</button>
 	);
 }
