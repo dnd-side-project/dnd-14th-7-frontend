@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Home, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import Image from "next/image";
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import { insightDetailQueryOptions } from "@/lib/queries/insight";
@@ -28,7 +28,7 @@ export function DashboardTabBar() {
 						: "bg-dnd-bg-mint hover:bg-white/60"
 				}`}
 			>
-				<Home className="size-[20px] text-dnd-primary" />
+				<Image src="/home.svg" alt="Home" width={24} height={24} />
 			</button>
 
 			<div role="tablist" className="flex flex-1 items-stretch overflow-x-auto">
