@@ -168,7 +168,7 @@ export function InsightPieceItem({
 
 		case "SELECTING": {
 			return (
-				<div className="bg-white rounded-[24px] p-6 flex flex-col gap-6">
+				<div className="bg-white rounded-[24px] p-6 flex flex-col gap-3">
 					<div className="flex justify-between items-center">
 						<div className="flex items-center gap-2">
 							<span className="w-6 h-6 rounded-full flex items-center justify-center bg-[var(--dnd-bg-insight-box)] text-[var(--dnd-primary)] typo-caption-2 font-bold shrink-0">
@@ -180,26 +180,31 @@ export function InsightPieceItem({
 							</div>
 						</div>
 					</div>
-					<div className="flex flex-col gap-3">
-						{candidates.map((candidate, i) => (
+					{candidates.map((candidate, candidateIndex) => {
+						const isSelected = selectedCandidateIndex === candidateIndex;
+						const isOriginal = candidateIndex === 0;
+
+						const candidateStyle = isSelected
+							? "bg-[var(--dnd-bg-mint2)] border border-[var(--dnd-primary)] text-[var(--dnd-label-strong)]"
+							: isOriginal
+								? "bg-[var(--dnd-bg-alternative)] text-[var(--dnd-label-strong)] hover:bg-[#ebebeb]"
+								: "bg-[var(--dnd-bg-mint2)] text-[var(--dnd-label-strong)] hover:bg-[#e1f5f3]";
+
+						return (
 							// biome-ignore lint/a11y/useKeyWithClickEvents: Selection item
 							<div
-								key={i}
-								onClick={() => setSelectedCandidateIndex(i)}
-								className={`p-4 rounded-[12px] cursor-pointer transition-colors typo-body-1 whitespace-pre-wrap ${
-									selectedCandidateIndex === i
-										? "bg-[var(--dnd-bg-mint2)] border border-[var(--dnd-primary)] font-semibold text-[var(--dnd-label-strong)]"
-										: "bg-[var(--dnd-bg-alternative)] text-[var(--dnd-label-neutral)] hover:bg-[#ebebeb]"
-								}`}
+								key={candidateIndex}
+								onClick={() => setSelectedCandidateIndex(candidateIndex)}
+								className={`p-4 rounded-[16px] cursor-pointer transition-colors text-[20px] font-medium leading-[1.4] tracking-[-0.24px] whitespace-pre-wrap ${candidateStyle}`}
 							>
 								{candidate}
 							</div>
-						))}
-					</div>
-					<div className="flex justify-end items-center gap-3">
+						);
+					})}
+					<div className="flex justify-end items-center gap-2">
 						<button
 							type="button"
-							className="px-4 py-2 rounded-[8px] typo-body-2 font-medium bg-[var(--dnd-bg-alternative)] text-[var(--dnd-label-neutral)] hover:bg-[#ebebeb] transition-colors"
+							className="px-7 py-3 rounded-[12px] typo-body-1 font-medium bg-[var(--dnd-bg-alternative)] text-[var(--dnd-label-neutral)] hover:bg-[#ebebeb] transition-colors"
 							onClick={() => {
 								setMode("DEFAULT");
 								setSelectedCandidateIndex(null);
@@ -209,10 +214,10 @@ export function InsightPieceItem({
 						</button>
 						<button
 							type="button"
-							className={`px-4 py-2 rounded-[8px] typo-body-2 font-medium transition-colors ${
+							className={`px-7 py-3 rounded-[12px] typo-body-1 font-semibold transition-colors ${
 								selectedCandidateIndex !== null
-									? "bg-[var(--dnd-fill-normal)] text-[var(--dnd-label-strong)] hover:bg-[#ebebeb]"
-									: "bg-[var(--dnd-fill-normal)] text-[var(--dnd-label-assistive)] cursor-not-allowed opacity-50"
+									? "bg-[#51ccbd] text-white hover:bg-[#43bfb0]"
+									: "bg-[var(--dnd-interaction-disable)] text-[var(--dnd-label-assistive)] cursor-not-allowed"
 							}`}
 							onClick={() => {
 								if (selectedCandidateIndex !== null) {
