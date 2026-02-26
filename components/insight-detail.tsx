@@ -94,7 +94,7 @@ function InsightDetailContent({ insightId }: { insightId: number }) {
 			<div className="w-full flex flex-col gap-6 pt-[80px] pb-[80px]">
 				<InsightHeader data={data} />
 				<InitialThoughtBox initialThought={data.initialThought} />
-				<MainInsightBox insightPieces={insightPieces} />
+				<MainInsightBox insightPieces={piecesData} />
 				<MemoSection />
 				<LinkSection />
 			</div>
