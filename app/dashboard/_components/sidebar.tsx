@@ -1,25 +1,12 @@
 "use client";
 
 import { PenSquare, Trash2 } from "lucide-react";
-import dynamic from "next/dynamic";
+import {
+	SidebarTagListSection,
+	SidebarUserProfileSection,
+} from "@/components/sidebar-auth";
 import { Button } from "@/components/ui/button";
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
-
-const SidebarUserProfileSection = dynamic(
-	() =>
-		import("@/components/sidebar-auth").then(
-			(mod) => mod.SidebarUserProfileSection,
-		),
-	{ ssr: false },
-);
-
-const SidebarTagListSection = dynamic(
-	() =>
-		import("@/components/sidebar-auth").then(
-			(mod) => mod.SidebarTagListSection,
-		),
-	{ ssr: false },
-);
 
 export function Sidebar() {
 	const { dispatch } = useDashboardTabs();
