@@ -81,7 +81,7 @@ import { InsightQnAPanel, InsightQnAPanelSkeleton } from "./insight-qna-panel";
 
 function InsightDetailContent({ insightId }: { insightId: number }) {
 	const { data } = useSuspenseQuery(insightDetailQueryOptions(insightId));
-	const { data: piecesData } = useSuspenseQuery(
+	const { data: insightPieces } = useSuspenseQuery(
 		insightPiecesQueryOptions(insightId),
 	);
 
@@ -90,7 +90,7 @@ function InsightDetailContent({ insightId }: { insightId: number }) {
 			<div className="w-full flex flex-col gap-6 pt-[80px] pb-[80px]">
 				<InsightHeader data={data} />
 				<InitialThoughtBox initialThought={data.initialThought} />
-				<MainInsightBox insightPieces={piecesData.insightPieces} />
+				<MainInsightBox insightPieces={insightPieces} />
 				<MemoSection />
 				<LinkSection />
 			</div>
