@@ -50,12 +50,10 @@ function SidebarPositionSetup() {
 
 function SidebarUserProfile() {
 	const { data: user } = useSuspenseQuery(userQueryOptions());
-	const { mutate: logout } = useMutation(logoutMutationOptions());
 
 	return (
 		<button
 			type="button"
-			onClick={() => logout()}
 			className="flex flex-1 cursor-pointer items-center gap-[8px]"
 		>
 			<div className="flex size-[32px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200">
