@@ -1,6 +1,6 @@
 "use client";
 
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQueries } from "@tanstack/react-query";
 import { MoreVertical } from "lucide-react";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -10,6 +10,8 @@ import {
 	insightPiecesQueryOptions,
 } from "@/lib/queries/insight";
 import { formatDate } from "@/lib/utils/date";
+import { InsightPieceItem } from "./insight-piece-item/insight-piece-item";
+import { InsightQnAPanel, InsightQnAPanelSkeleton } from "./insight-qna-panel";
 
 interface InsightDetailSectionProps {
 	insightId: number;
@@ -79,13 +81,13 @@ function InsightDetailSkeleton() {
 	);
 }
 
-import { InsightQnAPanel, InsightQnAPanelSkeleton } from "./insight-qna-panel";
-
 function InsightDetailContent({ insightId }: { insightId: number }) {
-	const { data } = useSuspenseQuery(insightDetailQueryOptions(insightId));
-	const { data: insightPieces } = useSuspenseQuery(
-		insightPiecesQueryOptions(insightId),
-	);
+	const [{ data }, { data: piecesData }] = useSuspenseQueries({
+		queries: [
+			insightDetailQueryOptions(insightId),
+			insightPiecesQueryOptions(insightId),
+		],
+	});
 
 	return (
 		<div className="flex gap-[80px] justify-center pl-[80px] pr-[24px]">
@@ -171,24 +173,6 @@ function InitialThoughtBox({ initialThought }: { initialThought: string }) {
 }
 
 function MainInsightBox({ insightPieces }: { insightPieces: InsightPiece[] }) {
-	const getLabel = (type: InsightPiece["createdType"]) => {
-		switch (type) {
-			case "INIT":
-				return "첫 생각";
-			case "SELF":
-				return "나의 생각";
-			case "ANSWER":
-				return "질문 답변";
-			default:
-				return "생각";
-		}
-	};
-
-	const getFormattedDate = (dateString: string) => {
-		const { year, month, day, weekday } = formatDate(dateString);
-		return `${year}.${month}.${day} ${weekday}`;
-	};
-
 	return (
 		<div className="flex flex-col gap-3">
 			<span className="typo-headline-2 font-bold text-[var(--dnd-label-neutral)]">
@@ -197,26 +181,13 @@ function MainInsightBox({ insightPieces }: { insightPieces: InsightPiece[] }) {
 					{insightPieces.length}
 				</span>
 			</span>
-			<div className="rounded-[32px] p-6 flex flex-col gap-4 bg-dnd-bg-insight-box">
+			<div className="rounded-[32px] p-6 flex flex-col gap-4 bg-[var(--dnd-bg-insight-box)] relative z-50">
 				{insightPieces.map((piece, index) => (
-					<div
+					<InsightPieceItem
 						key={piece.insightPieceId}
-						className="bg-white rounded-[24px] px-6 py-5 flex flex-col items-start gap-3"
-					>
-						<div className="flex items-center gap-2">
-							<span className="w-6 h-6 rounded-full flex items-center justify-center bg-[var(--dnd-bg-insight-box)] text-[var(--dnd-primary)] typo-caption-2 font-bold">
-								{index + 1}
-							</span>
-							<div className="flex items-center gap-2 typo-caption-1 text-[var(--dnd-label-alternative)]">
-								<span>{getLabel(piece.createdType)}</span>
-								<span className="w-[1px] h-3 bg-[var(--dnd-line-normal)]" />
-								<span>{getFormattedDate(piece.createdDate)}</span>
-							</div>
-						</div>
-						<p className="typo-headline-2 text-[var(--dnd-label-strong)]">
-							{piece.content}
-						</p>
-					</div>
+						piece={piece}
+						index={index}
+					/>
 				))}
 			</div>
 		</div>
