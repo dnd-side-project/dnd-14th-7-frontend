@@ -15,6 +15,7 @@ import {
 import type { InsightAnswerCard } from "@/lib/queries/insight";
 import {
 	convertAnswerToBlockMutationOptions,
+	insightKeys,
 	insightQuestionsQueryOptions,
 } from "@/lib/queries/insight";
 import { cn } from "@/lib/utils";
@@ -123,10 +124,10 @@ function AnswerCardMenu({
 		...convertAnswerToBlockMutationOptions(insightId),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: ["insight-questions", insightId],
+				queryKey: insightKeys.questions(insightId),
 			});
 			queryClient.invalidateQueries({
-				queryKey: ["insight-pieces", insightId],
+				queryKey: insightKeys.pieces(insightId),
 			});
 		},
 	});

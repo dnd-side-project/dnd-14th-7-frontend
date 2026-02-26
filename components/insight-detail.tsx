@@ -29,8 +29,8 @@ export function InsightDetailSection({ insightId }: InsightDetailSectionProps) {
 
 function InsightDetailSkeleton() {
 	return (
-		<div className="flex gap-10 justify-center p-[80px] animate-pulse">
-			<div className="w-full flex flex-col gap-6">
+		<div className="flex gap-[80px] justify-center pl-[80px] pr-[24px] animate-pulse">
+			<div className="w-full flex flex-col gap-6 pt-[80px] pb-[80px]">
 				<div className="flex justify-between items-start">
 					<div className="flex flex-col gap-6 w-full">
 						<div className="h-10 w-2/3 bg-[var(--dnd-fill-strong)] rounded-md" />
@@ -74,7 +74,9 @@ function InsightDetailSkeleton() {
 			</div>
 
 			{/* Q&A Panel Skeleton */}
-			<InsightQnAPanelSkeleton />
+			<div className="pt-[24px] pb-[24px]">
+				<InsightQnAPanelSkeleton />
+			</div>
 		</div>
 	);
 }
@@ -92,7 +94,7 @@ function InsightDetailContent({ insightId }: { insightId: number }) {
 			<div className="w-full flex flex-col gap-6 pt-[80px] pb-[80px]">
 				<InsightHeader data={data} />
 				<InitialThoughtBox initialThought={data.initialThought} />
-				<MainInsightBox insightPieces={piecesData.insightPieces} />
+				<MainInsightBox insightPieces={insightPieces} />
 				<MemoSection />
 				<LinkSection />
 			</div>

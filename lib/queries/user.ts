@@ -1,11 +1,13 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import { api } from "@/lib/core/api";
+import type { ApiResponse } from "@/lib/core/types";
 
 export type Position = "DEV" | "DESIGN" | "PROMOTER" | "OTHER";
 
 export interface User {
 	nickname: string;
 	email: string;
+	credit: number;
 	position: Position | "NONE";
 }
 
@@ -25,15 +27,9 @@ export const userKeys = {
 	tags: () => [...userKeys.all, "tags"] as const,
 };
 
-export const getUser = async () => {
-	if (typeof window === "undefined") {
-		return {
-			nickname: "심미진",
-			email: "mijin.sim@example.com",
-			position: "NONE",
-		};
-	}
-	return api.get<User>("/api/mock/user");
+export const getUser = async (): Promise<User> => {
+	const response = await api.get<ApiResponse<User>>("/api/v1/users");
+	return response.data;
 };
 
 export const getTags = async (): Promise<Tag[]> => {
@@ -56,7 +52,7 @@ export const tagsQueryOptions = () =>
 	});
 
 const postUserPosition = (position: Position) =>
-	api.post("/api/v1/users/position", { position });
+	api.post<ApiResponse<string>>("/api/v1/users/position", { position });
 
 export const updatePositionMutationOptions = () =>
 	mutationOptions({ mutationFn: postUserPosition });

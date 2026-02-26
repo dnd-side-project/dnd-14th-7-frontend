@@ -11,19 +11,20 @@ import { Textarea } from "@/components/ui/textarea";
 import {
 	answerQuestionMutationOptions,
 	type InsightQuestion,
+	insightKeys,
 	insightQuestionsQueryOptions,
 } from "@/lib/queries/insight";
 import { QuestionItem } from "./question-section";
 
 interface QuestionFormViewProps {
 	selectedQuestionId: number;
-	onCancel: () => void;
+	onSelectQuestion: (id: number | null) => void;
 	insightId: number;
 }
 
 export function QuestionFormView({
 	selectedQuestionId,
-	onCancel,
+	onSelectQuestion,
 	insightId,
 }: QuestionFormViewProps) {
 	const { data } = useSuspenseQuery(insightQuestionsQueryOptions(insightId));
@@ -36,13 +37,13 @@ export function QuestionFormView({
 						key={question.questionId}
 						question={question}
 						insightId={insightId}
-						onCancel={onCancel}
+						onCancel={() => onSelectQuestion(null)}
 					/>
 				) : (
 					<QuestionItem
 						key={question.questionId}
 						question={question}
-						disabled
+						onClick={() => onSelectQuestion(question.questionId)}
 					/>
 				),
 			)}
@@ -64,7 +65,7 @@ function QuestionForm({ question, insightId, onCancel }: QuestionFormProps) {
 		...answerQuestionMutationOptions(insightId),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: ["insight-questions", insightId],
+				queryKey: insightKeys.questions(insightId),
 			});
 			onCancel();
 		},
@@ -72,9 +73,13 @@ function QuestionForm({ question, insightId, onCancel }: QuestionFormProps) {
 
 	return (
 		<div className="bg-[var(--dnd-bg-mint2)] rounded-[32px] p-[24px] flex flex-col gap-[16px] border border-[#ebebeb]">
-			{/* 질문 헤더 */}
-			<div className="flex gap-[16px] items-center">
-				<div className="p-[12px] bg-white rounded-[12px] flex items-center justify-center shrink-0">
+			{/* 질문 헤더 - 클릭 시 폼 닫기 */}
+			<button
+				type="button"
+				onClick={onCancel}
+				className="flex gap-[16px] items-center text-left cursor-pointer"
+			>
+				<div className="p-[12px] bg-white rounded-[12px]">
 					<Image
 						src="/question-icon.svg"
 						alt="question"
@@ -82,10 +87,10 @@ function QuestionForm({ question, insightId, onCancel }: QuestionFormProps) {
 						height={24}
 					/>
 				</div>
-				<h3 className="typo-headline-1 font-semibold text-[var(--dnd-label-normal)] flex-1">
+				<h3 className="typo-headline-1 font-semibold text-[var(--dnd-label-normal)]">
 					{question.content}
 				</h3>
-			</div>
+			</button>
 
 			{/* 답변 입력 영역 */}
 			<Textarea

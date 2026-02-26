@@ -21,7 +21,7 @@ export function QuestionSection({ insightId }: QuestionSectionProps) {
 		return (
 			<QuestionFormView
 				selectedQuestionId={selectedQuestionId}
-				onCancel={() => setSelectedQuestionId(null)}
+				onSelectQuestion={setSelectedQuestionId}
 				insightId={insightId}
 			/>
 		);
