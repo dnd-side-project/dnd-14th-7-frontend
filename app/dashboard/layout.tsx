@@ -3,7 +3,9 @@ import {
 	HydrationBoundary,
 	QueryClient,
 } from "@tanstack/react-query";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { tagsQueryOptions, userQueryOptions } from "@/lib/queries/user";
+import { DashboardMain } from "./_components/dashboard-main";
 import { DashboardTabBar } from "./_components/dashboard-tab-bar";
 import { ClientBoundary } from "./_components/error-wrapper";
 import { Sidebar } from "./_components/sidebar";
@@ -22,17 +24,17 @@ export default async function DashboardLayout({
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
-			<div className="flex min-h-screen bg-dnd-bg-normal">
+			<SidebarProvider>
 				<ClientBoundary>
 					<Sidebar />
 				</ClientBoundary>
-				<div className="ml-[260px] flex flex-1 flex-col">
+				<DashboardMain>
 					<ClientBoundary>
 						<DashboardTabBar />
 					</ClientBoundary>
 					<main className="pt-[56px]">{children}</main>
-				</div>
-			</div>
+				</DashboardMain>
+			</SidebarProvider>
 		</HydrationBoundary>
 	);
 }
