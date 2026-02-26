@@ -94,10 +94,10 @@ export const insightKeys = {
 
 const getInsights = async (params: InsightsParams = {}): Promise<InsightsData> => {
 	const searchParams = new URLSearchParams();
-	if (params.page) searchParams.set("page", String(params.page));
-	if (params.size) searchParams.set("size", String(params.size));
+	if (params.page !== undefined) searchParams.set("page", String(params.page));
+	if (params.size !== undefined) searchParams.set("size", String(params.size));
 	if (params.sort) searchParams.set("sort", params.sort);
-	if (params.tag) searchParams.set("tag", String(params.tag));
+	if (params.tag !== undefined) searchParams.set("tag", String(params.tag));
 
 	const query = searchParams.toString();
 	const path = `/api/v1/insights${query ? `?${query}` : ""}`;

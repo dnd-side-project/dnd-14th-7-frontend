@@ -14,7 +14,12 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 
 function resolveUrl(path: string) {
 	if (isServer()) {
-		const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
+		const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+		if (!backendUrl) {
+			throw new Error(
+				"NEXT_PUBLIC_BACKEND_URL is not defined. Server-side API calls require this environment variable.",
+			);
+		}
 		return `${backendUrl}${path}`;
 	}
 	return path;
