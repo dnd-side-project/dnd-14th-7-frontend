@@ -1,6 +1,6 @@
 "use client";
 
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQueries } from "@tanstack/react-query";
 import { MoreVertical } from "lucide-react";
 import { Suspense, useCallback, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -80,10 +80,12 @@ function InsightDetailSkeleton() {
 }
 
 function InsightDetailContent({ insightId }: { insightId: number }) {
-	const { data } = useSuspenseQuery(insightDetailQueryOptions(insightId));
-	const { data: piecesData } = useSuspenseQuery(
-		insightPiecesQueryOptions(insightId),
-	);
+	const [{ data }, { data: piecesData }] = useSuspenseQueries({
+		queries: [
+			insightDetailQueryOptions(insightId),
+			insightPiecesQueryOptions(insightId),
+		],
+	});
 
 	return (
 		<div className="flex gap-[80px] justify-center pl-[80px] pr-[24px]">
