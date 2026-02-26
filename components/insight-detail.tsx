@@ -10,7 +10,7 @@ import {
 	insightPiecesQueryOptions,
 } from "@/lib/queries/insight";
 import { formatDate } from "@/lib/utils/date";
-import { InsightPieceItem } from "./insight-piece-item";
+import { InsightPieceItem } from "./insight-piece-item/insight-piece-item";
 import { InsightQnAPanel, InsightQnAPanelSkeleton } from "./insight-qna-panel";
 
 interface InsightDetailSectionProps {
