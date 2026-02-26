@@ -25,6 +25,7 @@ export function deserializeTab(str: string | null | undefined): Tab {
 
 	const [prefix, ...rest] = str.split(":");
 
+	// TODO: validation 추상화 필요
 	switch (prefix) {
 		case "insight": {
 			const id = rest.join(":");
