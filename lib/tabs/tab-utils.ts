@@ -27,9 +27,13 @@ export function deserializeTab(str: string | null | undefined): Tab {
 
 	switch (prefix) {
 		case "insight":
-			return { type: "insight", id: rest.join(":") };
+			return rest[0]
+				? { type: "insight", id: rest.join(":") }
+				: { type: "home" };
 		case "tag":
-			return { type: "tag", id: rest[0], name: rest.slice(1).join(":") };
+			return rest[0]
+				? { type: "tag", id: rest[0], name: rest.slice(1).join(":") }
+				: { type: "home" };
 		default:
 			return { type: "home" };
 	}
