@@ -15,9 +15,11 @@ import { formatDate } from "@/lib/utils/date";
 export function InsightPieceItem({
 	piece,
 	index,
+	onModeChange,
 }: {
 	piece: InsightPiece;
 	index: number;
+	onModeChange?: (mode: "DEFAULT" | "LOADING" | "SELECTING") => void;
 }) {
 	const [mode, setMode] = useState<"DEFAULT" | "LOADING" | "SELECTING">(
 		"DEFAULT",
@@ -32,6 +34,7 @@ export function InsightPieceItem({
 		if (mode === "LOADING") {
 			timeout = setTimeout(() => {
 				setMode("SELECTING");
+				onModeChange?.("SELECTING");
 			}, 1500);
 		}
 		return () => {
@@ -96,7 +99,10 @@ export function InsightPieceItem({
 							>
 								<DropdownMenuItem
 									className="p-3 rounded-xl bg-[var(--dnd-bg-alternative)] cursor-pointer flex items-start gap-3 w-[156px] focus:bg-[var(--dnd-bg-alternative)]"
-									onClick={() => setMode("LOADING")}
+									onClick={() => {
+										setMode("LOADING");
+										onModeChange?.("LOADING");
+									}}
 								>
 									<div className="flex bg-[#ffcccb] opacity-50 absolute inset-0 mix-blend-multiply pointer-events-none hidden"></div>
 									<Image
@@ -185,7 +191,7 @@ export function InsightPieceItem({
 						const isOriginal = candidateIndex === 0;
 
 						const candidateStyle = isSelected
-							? "bg-[var(--dnd-bg-mint2)] border border-[var(--dnd-primary)] text-[var(--dnd-label-strong)]"
+							? "bg-[var(--dnd-bg-mint2)] border-2 border-[var(--dnd-primary)] text-[var(--dnd-label-strong)]"
 							: isOriginal
 								? "bg-[var(--dnd-bg-alternative)] text-[var(--dnd-label-strong)] hover:bg-[#ebebeb]"
 								: "bg-[var(--dnd-bg-mint2)] text-[var(--dnd-label-strong)] hover:bg-[#e1f5f3]";
@@ -207,6 +213,7 @@ export function InsightPieceItem({
 							className="px-7 py-3 rounded-[12px] typo-body-1 font-medium bg-[var(--dnd-bg-alternative)] text-[var(--dnd-label-neutral)] hover:bg-[#ebebeb] transition-colors"
 							onClick={() => {
 								setMode("DEFAULT");
+								onModeChange?.("DEFAULT");
 								setSelectedCandidateIndex(null);
 							}}
 						>
@@ -223,6 +230,7 @@ export function InsightPieceItem({
 								if (selectedCandidateIndex !== null) {
 									setCurrentContent(candidates[selectedCandidateIndex]);
 									setMode("DEFAULT");
+									onModeChange?.("DEFAULT");
 									setSelectedCandidateIndex(null);
 								}
 							}}
