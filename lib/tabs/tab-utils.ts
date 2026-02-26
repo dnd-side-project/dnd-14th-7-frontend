@@ -26,10 +26,12 @@ export function deserializeTab(str: string | null | undefined): Tab {
 	const [prefix, ...rest] = str.split(":");
 
 	switch (prefix) {
-		case "insight":
-			return rest[0]
-				? { type: "insight", id: rest.join(":") }
+		case "insight": {
+			const id = rest.join(":");
+			return id && !Number.isNaN(Number(id))
+				? { type: "insight", id }
 				: { type: "home" };
+		}
 		case "tag":
 			return rest[0]
 				? { type: "tag", id: rest[0], name: rest.slice(1).join(":") }
