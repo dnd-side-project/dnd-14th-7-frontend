@@ -2,7 +2,7 @@
 
 import { useSuspenseQueries } from "@tanstack/react-query";
 import { MoreVertical } from "lucide-react";
-import { Suspense, useCallback, useState } from "react";
+import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import type { GetInsightResponse, InsightPiece } from "@/lib/queries/insight";
 import {
@@ -171,15 +171,6 @@ function InitialThoughtBox({ initialThought }: { initialThought: string }) {
 }
 
 function MainInsightBox({ insightPieces }: { insightPieces: InsightPiece[] }) {
-	const [isOverlayVisible, setIsOverlayVisible] = useState(false);
-
-	const handleModeChange = useCallback(
-		(mode: "DEFAULT" | "LOADING" | "SELECTING") => {
-			setIsOverlayVisible(mode !== "DEFAULT");
-		},
-		[],
-	);
-
 	return (
 		<div className="flex flex-col gap-3">
 			<span className="typo-headline-2 font-bold text-[var(--dnd-label-neutral)]">
@@ -188,14 +179,12 @@ function MainInsightBox({ insightPieces }: { insightPieces: InsightPiece[] }) {
 					{insightPieces.length}
 				</span>
 			</span>
-			{isOverlayVisible && <div className="fixed inset-0 bg-black/50 z-40" />}
 			<div className="rounded-[32px] p-6 flex flex-col gap-4 bg-[var(--dnd-bg-insight-box)] relative z-50">
 				{insightPieces.map((piece, index) => (
 					<InsightPieceItem
 						key={piece.insightPieceId}
 						piece={piece}
 						index={index}
-						onModeChange={handleModeChange}
 					/>
 				))}
 			</div>

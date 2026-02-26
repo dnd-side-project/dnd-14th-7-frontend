@@ -11,11 +11,9 @@ type Mode = "DEFAULT" | "LOADING" | "SELECTING";
 export function InsightPieceItem({
 	piece,
 	index,
-	onModeChange,
 }: {
 	piece: InsightPiece;
 	index: number;
-	onModeChange?: (mode: Mode) => void;
 }) {
 	const [mode, setMode] = useState<Mode>("DEFAULT");
 	const [currentContent, setCurrentContent] = useState(piece.content);
@@ -25,7 +23,6 @@ export function InsightPieceItem({
 		if (mode === "LOADING") {
 			timeout = setTimeout(() => {
 				setMode("SELECTING");
-				onModeChange?.("SELECTING");
 			}, 1500);
 		}
 		return () => {
@@ -42,8 +39,11 @@ export function InsightPieceItem({
 
 	const changeMode = (newMode: Mode) => {
 		setMode(newMode);
-		onModeChange?.(newMode);
 	};
+
+	const overlay = mode !== "DEFAULT" && (
+		<div className="fixed inset-0 bg-black/50 z-40" />
+	);
 
 	switch (mode) {
 		case "DEFAULT":
@@ -56,19 +56,27 @@ export function InsightPieceItem({
 				/>
 			);
 		case "LOADING":
-			return <LoadingModeView piece={piece} index={index} />;
+			return (
+				<>
+					{overlay}
+					<LoadingModeView piece={piece} index={index} />
+				</>
+			);
 		case "SELECTING":
 			return (
-				<SelectingModeView
-					piece={piece}
-					index={index}
-					candidates={candidates}
-					onCancel={() => changeMode("DEFAULT")}
-					onSelect={(content) => {
-						setCurrentContent(content);
-						changeMode("DEFAULT");
-					}}
-				/>
+				<>
+					{overlay}
+					<SelectingModeView
+						piece={piece}
+						index={index}
+						candidates={candidates}
+						onCancel={() => changeMode("DEFAULT")}
+						onSelect={(content) => {
+							setCurrentContent(content);
+							changeMode("DEFAULT");
+						}}
+					/>
+				</>
 			);
 	}
 	return null;
