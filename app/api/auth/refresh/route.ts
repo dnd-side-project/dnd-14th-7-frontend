@@ -15,7 +15,7 @@ export async function POST() {
 	}
 
 	const response = await fetch(
-		`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`,
+		`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/refresh`,
 		{
 			method: "POST",
 			headers: {
