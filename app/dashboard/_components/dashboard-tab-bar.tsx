@@ -1,17 +1,14 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import Image from "next/image";
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import { insightDetailQueryOptions } from "@/lib/queries/insight";
 import type { Tab } from "@/lib/tabs/tab-utils";
 import { deserializeTab } from "@/lib/tabs/tab-utils";
-
-function InsightTabLabel({ insightId }: { insightId: number }) {
-	const { data, isLoading } = useQuery(insightDetailQueryOptions(insightId));
-	return <>{isLoading ? "인사이트 생성 중..." : data?.title || "인사이트"}</>;
-}
 
 export function DashboardTabBar() {
 	const { state, dispatch } = useDashboardTabs();
@@ -77,19 +74,7 @@ function TabItem({ tabKey, tab, isActive, onNavigate, onClose }: TabItemProps) {
 			onClick={() => onNavigate(tabKey)}
 			onKeyDown={(e) => e.key === "Enter" && onNavigate(tabKey)}
 		>
-			<span className="min-w-0 flex-1 truncate text-[17px] font-medium leading-[1.41] text-dnd-label-neutral">
-				{tab.type === "new" ? (
-					"새 페이지"
-				) : tab.type === "insight" ? (
-					<InsightTabLabel insightId={Number(tab.id)} />
-				) : tab.type === "tag" ? (
-					`태그 ${tab.name}`
-				) : tab.type === "trash" ? (
-					"휴지통"
-				) : (
-					""
-				)}
-			</span>
+			<TabLabel tab={tab} />
 			<button
 				type="button"
 				onClick={(e) => {
@@ -100,6 +85,59 @@ function TabItem({ tabKey, tab, isActive, onNavigate, onClose }: TabItemProps) {
 			>
 				<Image src="/cross.svg" alt="close" width={24} height={24} />
 			</button>
+		</div>
+	);
+}
+
+function TabLabel({ tab }: { tab: Tab }) {
+	switch (tab.type) {
+		case "tag":
+			return <TagTabLabel name={tab.name ?? ""} />;
+		case "insight":
+			return (
+				<ErrorBoundary
+					fallback={<TextTabLabel>인사이트</TextTabLabel>}
+				>
+					<Suspense
+						fallback={<TextTabLabel>인사이트 생성 중...</TextTabLabel>}
+					>
+						<InsightTabLabel insightId={Number(tab.id)} />
+					</Suspense>
+				</ErrorBoundary>
+			);
+		case "new":
+			return <TextTabLabel>새 페이지</TextTabLabel>;
+		case "trash":
+			return <TextTabLabel>휴지통</TextTabLabel>;
+		default:
+			return null;
+	}
+}
+
+function InsightTabLabel({ insightId }: { insightId: number }) {
+	const { data } = useSuspenseQuery(insightDetailQueryOptions(insightId));
+	return <TextTabLabel>{data.title || "인사이트"}</TextTabLabel>;
+}
+
+function TextTabLabel({ children }: { children: React.ReactNode }) {
+	return (
+		<span className="min-w-0 flex-1 truncate text-[17px] font-medium leading-[1.41] text-dnd-label-neutral">
+			{children}
+		</span>
+	);
+}
+
+function TagTabLabel({ name }: { name: string }) {
+	return (
+		<div className="flex min-w-0 flex-1 items-center gap-[8px]">
+			<Image
+				src="/hash-tag.svg"
+				alt="#"
+				width={16}
+				height={16}
+				className="shrink-0"
+			/>
+			<TextTabLabel>{name}</TextTabLabel>
 		</div>
 	);
 }
