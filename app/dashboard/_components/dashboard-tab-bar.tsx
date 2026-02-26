@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Home, Search, X } from "lucide-react";
+import { Search } from "lucide-react";
+import Image from "next/image";
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import { insightDetailQueryOptions } from "@/lib/queries/insight";
 import type { Tab } from "@/lib/tabs/tab-utils";
@@ -27,7 +28,7 @@ export function DashboardTabBar() {
 						: "bg-dnd-bg-mint hover:bg-white/60"
 				}`}
 			>
-				<Home className="size-[20px] text-dnd-primary" />
+				<Image src="/home.svg" alt="Home" width={24} height={24} />
 			</button>
 
 			<div role="tablist" className="flex flex-1 items-stretch overflow-x-auto">
@@ -70,8 +71,8 @@ function TabItem({ tabKey, tab, isActive, onNavigate, onClose }: TabItemProps) {
 			role="tab"
 			tabIndex={0}
 			aria-selected={isActive}
-			className={`flex h-[56px] w-[224px] shrink-0 cursor-pointer items-center gap-[8px] border-r border-[#e1e2e4] px-[16px] transition-colors ${
-				isActive ? "bg-white" : "bg-dnd-bg-mint hover:bg-white/60"
+			className={`group flex h-[56px] w-[224px] shrink-0 cursor-pointer items-center gap-[8px] border-r border-[#e1e2e4] px-[16px] transition-colors ${
+				isActive ? "bg-white" : "bg-dnd-bg-mint"
 			}`}
 			onClick={() => onNavigate(tabKey)}
 			onKeyDown={(e) => e.key === "Enter" && onNavigate(tabKey)}
@@ -95,9 +96,9 @@ function TabItem({ tabKey, tab, isActive, onNavigate, onClose }: TabItemProps) {
 					e.stopPropagation();
 					onClose(tabKey);
 				}}
-				className="shrink-0 rounded p-[2px] text-dnd-label-alternative hover:bg-black/10"
+				className="shrink-0 rounded p-[2px] opacity-0 transition-opacity group-hover:opacity-100 cursor-pointer"
 			>
-				<X className="size-[14px]" />
+				<Image src="/cross.svg" alt="close" width={24} height={24} />
 			</button>
 		</div>
 	);

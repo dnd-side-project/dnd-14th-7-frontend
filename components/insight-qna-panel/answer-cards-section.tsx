@@ -5,14 +5,13 @@ import {
 	useQueryClient,
 	useSuspenseQuery,
 } from "@tanstack/react-query";
+import Image from "next/image";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { KebabIcon } from "@/components/ui/icons/KebabIcon";
-import { QuestionIcon } from "@/components/ui/icons/QuestionIcon";
 import type { InsightAnswerCard } from "@/lib/queries/insight";
 import {
 	convertAnswerToBlockMutationOptions,
@@ -59,7 +58,12 @@ function AnswerCardItem({
 		>
 			<div className="flex gap-[16px] items-center">
 				<div className="p-[12px] bg-white rounded-[12px] flex items-center justify-center shrink-0">
-					<QuestionIcon />
+					<Image
+						src="/question-icon.svg"
+						alt="question"
+						width={23}
+						height={24}
+					/>
 				</div>
 				<h3 className="typo-headline-1 font-semibold text-[var(--dnd-label-normal)] flex-1">
 					{card.questionContent}
@@ -136,7 +140,7 @@ function AnswerCardMenu({
 				)}
 				aria-label="답변카드 메뉴"
 			>
-				<KebabIcon />
+				<Image src="/kebab-icon.svg" alt="menu" width={17} height={17} />
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
 				align="end"

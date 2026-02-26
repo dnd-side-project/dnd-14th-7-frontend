@@ -1,8 +1,8 @@
 "use client";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
+import Image from "next/image";
 import { useState } from "react";
-import { Sparkle } from "@/components/ui/icons/Sparkle";
 import type { InsightQuestion } from "@/lib/queries/insight";
 import { insightQuestionsQueryOptions } from "@/lib/queries/insight";
 import { cn } from "@/lib/utils";
@@ -96,7 +96,7 @@ function RefreshQuestionsButton() {
 				className="bg-white border border-[var(--dnd-line-strong)] rounded-lg py-2 px-3 shadow-sm hover:bg-gray-50 transition-colors"
 			>
 				<div className="flex items-center justify-center gap-1">
-					<Sparkle />
+					<Image src="/sparkle.svg" alt="sparkle" width={13} height={13} />
 					<span className="typo-caption-1 font-medium text-[var(--dnd-label-neutral)]">
 						새로운 질문 받기
 					</span>

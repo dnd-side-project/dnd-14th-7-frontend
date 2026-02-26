@@ -5,8 +5,8 @@ import {
 	useQueryClient,
 	useSuspenseQuery,
 } from "@tanstack/react-query";
+import Image from "next/image";
 import { useState } from "react";
-import { QuestionIcon } from "@/components/ui/icons/QuestionIcon";
 import { Textarea } from "@/components/ui/textarea";
 import {
 	answerQuestionMutationOptions,
@@ -75,7 +75,12 @@ function QuestionForm({ question, insightId, onCancel }: QuestionFormProps) {
 			{/* 질문 헤더 */}
 			<div className="flex gap-[16px] items-center">
 				<div className="p-[12px] bg-white rounded-[12px] flex items-center justify-center shrink-0">
-					<QuestionIcon />
+					<Image
+						src="/question-icon.svg"
+						alt="question"
+						width={23}
+						height={24}
+					/>
 				</div>
 				<h3 className="typo-headline-1 font-semibold text-[var(--dnd-label-normal)] flex-1">
 					{question.content}
