@@ -33,8 +33,9 @@ export const getUser = async (): Promise<User> => {
 };
 
 export const getTags = async (): Promise<Tag[]> => {
-	const data = await api.get<TagsResponse>("/api/mock/tags");
-	return data.tags;
+	const response =
+		await api.get<ApiResponse<TagsResponse>>("/api/v1/users/tag");
+	return response.data.tags;
 };
 
 export const userQueryOptions = () =>

@@ -6,6 +6,7 @@ import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { PositionSelectModal } from "@/components/position-select-modal";
 import { Button } from "@/components/ui/button";
+import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import {
 	logoutMutationOptions,
 	redirectToGoogleLogin,
@@ -49,12 +50,10 @@ function SidebarPositionSetup() {
 
 function SidebarUserProfile() {
 	const { data: user } = useSuspenseQuery(userQueryOptions());
-	const { mutate: logout } = useMutation(logoutMutationOptions());
 
 	return (
 		<button
 			type="button"
-			onClick={() => logout()}
 			className="flex flex-1 cursor-pointer items-center gap-[8px]"
 		>
 			<div className="flex size-[32px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200">
@@ -80,10 +79,19 @@ function SidebarTagList() {
 }
 
 function SidebarTag({ tag }: { tag: Tag }) {
+	const { dispatch } = useDashboardTabs();
+	const tabKey = `tag:${tag.tagId}:${tag.tagName}`;
+
 	return (
 		<Button
 			variant="text-secondary"
 			className="w-full justify-start gap-[8px] px-[8px] py-[8px] h-auto"
+			onClick={() =>
+				dispatch(
+					{ type: "add", tab: tabKey },
+					{ type: "activate", tab: tabKey },
+				)
+			}
 		>
 			<span className="typo-body-1 text-dnd-label-alternative">#</span>
 			<span className="typo-body-1 font-medium text-dnd-label-neutral">

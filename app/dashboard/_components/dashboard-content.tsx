@@ -13,6 +13,7 @@ import {
 	HomeToggleHeader,
 } from "./home-insight-list";
 import { HomeTagCard } from "./home-tag-card";
+import { TagPage } from "./tag-page";
 
 const mockInsights = Array.from({ length: 5 }).map((_, i) => ({
 	id: i + 1,
@@ -149,7 +150,12 @@ export function DashboardContent() {
 		case "trash":
 			return <div className="p-4">휴지통 화면 (준비중)</div>;
 		case "tag":
-			return <div className="p-4">태그 {currentTabObj.name} 화면 (준비중)</div>;
+			return (
+				<TagPage
+					tagId={Number(currentTabObj.id)}
+					tagName={currentTabObj.name}
+				/>
+			);
 		default:
 			throw new Error("유효하지 않은 탭 타입입니다.");
 	}

@@ -1,24 +1,36 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import Image from "next/image";
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { useSidebar } from "@/components/ui/sidebar";
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import { insightDetailQueryOptions } from "@/lib/queries/insight";
 import type { Tab } from "@/lib/tabs/tab-utils";
 import { deserializeTab } from "@/lib/tabs/tab-utils";
 
-function InsightTabLabel({ insightId }: { insightId: number }) {
-	const { data, isLoading } = useQuery(insightDetailQueryOptions(insightId));
-	return <>{isLoading ? "인사이트 생성 중..." : data?.title || "인사이트"}</>;
-}
-
 export function DashboardTabBar() {
 	const { state, dispatch } = useDashboardTabs();
+	const { open, toggleSidebar } = useSidebar();
 	const currentTabKey = state.currentTab || "home";
 
 	return (
-		<div className="fixed left-[260px] top-0 right-0 z-10 flex h-[56px] items-center border-b border-[#e1e2e4] bg-dnd-bg-mint">
+		<div
+			className={`fixed top-0 right-0 z-10 flex h-[56px] items-center border-b border-[#e1e2e4] bg-dnd-bg-mint transition-[left] duration-300 ${
+				open ? "left-[260px]" : "left-0"
+			}`}
+		>
+			{!open && (
+				<button
+					type="button"
+					onClick={toggleSidebar}
+					className="flex h-full shrink-0 items-center justify-center border-r border-[#e1e2e4] px-[16px] text-dnd-label-neutral hover:bg-white/60"
+				>
+					<Image src="/side-bar.svg" alt="side-bar" width={24} height={24} />
+				</button>
+			)}
 			<button
 				type="button"
 				onClick={() => dispatch({ type: "activate", tab: null })}
@@ -77,19 +89,7 @@ function TabItem({ tabKey, tab, isActive, onNavigate, onClose }: TabItemProps) {
 			onClick={() => onNavigate(tabKey)}
 			onKeyDown={(e) => e.key === "Enter" && onNavigate(tabKey)}
 		>
-			<span className="min-w-0 flex-1 truncate text-[17px] font-medium leading-[1.41] text-dnd-label-neutral">
-				{tab.type === "new" ? (
-					"새 페이지"
-				) : tab.type === "insight" ? (
-					<InsightTabLabel insightId={Number(tab.id)} />
-				) : tab.type === "tag" ? (
-					`태그 ${tab.name}`
-				) : tab.type === "trash" ? (
-					"휴지통"
-				) : (
-					""
-				)}
-			</span>
+			<TabLabel tab={tab} />
 			<button
 				type="button"
 				onClick={(e) => {
@@ -100,6 +100,55 @@ function TabItem({ tabKey, tab, isActive, onNavigate, onClose }: TabItemProps) {
 			>
 				<Image src="/cross.svg" alt="close" width={24} height={24} />
 			</button>
+		</div>
+	);
+}
+
+function TabLabel({ tab }: { tab: Tab }) {
+	switch (tab.type) {
+		case "tag":
+			return <TagTabLabel name={tab.name ?? ""} />;
+		case "insight":
+			return (
+				<ErrorBoundary fallback={<TextTabLabel>인사이트</TextTabLabel>}>
+					<Suspense fallback={<TextTabLabel>인사이트 생성 중...</TextTabLabel>}>
+						<InsightTabLabel insightId={Number(tab.id)} />
+					</Suspense>
+				</ErrorBoundary>
+			);
+		case "new":
+			return <TextTabLabel>새 페이지</TextTabLabel>;
+		case "trash":
+			return <TextTabLabel>휴지통</TextTabLabel>;
+		default:
+			return null;
+	}
+}
+
+function InsightTabLabel({ insightId }: { insightId: number }) {
+	const { data } = useSuspenseQuery(insightDetailQueryOptions(insightId));
+	return <TextTabLabel>{data.title || "인사이트"}</TextTabLabel>;
+}
+
+function TextTabLabel({ children }: { children: React.ReactNode }) {
+	return (
+		<span className="min-w-0 flex-1 truncate text-[17px] font-medium leading-[1.41] text-dnd-label-neutral">
+			{children}
+		</span>
+	);
+}
+
+function TagTabLabel({ name }: { name: string }) {
+	return (
+		<div className="flex min-w-0 flex-1 items-center gap-[8px]">
+			<Image
+				src="/hash-tag.svg"
+				alt="#"
+				width={16}
+				height={16}
+				className="shrink-0"
+			/>
+			<TextTabLabel>{name}</TextTabLabel>
 		</div>
 	);
 }

@@ -6,19 +6,26 @@ import {
 	SidebarUserProfileSection,
 } from "@/components/sidebar-auth";
 import { Button } from "@/components/ui/button";
+import { useSidebar } from "@/components/ui/sidebar";
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 
 export function Sidebar() {
 	const { dispatch } = useDashboardTabs();
+	const { open, toggleSidebar } = useSidebar();
 
 	return (
-		<div className="fixed left-0 top-0 flex h-full w-[260px] flex-col gap-[32px] bg-dnd-bg-alternative p-[24px] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.08),0px_1px_2px_0px_rgba(0,0,0,0.12)]">
+		<div
+			className={`fixed left-0 top-0 flex h-full w-[260px] flex-col gap-[32px] overflow-hidden bg-dnd-bg-alternative p-[24px] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.08),0px_1px_2px_0px_rgba(0,0,0,0.12)] transition-transform duration-200 ease-linear ${
+				open ? "translate-x-0" : "-translate-x-full"
+			}`}
+		>
 			<div className="flex w-full items-center justify-between">
 				<SidebarUserProfileSection />
 				<Button
 					variant="ghost"
 					size="icon"
 					className="size-[32px] shrink-0 p-0 hover:bg-transparent"
+					onClick={toggleSidebar}
 				>
 					<svg
 						role="img"
@@ -38,9 +45,9 @@ export function Sidebar() {
 				</Button>
 			</div>
 
-			<div className="flex w-full flex-col gap-[32px]">
+			<div className="flex w-full flex-1 min-h-0 flex-col gap-[32px]">
 				<Button
-					className="h-auto w-full flex-row items-center justify-center gap-[4px] rounded-[8px] py-[8px] bg-white border border-dnd-line-normal shadow-dnd-normal hover:bg-dnd-bg-alternative"
+					className="h-auto w-full shrink-0 flex-row items-center justify-center gap-[4px] rounded-[8px] py-[8px] bg-white border border-dnd-line-normal shadow-dnd-normal hover:bg-dnd-bg-alternative"
 					variant="ghost"
 					onClick={() => {
 						dispatch(
@@ -55,16 +62,18 @@ export function Sidebar() {
 					</span>
 				</Button>
 
-				<div className="flex w-full flex-col gap-[8px]">
-					<p className="typo-body-1 w-full overflow-hidden text-ellipsis whitespace-nowrap font-medium text-dnd-label-alternative">
+				<div className="flex w-full flex-1 min-h-0 flex-col gap-[8px]">
+					<p className="typo-body-1 w-full shrink-0 overflow-hidden text-ellipsis whitespace-nowrap font-medium text-dnd-label-alternative">
 						태그
 					</p>
-					<SidebarTagListSection />
+					<div className="flex-1 min-h-0 overflow-y-auto">
+						<SidebarTagListSection />
+					</div>
 				</div>
 
 				<Button
 					variant="text-secondary"
-					className="w-full justify-start gap-[8px] px-[8px] py-[8px] h-auto mt-auto"
+					className="w-full shrink-0 justify-start gap-[8px] px-[8px] py-[8px] h-auto"
 					onClick={() => {
 						dispatch(
 							{ type: "add", tab: "trash" },
