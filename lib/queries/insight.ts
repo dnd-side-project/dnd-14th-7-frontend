@@ -84,7 +84,8 @@ interface InsightsParams {
 
 export const insightKeys = {
 	all: ["insight"] as const,
-	list: (params?: InsightsParams) => [...insightKeys.all, "list", params] as const,
+	list: (params?: InsightsParams) =>
+		[...insightKeys.all, "list", params] as const,
 	detail: (id: number) => [...insightKeys.all, "detail", id] as const,
 	pieces: (id: number) => [...insightKeys.all, "pieces", id] as const,
 	questions: (id: number) => [...insightKeys.all, "questions", id] as const,
@@ -92,7 +93,9 @@ export const insightKeys = {
 
 // ── API Functions ──
 
-const getInsights = async (params: InsightsParams = {}): Promise<InsightsData> => {
+const getInsights = async (
+	params: InsightsParams = {},
+): Promise<InsightsData> => {
 	const searchParams = new URLSearchParams();
 	if (params.page !== undefined) searchParams.set("page", String(params.page));
 	if (params.size !== undefined) searchParams.set("size", String(params.size));
@@ -106,12 +109,16 @@ const getInsights = async (params: InsightsParams = {}): Promise<InsightsData> =
 };
 
 const getInsight = async (id: number): Promise<GetInsightResponse> => {
-	const response = await api.get<ApiResponse<GetInsightResponse>>(`/api/v1/insights/${id}`);
+	const response = await api.get<ApiResponse<GetInsightResponse>>(
+		`/api/v1/insights/${id}`,
+	);
 	return response.data;
 };
 
 const getInsightPieces = async (id: number): Promise<InsightPiece[]> => {
-	const response = await api.get<ApiResponse<InsightPiecesData>>(`/api/v1/insights/${id}/list`);
+	const response = await api.get<ApiResponse<InsightPiecesData>>(
+		`/api/v1/insights/${id}/list`,
+	);
 	return response.data.insightPieces;
 };
 
@@ -119,8 +126,13 @@ interface CreateInsightResponse {
 	insightId: number;
 }
 
-const createInsight = async (data: { memo: string }): Promise<CreateInsightResponse> => {
-	const response = await api.post<ApiResponse<CreateInsightResponse>>("/api/v1/insights", data);
+const createInsight = async (data: {
+	memo: string;
+}): Promise<CreateInsightResponse> => {
+	const response = await api.post<ApiResponse<CreateInsightResponse>>(
+		"/api/v1/insights",
+		data,
+	);
 	return response.data;
 };
 
@@ -128,14 +140,23 @@ const createInsightPiece = (insightId: number, data: { content: string }) =>
 	api.post<ApiResponse<unknown>>(`/api/v1/insights/${insightId}/pieces`, data);
 
 const getInsightQuestions = (id: number) =>
-	api.get<ApiResponse<GetInsightQuestionsResponse>>(`/api/v1/insights/${id}/questions`)
+	api
+		.get<ApiResponse<GetInsightQuestionsResponse>>(
+			`/api/v1/insights/${id}/questions`,
+		)
 		.then((r) => r.data);
 
 const convertAnswerToBlock = (insightId: number, answerId: number) =>
-	api.post<ApiResponse<unknown>>(`/api/v1/insights/${insightId}/answer-blocks`, { answerId });
+	api.post<ApiResponse<unknown>>(
+		`/api/v1/insights/${insightId}/answer-blocks`,
+		{ answerId },
+	);
 
 const answerQuestion = (questionId: number, data: { content: string }) =>
-	api.post<ApiResponse<unknown>>(`/api/v1/questions/${questionId}/answer`, data);
+	api.post<ApiResponse<unknown>>(
+		`/api/v1/questions/${questionId}/answer`,
+		data,
+	);
 
 // ── Query Options ──
 
@@ -172,7 +193,8 @@ export const insightCreationMutationOptions = () =>
 
 export const insightPieceCreationMutationOptions = (insightId: number) =>
 	mutationOptions({
-		mutationFn: (data: { content: string }) => createInsightPiece(insightId, data),
+		mutationFn: (data: { content: string }) =>
+			createInsightPiece(insightId, data),
 	});
 
 export const convertAnswerToBlockMutationOptions = (insightId: number) =>

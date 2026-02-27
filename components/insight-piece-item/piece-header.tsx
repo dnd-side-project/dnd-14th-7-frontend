@@ -13,7 +13,7 @@ function getLabel(type: InsightPiece["createdType"]) {
 		case "INIT":
 			return "첫 생각";
 		case "SELF":
-			return "나의 생각";
+			return "직접작성";
 		case "ANSWER":
 			return "질문 답변";
 		default:

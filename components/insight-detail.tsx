@@ -1,12 +1,19 @@
 "use client";
 
-import { useSuspenseQueries } from "@tanstack/react-query";
+import {
+	useMutation,
+	useQueryClient,
+	useSuspenseQueries,
+} from "@tanstack/react-query";
 import { MoreVertical } from "lucide-react";
-import { Suspense } from "react";
+import Image from "next/image";
+import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import type { GetInsightResponse, InsightPiece } from "@/lib/queries/insight";
 import {
 	insightDetailQueryOptions,
+	insightKeys,
+	insightPieceCreationMutationOptions,
 	insightPiecesQueryOptions,
 } from "@/lib/queries/insight";
 import { formatDate } from "@/lib/utils/date";
@@ -94,7 +101,7 @@ function InsightDetailContent({ insightId }: { insightId: number }) {
 			<div className="w-full flex flex-col gap-6 pt-[80px] pb-[80px]">
 				<InsightHeader data={data} />
 				<InitialThoughtBox initialThought={data.initialThought} />
-				<MainInsightBox insightPieces={piecesData} />
+				<MainInsightBox insightId={insightId} insightPieces={piecesData} />
 				<MemoSection />
 				<LinkSection />
 			</div>
@@ -172,15 +179,51 @@ function InitialThoughtBox({ initialThought }: { initialThought: string }) {
 	);
 }
 
-function MainInsightBox({ insightPieces }: { insightPieces: InsightPiece[] }) {
+function MainInsightBox({
+	insightId,
+	insightPieces,
+}: {
+	insightId: number;
+	insightPieces: InsightPiece[];
+}) {
+	const [isInputVisible, setIsInputVisible] = useState(false);
+	const [inputValue, setInputValue] = useState("");
+	const queryClient = useQueryClient();
+	const { mutate, isPending } = useMutation({
+		...insightPieceCreationMutationOptions(insightId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: insightKeys.pieces(insightId),
+			});
+			setInputValue("");
+			setIsInputVisible(false);
+		},
+	});
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "Enter" && !e.nativeEvent.isComposing && inputValue.trim()) {
+			e.preventDefault();
+			mutate({ content: inputValue.trim() });
+		}
+	};
+
 	return (
 		<div className="flex flex-col gap-3">
-			<span className="typo-headline-2 font-bold text-[var(--dnd-label-neutral)]">
-				인사이트{" "}
-				<span className="text-[var(--dnd-primary)]">
-					{insightPieces.length}
+			<div className="group flex items-center justify-between py-[16px] px-[20px] gap-[8px]">
+				<span className="typo-headline-2 font-bold text-[var(--dnd-label-neutral)]">
+					인사이트{" "}
+					<span className="text-[var(--dnd-primary)]">
+						{insightPieces.length}
+					</span>
 				</span>
-			</span>
+				<button
+					type="button"
+					className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 shrink-0"
+					onClick={() => setIsInputVisible((prev) => !prev)}
+				>
+					<Image src="/plus.svg" alt="추가" width={24} height={24} />
+				</button>
+			</div>
 			<div className="rounded-[32px] p-6 flex flex-col gap-4 bg-[var(--dnd-bg-insight-box)] relative z-50">
 				{insightPieces.map((piece, index) => (
 					<InsightPieceItem
@@ -189,6 +232,17 @@ function MainInsightBox({ insightPieces }: { insightPieces: InsightPiece[] }) {
 						index={index}
 					/>
 				))}
+				{isInputVisible && (
+					<input
+						className="w-full rounded-[16px] border-2 border-[var(--dnd-primary)] bg-white px-6 py-4 typo-body-1 text-[var(--dnd-label-normal)] placeholder-[var(--dnd-label-assistive)] focus:outline-none resize-none"
+						placeholder="새로운 인사이트를 입력하세요"
+						value={inputValue}
+						onChange={(e) => setInputValue(e.target.value)}
+						onKeyDown={handleKeyDown}
+						disabled={isPending}
+						autoFocus
+					/>
+				)}
 			</div>
 		</div>
 	);
