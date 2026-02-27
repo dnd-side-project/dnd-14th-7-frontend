@@ -24,29 +24,33 @@ export default function Page() {
 					<Image
 						src="/intro-1.png"
 						alt="Intro 1"
-						width={1440}
-						height={508}
+						width={4096}
+						height={1445}
+						unoptimized
 						className="w-full h-auto"
 					/>
 					<Image
 						src="/intro-2.png"
 						alt="Intro 2"
-						width={1440}
-						height={508}
+						width={4096}
+						height={1445}
+						unoptimized
 						className="w-full h-auto"
 					/>
 					<Image
 						src="/intro-3.png"
 						alt="Intro 3"
-						width={1440}
-						height={508}
+						width={4096}
+						height={1445}
+						unoptimized
 						className="w-full h-auto"
 					/>
 					<Image
 						src="/intro-4.png"
 						alt="Intro 4"
-						width={1440}
-						height={508}
+						width={4096}
+						height={1445}
+						unoptimized
 						className="w-full h-auto"
 					/>
 				</div>
