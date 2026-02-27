@@ -50,9 +50,7 @@ export function InsightInput({ onSuccess, titleClassName }: InsightInputProps) {
 	const { data: user, isError } = useQuery(userQueryOptions());
 
 	if (isError || !user) {
-		return (
-			<GuestInsightInput titleClassName={titleClassName} />
-		);
+		return <GuestInsightInput titleClassName={titleClassName} />;
 	}
 
 	return (
@@ -66,11 +64,7 @@ export function InsightInput({ onSuccess, titleClassName }: InsightInputProps) {
 
 // ── 비로그인 상태: 클릭 시 로그인 모달 ──
 
-function GuestInsightInput({
-	titleClassName,
-}: {
-	titleClassName?: string;
-}) {
+function GuestInsightInput({ titleClassName }: { titleClassName?: string }) {
 	const content = getPositionContent(undefined);
 
 	return (
@@ -92,11 +86,7 @@ function GuestInsightInput({
 					));
 				}}
 				trailingContent={
-					<Button
-						variant="solid"
-						size="dnd-large"
-						disabled
-					>
+					<Button variant="solid" size="dnd-large" disabled>
 						인사이트 생성
 					</Button>
 				}

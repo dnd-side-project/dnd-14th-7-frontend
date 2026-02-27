@@ -1,13 +1,19 @@
 "use client";
 
-import { useSuspenseQueries } from "@tanstack/react-query";
+import {
+	useMutation,
+	useQueryClient,
+	useSuspenseQueries,
+} from "@tanstack/react-query";
 import { MoreVertical } from "lucide-react";
-import { Suspense } from "react";
+import { type KeyboardEvent, Suspense, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import type { GetInsightResponse, InsightPiece } from "@/lib/queries/insight";
 import {
 	insightDetailQueryOptions,
+	insightKeys,
 	insightPiecesQueryOptions,
+	updateInsightTitleMutationOptions,
 } from "@/lib/queries/insight";
 import { formatDate } from "@/lib/utils/date";
 import { InsightPieceItem } from "./insight-piece-item/insight-piece-item";
@@ -94,7 +100,7 @@ function InsightDetailContent({ insightId }: { insightId: number }) {
 			<div className="w-full flex flex-col gap-6 pt-[80px] pb-[80px]">
 				<InsightHeader data={data} />
 				<InitialThoughtBox initialThought={data.initialThought} />
-				<MainInsightBox insightPieces={insightPieces} />
+				<MainInsightBox insightPieces={piecesData} />
 				<MemoSection />
 				<LinkSection />
 			</div>
@@ -106,6 +112,53 @@ function InsightDetailContent({ insightId }: { insightId: number }) {
 }
 
 function InsightHeader({ data }: { data: GetInsightResponse }) {
+	const queryClient = useQueryClient();
+	const [isEditing, setIsEditing] = useState(false);
+	const [editValue, setEditValue] = useState(data.title);
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	const { mutate: updateTitle } = useMutation({
+		...updateInsightTitleMutationOptions(data.insightId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: insightKeys.detail(data.insightId),
+			});
+		},
+		onError: () => {
+			setEditValue(data.title);
+		},
+	});
+
+	const handleSubmit = () => {
+		const trimmed = editValue.trim();
+		if (!trimmed || trimmed === data.title) {
+			setEditValue(data.title);
+			setIsEditing(false);
+			return;
+		}
+		updateTitle({ title: trimmed });
+		setIsEditing(false);
+	};
+
+	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			handleSubmit();
+		} else if (e.key === "Escape") {
+			setEditValue(data.title);
+			setIsEditing(false);
+		}
+	};
+
+	const handleTitleClick = () => {
+		setIsEditing(true);
+		setEditValue(data.title);
+		requestAnimationFrame(() => {
+			inputRef.current?.focus();
+			inputRef.current?.select();
+		});
+	};
+
 	const createdDate = formatDate(data.createdDate);
 	const updatedDate = formatDate(data.updatedDate);
 
@@ -131,9 +184,25 @@ function InsightHeader({ data }: { data: GetInsightResponse }) {
 	return (
 		<div className="flex justify-between items-start">
 			<div className="flex flex-col gap-6">
-				<h1 className="typo-title-1 font-bold text-[var(--dnd-label-strong)]">
-					{data.title}
-				</h1>
+				{isEditing ? (
+					<input
+						ref={inputRef}
+						type="text"
+						value={editValue}
+						onChange={(e) => setEditValue(e.target.value)}
+						onBlur={handleSubmit}
+						onKeyDown={handleKeyDown}
+						className="typo-title-1 font-bold text-[var(--dnd-label-strong)] bg-transparent border-2 border-[var(--dnd-primary)] rounded-xl px-4 py-2 outline-none"
+					/>
+				) : (
+					<h1
+						className="typo-title-1 font-bold text-[var(--dnd-label-strong)] cursor-pointer hover:text-[var(--dnd-primary)] transition-colors"
+						onClick={handleTitleClick}
+						title="클릭하여 제목 수정"
+					>
+						{data.title}
+					</h1>
+				)}
 				<div className="flex flex-col gap-4">
 					<div className="flex items-center gap-2 typo-body-2 text-[var(--dnd-label-alternative)]">
 						<span>{createdDateStr}</span>

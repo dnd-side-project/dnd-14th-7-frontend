@@ -18,9 +18,10 @@ async function proxyRequest(req: NextRequest) {
 		headers.Authorization = `Bearer ${accessToken}`;
 	}
 
-	const body = req.method !== "GET" && req.method !== "HEAD"
-		? await req.text()
-		: undefined;
+	const body =
+		req.method !== "GET" && req.method !== "HEAD"
+			? await req.text()
+			: undefined;
 
 	const response = await fetch(url.toString(), {
 		method: req.method,
@@ -32,7 +33,10 @@ async function proxyRequest(req: NextRequest) {
 
 	return new NextResponse(data, {
 		status: response.status,
-		headers: { "Content-Type": response.headers.get("Content-Type") ?? "application/json" },
+		headers: {
+			"Content-Type":
+				response.headers.get("Content-Type") ?? "application/json",
+		},
 	});
 }
 
