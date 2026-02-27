@@ -150,7 +150,12 @@ export function DashboardContent() {
 		case "trash":
 			return <div className="p-4">휴지통 화면 (준비중)</div>;
 		case "tag":
-			return <TagPage tagId={Number(currentTabObj.id)} tagName={currentTabObj.name} />;
+			return (
+				<TagPage
+					tagId={Number(currentTabObj.id)}
+					tagName={currentTabObj.name}
+				/>
+			);
 		default:
 			throw new Error("유효하지 않은 탭 타입입니다.");
 	}

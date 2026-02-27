@@ -25,7 +25,7 @@ export function Sidebar() {
 					variant="ghost"
 					size="icon"
 					className="size-[32px] shrink-0 p-0 hover:bg-transparent"
-				onClick={toggleSidebar}
+					onClick={toggleSidebar}
 				>
 					<svg
 						role="img"

@@ -33,7 +33,8 @@ export const getUser = async (): Promise<User> => {
 };
 
 export const getTags = async (): Promise<Tag[]> => {
-	const response = await api.get<ApiResponse<TagsResponse>>("/api/v1/users/tag");
+	const response =
+		await api.get<ApiResponse<TagsResponse>>("/api/v1/users/tag");
 	return response.data.tags;
 };
 
