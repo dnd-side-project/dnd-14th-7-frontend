@@ -39,8 +39,6 @@ function getPositionContent(position: User["position"] | undefined) {
 	);
 }
 
-// ── 공개 컴포넌트: 인증 분기 ──
-
 interface InsightInputProps {
 	onSuccess?: (insightId: number) => void;
 	titleClassName?: string;
@@ -61,8 +59,6 @@ export function InsightInput({ onSuccess, titleClassName }: InsightInputProps) {
 		/>
 	);
 }
-
-// ── 비로그인 상태: 클릭 시 로그인 모달 ──
 
 function GuestInsightInput({ titleClassName }: { titleClassName?: string }) {
 	const content = getPositionContent(undefined);
@@ -94,8 +90,6 @@ function GuestInsightInput({ titleClassName }: { titleClassName?: string }) {
 		</section>
 	);
 }
-
-// ── 로그인 상태: 인사이트 생성 ──
 
 interface AuthenticatedInsightInputProps {
 	user: User;
