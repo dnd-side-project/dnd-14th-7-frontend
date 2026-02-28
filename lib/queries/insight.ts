@@ -147,7 +147,7 @@ const getInsightQuestions = (id: number) =>
 		.then((r) => r.data);
 
 const updateInsightTitle = (insightId: number, data: { title: string }) =>
-	api.patch<ApiResponse<unknown>>(`/api/v1/insights/${insightId}/title`, data);
+	api.patch<ApiResponse<void>>(`/api/v1/insights/${insightId}/title`, data);
 
 const convertAnswerToBlock = (insightId: number, answerId: number) =>
 	api.post<ApiResponse<unknown>>(
