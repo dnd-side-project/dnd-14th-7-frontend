@@ -146,6 +146,9 @@ const getInsightQuestions = (id: number) =>
 		)
 		.then((r) => r.data);
 
+const updateInsightTitle = (insightId: number, data: { title: string }) =>
+	api.patch<ApiResponse<void>>(`/api/v1/insights/${insightId}/title`, data);
+
 const convertAnswerToBlock = (insightId: number, answerId: number) =>
 	api.post<ApiResponse<unknown>>(
 		`/api/v1/insights/${insightId}/answer-blocks`,
@@ -206,4 +209,10 @@ export const answerQuestionMutationOptions = (_insightId: number) =>
 	mutationOptions({
 		mutationFn: (data: { questionId: number; content: string }) =>
 			answerQuestion(data.questionId, { content: data.content }),
+	});
+
+export const updateInsightTitleMutationOptions = (insightId: number) =>
+	mutationOptions({
+		mutationFn: (data: { title: string }) =>
+			updateInsightTitle(insightId, data),
 	});
