@@ -45,3 +45,4 @@ storybook-static
 
 .agents/
 skills-lock.json
+.claude/
