@@ -1,218 +1,416 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
-import { api } from "@/lib/core/api";
-import type { ApiResponse } from "@/lib/core/types";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Types ──
 
 export interface Tag {
-	tagId: number;
-	tagName: string;
+  tagId: number;
+  tagName: string;
 }
 
 export interface InsightSummary {
-	insightId: number;
-	title: string;
-	confirmedContent: string;
-	tags: Tag[];
-	createdDate: string;
-	trashedDate: string;
+  insightId: number;
+  title: string;
+  confirmedContent: string;
+  tags: Tag[];
+  createdDate: string;
+  trashedDate: string;
 }
 
 export interface PageInfo {
-	number: number;
-	size: number;
-	totalElements: number;
-	totalPages: number;
+  number: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
 }
 
 interface InsightsData {
-	content: InsightSummary[];
-	page: PageInfo;
+  content: InsightSummary[];
+  page: PageInfo;
 }
 
 export interface GetInsightResponse {
-	insightId: number;
-	initialThought: string;
-	title: string;
-	tags: Tag[];
-	createdDate: string;
-	updatedDate: string;
+  insightId: number;
+  initialThought: string;
+  title: string;
+  tags: Tag[];
+  createdDate: string;
+  updatedDate: string;
 }
 
 export interface InsightPiece {
-	insightPieceId: number;
-	content: string;
-	createdType: "INIT" | "SELF" | "ANSWER";
-	createdDate: string;
-}
-
-interface InsightPiecesData {
-	insightPieces: InsightPiece[];
+  insightPieceId: number;
+  content: string;
+  createdType: "INIT" | "SELF" | "ANSWER";
+  createdDate: string;
 }
 
 export interface InsightQuestion {
-	questionId: number;
-	content: string;
-	status: "WAITING" | "COMPLETED" | "ARCHIVED";
-	createdDate: string;
+  questionId: number;
+  content: string;
+  status: "WAITING" | "COMPLETED" | "ARCHIVED";
+  createdDate: string;
 }
 
 export interface InsightAnswerCard {
-	answerId: number;
-	questionId: number;
-	questionContent: string;
-	answerContent: string;
-	isConverted: boolean;
-	createdDate: string;
+  answerId: number;
+  questionId: number;
+  questionContent: string;
+  answerContent: string;
+  isConverted: boolean;
+  createdDate: string;
 }
 
 export interface GetInsightQuestionsResponse {
-	questions: InsightQuestion[];
-	answerCards: InsightAnswerCard[];
+  questions: InsightQuestion[];
+  answerCards: InsightAnswerCard[];
 }
 
 type InsightsSort = "LATEST" | "VIEWS";
 
 interface InsightsParams {
-	page?: number;
-	size?: number;
-	sort?: InsightsSort;
-	tag?: number;
+  page?: number;
+  size?: number;
+  sort?: InsightsSort;
+  tag?: number;
 }
 
 // ── Query Keys ──
 
 export const insightKeys = {
-	all: ["insight"] as const,
-	list: (params?: InsightsParams) =>
-		[...insightKeys.all, "list", params] as const,
-	detail: (id: number) => [...insightKeys.all, "detail", id] as const,
-	pieces: (id: number) => [...insightKeys.all, "pieces", id] as const,
-	questions: (id: number) => [...insightKeys.all, "questions", id] as const,
+  all: ["insight"] as const,
+  list: (params?: InsightsParams) =>
+    [...insightKeys.all, "list", params] as const,
+  detail: (id: number) => [...insightKeys.all, "detail", id] as const,
+  pieces: (id: number) => [...insightKeys.all, "pieces", id] as const,
+  questions: (id: number) => [...insightKeys.all, "questions", id] as const,
 };
 
 // ── API Functions ──
 
-const getInsights = async (
-	params: InsightsParams = {},
-): Promise<InsightsData> => {
-	const searchParams = new URLSearchParams();
-	if (params.page !== undefined) searchParams.set("page", String(params.page));
-	if (params.size !== undefined) searchParams.set("size", String(params.size));
-	if (params.sort) searchParams.set("sort", params.sort);
-	if (params.tag !== undefined) searchParams.set("tag", String(params.tag));
+const getInsights = async (params: InsightsParams = {}): Promise<InsightsData> => {
+  const supabase = createClient();
+  const { page = 0, size = 20, sort = "LATEST", tag } = params;
 
-	const query = searchParams.toString();
-	const path = `/api/v1/insights${query ? `?${query}` : ""}`;
-	const response = await api.get<ApiResponse<InsightsData>>(path);
-	return response.data;
+  let query = supabase
+    .from("insights")
+    .select(
+      `
+      id,
+      title,
+      initial_thought,
+      created_at,
+      trashed_at,
+      insight_tags!inner(tag_id, tags(id, name))
+    `,
+      { count: "exact" },
+    )
+    .is("trashed_at", null);
+
+  if (tag !== undefined) {
+    query = query.eq("insight_tags.tag_id", tag);
+  }
+
+  if (sort === "VIEWS") {
+    query = query.order("views", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
+
+  const from = page * size;
+  const to = from + size - 1;
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
+  if (error) throw error;
+
+  const content: InsightSummary[] = (data ?? []).map((row) => {
+    const tagRows = Array.isArray(row.insight_tags) ? row.insight_tags : [];
+    const tags: Tag[] = tagRows
+      .filter((t: { tags: { id: number; name: string } | null }) => t.tags)
+      .map((t: { tags: { id: number; name: string } }) => ({
+        tagId: t.tags.id,
+        tagName: t.tags.name,
+      }));
+
+    return {
+      insightId: row.id,
+      title: row.title ?? "",
+      confirmedContent: row.initial_thought ?? "",
+      tags,
+      createdDate: row.created_at,
+      trashedDate: row.trashed_at ?? "",
+    };
+  });
+
+  const totalElements = count ?? 0;
+  const totalPages = Math.ceil(totalElements / size);
+
+  return {
+    content,
+    page: { number: page, size, totalElements, totalPages },
+  };
 };
 
 const getInsight = async (id: number): Promise<GetInsightResponse> => {
-	const response = await api.get<ApiResponse<GetInsightResponse>>(
-		`/api/v1/insights/${id}`,
-	);
-	return response.data;
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("insights")
+    .select(
+      `
+      id,
+      title,
+      initial_thought,
+      created_at,
+      updated_at,
+      insight_tags(tag_id, tags(id, name))
+    `,
+    )
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+
+  const tagRows = Array.isArray(data.insight_tags) ? data.insight_tags : [];
+  const tags: Tag[] = tagRows
+    .filter((t: { tags: { id: number; name: string } | null }) => t.tags)
+    .map((t: { tags: { id: number; name: string } }) => ({
+      tagId: t.tags.id,
+      tagName: t.tags.name,
+    }));
+
+  return {
+    insightId: data.id,
+    initialThought: data.initial_thought ?? "",
+    title: data.title ?? "",
+    tags,
+    createdDate: data.created_at,
+    updatedDate: data.updated_at,
+  };
 };
 
 const getInsightPieces = async (id: number): Promise<InsightPiece[]> => {
-	const response = await api.get<ApiResponse<InsightPiecesData>>(
-		`/api/v1/insights/${id}/list`,
-	);
-	return response.data.insightPieces;
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("insight_pieces")
+    .select("id, content, created_type, created_at")
+    .eq("insight_id", id)
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  return (data ?? []).map((row) => ({
+    insightPieceId: row.id,
+    content: row.content,
+    createdType: row.created_type as "INIT" | "SELF" | "ANSWER",
+    createdDate: row.created_at,
+  }));
 };
 
 interface CreateInsightResponse {
-	insightId: number;
+  insightId: number;
 }
 
 const createInsight = async (data: {
-	memo: string;
+  memo: string;
 }): Promise<CreateInsightResponse> => {
-	const response = await api.post<ApiResponse<CreateInsightResponse>>(
-		"/api/v1/insights",
-		data,
-	);
-	return response.data;
+  const supabase = createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) throw new Error("Unauthenticated");
+
+  const { data: insight, error } = await supabase
+    .from("insights")
+    .insert({ user_id: user.id, initial_thought: data.memo, title: "" })
+    .select("id")
+    .single();
+
+  if (error) throw error;
+
+  const { error: pieceError } = await supabase.from("insight_pieces").insert({
+    insight_id: insight.id,
+    content: data.memo,
+    created_type: "INIT",
+  });
+
+  if (pieceError) throw pieceError;
+
+  return { insightId: insight.id };
 };
 
-const createInsightPiece = (insightId: number, data: { content: string }) =>
-	api.post<ApiResponse<unknown>>(`/api/v1/insights/${insightId}/pieces`, data);
+const createInsightPiece = async (
+  insightId: number,
+  data: { content: string },
+): Promise<void> => {
+  const supabase = createClient();
+  const { error } = await supabase.from("insight_pieces").insert({
+    insight_id: insightId,
+    content: data.content,
+    created_type: "SELF",
+  });
 
-const getInsightQuestions = (id: number) =>
-	api
-		.get<ApiResponse<GetInsightQuestionsResponse>>(
-			`/api/v1/insights/${id}/questions`,
-		)
-		.then((r) => r.data);
+  if (error) throw error;
+};
 
-const updateInsightTitle = (insightId: number, data: { title: string }) =>
-	api.patch<ApiResponse<void>>(`/api/v1/insights/${insightId}/title`, data);
+const getInsightQuestions = async (
+  id: number,
+): Promise<GetInsightQuestionsResponse> => {
+  const supabase = createClient();
 
-const convertAnswerToBlock = (insightId: number, answerId: number) =>
-	api.post<ApiResponse<unknown>>(
-		`/api/v1/insights/${insightId}/answer-blocks`,
-		{ answerId },
-	);
+  const { data: questions, error: qError } = await supabase
+    .from("questions")
+    .select("id, content, status, created_at")
+    .eq("insight_id", id)
+    .order("created_at", { ascending: true });
 
-const answerQuestion = (questionId: number, data: { content: string }) =>
-	api.post<ApiResponse<unknown>>(
-		`/api/v1/questions/${questionId}/answer`,
-		data,
-	);
+  if (qError) throw qError;
+
+  const questionIds = (questions ?? []).map((q) => q.id);
+
+  const { data: answers, error: aError } = await supabase
+    .from("answers")
+    .select("id, question_id, content, is_converted, created_at, questions(content)")
+    .in("question_id", questionIds.length > 0 ? questionIds : [-1]);
+
+  if (aError) throw aError;
+
+  return {
+    questions: (questions ?? []).map((q) => ({
+      questionId: q.id,
+      content: q.content,
+      status: q.status as "WAITING" | "COMPLETED" | "ARCHIVED",
+      createdDate: q.created_at,
+    })),
+    answerCards: (answers ?? []).map((a) => ({
+      answerId: a.id,
+      questionId: a.question_id,
+      questionContent: (a.questions as { content: string } | null)?.content ?? "",
+      answerContent: a.content,
+      isConverted: a.is_converted,
+      createdDate: a.created_at,
+    })),
+  };
+};
+
+const updateInsightTitle = async (
+  insightId: number,
+  data: { title: string },
+): Promise<void> => {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("insights")
+    .update({ title: data.title })
+    .eq("id", insightId);
+
+  if (error) throw error;
+};
+
+const convertAnswerToBlock = async (
+  insightId: number,
+  answerId: number,
+): Promise<void> => {
+  const supabase = createClient();
+
+  const { data: answer, error: answerError } = await supabase
+    .from("answers")
+    .select("content")
+    .eq("id", answerId)
+    .single();
+
+  if (answerError) throw answerError;
+
+  const { error: pieceError } = await supabase.from("insight_pieces").insert({
+    insight_id: insightId,
+    content: answer.content,
+    created_type: "ANSWER",
+  });
+
+  if (pieceError) throw pieceError;
+
+  const { error: updateError } = await supabase
+    .from("answers")
+    .update({ is_converted: true })
+    .eq("id", answerId);
+
+  if (updateError) throw updateError;
+};
+
+const answerQuestion = async (
+  questionId: number,
+  data: { content: string },
+): Promise<void> => {
+  const supabase = createClient();
+
+  const { error: answerError } = await supabase.from("answers").insert({
+    question_id: questionId,
+    content: data.content,
+  });
+
+  if (answerError) throw answerError;
+
+  const { error: statusError } = await supabase
+    .from("questions")
+    .update({ status: "COMPLETED" })
+    .eq("id", questionId);
+
+  if (statusError) throw statusError;
+};
 
 // ── Query Options ──
 
 export const insightsQueryOptions = (params: InsightsParams = {}) =>
-	queryOptions({
-		queryKey: insightKeys.list(params),
-		queryFn: () => getInsights(params),
-	});
+  queryOptions({
+    queryKey: insightKeys.list(params),
+    queryFn: () => getInsights(params),
+  });
 
 export const insightDetailQueryOptions = (id: number) =>
-	queryOptions({
-		queryKey: insightKeys.detail(id),
-		queryFn: () => getInsight(id),
-	});
+  queryOptions({
+    queryKey: insightKeys.detail(id),
+    queryFn: () => getInsight(id),
+  });
 
 export const insightPiecesQueryOptions = (id: number) =>
-	queryOptions({
-		queryKey: insightKeys.pieces(id),
-		queryFn: () => getInsightPieces(id),
-	});
+  queryOptions({
+    queryKey: insightKeys.pieces(id),
+    queryFn: () => getInsightPieces(id),
+  });
 
 export const insightQuestionsQueryOptions = (id: number) =>
-	queryOptions({
-		queryKey: insightKeys.questions(id),
-		queryFn: () => getInsightQuestions(id),
-	});
+  queryOptions({
+    queryKey: insightKeys.questions(id),
+    queryFn: () => getInsightQuestions(id),
+  });
 
 // ── Mutation Options ──
 
 export const insightCreationMutationOptions = () =>
-	mutationOptions({
-		mutationFn: createInsight,
-	});
+  mutationOptions({
+    mutationFn: createInsight,
+  });
 
 export const insightPieceCreationMutationOptions = (insightId: number) =>
-	mutationOptions({
-		mutationFn: (data: { content: string }) =>
-			createInsightPiece(insightId, data),
-	});
+  mutationOptions({
+    mutationFn: (data: { content: string }) =>
+      createInsightPiece(insightId, data),
+  });
 
 export const convertAnswerToBlockMutationOptions = (insightId: number) =>
-	mutationOptions({
-		mutationFn: (answerId: number) => convertAnswerToBlock(insightId, answerId),
-	});
+  mutationOptions({
+    mutationFn: (answerId: number) => convertAnswerToBlock(insightId, answerId),
+  });
 
 export const answerQuestionMutationOptions = (_insightId: number) =>
-	mutationOptions({
-		mutationFn: (data: { questionId: number; content: string }) =>
-			answerQuestion(data.questionId, { content: data.content }),
-	});
+  mutationOptions({
+    mutationFn: (data: { questionId: number; content: string }) =>
+      answerQuestion(data.questionId, { content: data.content }),
+  });
 
 export const updateInsightTitleMutationOptions = (insightId: number) =>
-	mutationOptions({
-		mutationFn: (data: { title: string }) =>
-			updateInsightTitle(insightId, data),
-	});
+  mutationOptions({
+    mutationFn: (data: { title: string }) =>
+      updateInsightTitle(insightId, data),
+  });
