@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { VisuallyHidden } from "radix-ui";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { redirectToGoogleLogin } from "@/lib/queries/user";
+import { signInWithGoogle } from "@/lib/queries/user";
 
 export interface LoginModalProps {
 	isOpen: boolean;
@@ -11,9 +11,9 @@ export interface LoginModalProps {
 }
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
-	const handleGoogleLogin = () => {
+	const handleGoogleLogin = async () => {
 		onClose();
-		redirectToGoogleLogin();
+		await signInWithGoogle();
 	};
 
 	return (
