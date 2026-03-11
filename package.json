@@ -14,6 +14,8 @@
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.1.0",
+		"@supabase/ssr": "^0.9.0",
+		"@supabase/supabase-js": "^2.99.1",
 		"@tanstack/react-query": "^5.90.21",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
@@ -51,5 +53,6 @@
 		"typescript": "^5",
 		"vite": "^7.3.1",
 		"vitest": "^4.0.18"
-	}
+	},
+	"packageManager": "pnpm@10.30.3+sha512.c961d1e0a2d8e354ecaa5166b822516668b7f44cb5bd95122d590dd81922f606f5473b6d23ec4a5be05e7fcd18e8488d47d978bbe981872f1145d06e9a740017"
 }
