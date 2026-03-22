@@ -1,7 +1,17 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import type { Database } from "@/lib/supabase/types";
 
-// ── Types ──
+
+type FetchedQuestionRow = Pick<Database["public"]["Tables"]["questions"]["Row"], "id" | "content" | "status" | "created_at">;
+type FetchedAnswerRow = Pick<Database["public"]["Tables"]["answers"]["Row"], "id" | "question_id" | "content" | "is_converted" | "created_at"> & {
+  questions: { content: string } | null;
+};
+type InsightTagRow = {
+  tag_id: number;
+  tags: { id: number; name: string } | null;
+};
+
 
 export interface Tag {
   tagId: number;
@@ -124,13 +134,20 @@ const getInsights = async (params: InsightsParams = {}): Promise<InsightsData> =
   const { data, error, count } = await query;
   if (error) throw error;
 
-  const content: InsightSummary[] = (data ?? []).map((row) => {
-    const tagRows = Array.isArray(row.insight_tags) ? row.insight_tags : [];
+  if (!data || data.length === 0) {
+    return {
+      content: [],
+      page: { number: page, size, totalElements: count ?? 0, totalPages: 0 },
+    };
+  }
+
+  const content: InsightSummary[] = data.map((row) => {
+    const tagRows: InsightTagRow[] = Array.isArray(row.insight_tags) ? row.insight_tags : [];
     const tags: Tag[] = tagRows
-      .filter((t: { tags: { id: number; name: string } | null }) => t.tags)
-      .map((t: { tags: { id: number; name: string } }) => ({
-        tagId: t.tags.id,
-        tagName: t.tags.name,
+      .filter((t) => t.tags)
+      .map((t) => ({
+        tagId: t.tags!.id,
+        tagName: t.tags!.name,
       }));
 
     return {
@@ -171,12 +188,12 @@ const getInsight = async (id: number): Promise<GetInsightResponse> => {
 
   if (error) throw error;
 
-  const tagRows = Array.isArray(data.insight_tags) ? data.insight_tags : [];
+  const tagRows: InsightTagRow[] = Array.isArray(data.insight_tags) ? data.insight_tags : [];
   const tags: Tag[] = tagRows
-    .filter((t: { tags: { id: number; name: string } | null }) => t.tags)
-    .map((t: { tags: { id: number; name: string } }) => ({
-      tagId: t.tags.id,
-      tagName: t.tags.name,
+    .filter((t) => t.tags)
+    .map((t) => ({
+      tagId: t.tags!.id,
+      tagName: t.tags!.name,
     }));
 
   return {
@@ -199,10 +216,12 @@ const getInsightPieces = async (id: number): Promise<InsightPiece[]> => {
 
   if (error) throw error;
 
-  return (data ?? []).map((row) => ({
+  if (!data || data.length === 0) return [];
+
+  return data.map((row) => ({
     insightPieceId: row.id,
     content: row.content,
-    createdType: row.created_type as "INIT" | "SELF" | "ANSWER",
+    createdType: row.created_type,
     createdDate: row.created_at,
   }));
 };
@@ -255,43 +274,65 @@ const createInsightPiece = async (
   if (error) throw error;
 };
 
+const mapInsightQuestion = (q: FetchedQuestionRow): InsightQuestion => ({
+  questionId: q.id,
+  content: q.content,
+  status: q.status,
+  createdDate: q.created_at,
+});
+
+const mapInsightAnswerCard = (a: FetchedAnswerRow): InsightAnswerCard => ({
+  answerId: a.id,
+  questionId: a.question_id,
+  questionContent: a.questions?.content ?? "",
+  answerContent: a.content,
+  isConverted: a.is_converted,
+  createdDate: a.created_at,
+});
+
+const fetchQuestionsByInsight = async (
+  supabase: ReturnType<typeof createClient>,
+  insightId: number,
+) => {
+  const { data, error } = await supabase
+    .from("questions")
+    .select("id, content, status, created_at")
+    .eq("insight_id", insightId)
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+  return data ?? [];
+};
+
+const fetchAnswersByQuestionIds = async (
+  supabase: ReturnType<typeof createClient>,
+  questionIds: number[],
+) => {
+  const { data, error } = await supabase
+    .from("answers")
+    .select("id, question_id, content, is_converted, created_at, questions(content)")
+    .in("question_id", questionIds);
+
+  if (error) throw error;
+  return data ?? [];
+};
+
 const getInsightQuestions = async (
   id: number,
 ): Promise<GetInsightQuestionsResponse> => {
   const supabase = createClient();
 
-  const { data: questions, error: qError } = await supabase
-    .from("questions")
-    .select("id, content, status, created_at")
-    .eq("insight_id", id)
-    .order("created_at", { ascending: true });
+  const questions = await fetchQuestionsByInsight(supabase, id);
+  if (questions.length === 0) return { questions: [], answerCards: [] };
 
-  if (qError) throw qError;
-
-  const questionIds = (questions ?? []).map((q) => q.id);
-
-  const { data: answers, error: aError } = await supabase
-    .from("answers")
-    .select("id, question_id, content, is_converted, created_at, questions(content)")
-    .in("question_id", questionIds.length > 0 ? questionIds : [-1]);
-
-  if (aError) throw aError;
+  const answers = await fetchAnswersByQuestionIds(
+    supabase,
+    questions.map((q) => q.id),
+  );
 
   return {
-    questions: (questions ?? []).map((q) => ({
-      questionId: q.id,
-      content: q.content,
-      status: q.status as "WAITING" | "COMPLETED" | "ARCHIVED",
-      createdDate: q.created_at,
-    })),
-    answerCards: (answers ?? []).map((a) => ({
-      answerId: a.id,
-      questionId: a.question_id,
-      questionContent: (a.questions as { content: string } | null)?.content ?? "",
-      answerContent: a.content,
-      isConverted: a.is_converted,
-      createdDate: a.created_at,
-    })),
+    questions: questions.map(mapInsightQuestion),
+    answerCards: answers.map(mapInsightAnswerCard),
   };
 };
 

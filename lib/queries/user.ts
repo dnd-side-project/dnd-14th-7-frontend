@@ -1,5 +1,9 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import type { Database } from "@/lib/supabase/types";
+
+// Supabase는 count 집계 결과를 타입 추론하지 못하므로 명시적으로 선언
+type InsightTagCount = { count: number };
 
 export type Position = "DEV" | "DESIGN" | "PROMOTER" | "OTHER";
 
@@ -43,7 +47,7 @@ export const getUser = async (): Promise<User> => {
     nickname: data.nickname,
     email: data.email,
     credit: data.credit,
-    position: data.position as Position | "NONE",
+    position: data.position,
   };
 };
 
@@ -63,12 +67,14 @@ export const getTags = async (): Promise<Tag[]> => {
 
   if (error) throw error;
 
-  return (data ?? []).map((row) => ({
+  if (!data || data.length === 0) return [];
+
+  return data.map((row) => ({
     tagId: row.id,
     tagName: row.name,
     insightCount:
       Array.isArray(row.insight_tags) && row.insight_tags.length > 0
-        ? (row.insight_tags[0] as { count: number }).count
+        ? (row.insight_tags[0] as InsightTagCount).count
         : 0,
   }));
 };
