@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import {
 	logoutMutationOptions,
-	redirectToGoogleLogin,
+	signInWithGoogle,
 	type Tag,
 	tagsQueryOptions,
 	userQueryOptions,
@@ -105,7 +105,7 @@ function SidebarUserProfileFallback() {
 	return (
 		<button
 			type="button"
-			onClick={redirectToGoogleLogin}
+			onClick={() => signInWithGoogle()}
 			className="flex flex-1 cursor-pointer items-center gap-[8px]"
 		>
 			<div className="flex size-[32px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-dnd-fill-strong" />
@@ -136,7 +136,7 @@ function SidebarTagListFallback() {
 			<Button
 				variant="ghost"
 				className="mt-[12px] h-auto w-full rounded-[10px] bg-[#e1f5f3] px-[20px] py-[9px] hover:bg-[#d0eeeb]"
-				onClick={redirectToGoogleLogin}
+				onClick={() => signInWithGoogle()}
 			>
 				<span className="typo-body-2 font-semibold text-dnd-primary-strong">
 					로그인

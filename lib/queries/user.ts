@@ -1,77 +1,135 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
-import { api } from "@/lib/core/api";
-import type { ApiResponse } from "@/lib/core/types";
+import { createClient } from "@/lib/supabase/client";
+import type { Database } from "@/lib/supabase/types";
+
+// Supabase는 count 집계 결과를 타입 추론하지 못하므로 명시적으로 선언
+type InsightTagCount = { count: number };
 
 export type Position = "DEV" | "DESIGN" | "PROMOTER" | "OTHER";
 
 export interface User {
-	nickname: string;
-	email: string;
-	credit: number;
-	position: Position | "NONE";
+  nickname: string;
+  email: string;
+  credit: number;
+  position: Position | "NONE";
 }
 
 export interface Tag {
-	tagId: number;
-	tagName: string;
-	insightCount: number;
-}
-
-interface TagsResponse {
-	tags: Tag[];
+  tagId: number;
+  tagName: string;
+  insightCount: number;
 }
 
 export const userKeys = {
-	all: ["user"] as const,
-	profile: () => [...userKeys.all, "profile"] as const,
-	tags: () => [...userKeys.all, "tags"] as const,
+  all: ["user"] as const,
+  profile: () => [...userKeys.all, "profile"] as const,
+  tags: () => [...userKeys.all, "tags"] as const,
 };
 
 export const getUser = async (): Promise<User> => {
-	const response = await api.get<ApiResponse<User>>("/api/v1/users");
-	return response.data;
+  const supabase = createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) throw new Error("Unauthenticated");
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("nickname, email, credit, position")
+    .eq("id", user.id)
+    .single();
+
+  if (error) throw error;
+
+  return {
+    nickname: data.nickname,
+    email: data.email,
+    credit: data.credit,
+    position: data.position,
+  };
 };
 
 export const getTags = async (): Promise<Tag[]> => {
-	const response =
-		await api.get<ApiResponse<TagsResponse>>("/api/v1/users/tag");
-	return response.data.tags;
+  const supabase = createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) throw new Error("Unauthenticated");
+
+  const { data, error } = await supabase
+    .from("tags")
+    .select("id, name, insight_tags(count)")
+    .eq("user_id", user.id);
+
+  if (error) throw error;
+
+  if (!data || data.length === 0) return [];
+
+  return data.map((row) => ({
+    tagId: row.id,
+    tagName: row.name,
+    insightCount:
+      Array.isArray(row.insight_tags) && row.insight_tags.length > 0
+        ? (row.insight_tags[0] as InsightTagCount).count
+        : 0,
+  }));
 };
 
 export const userQueryOptions = () =>
-	queryOptions({
-		queryKey: userKeys.profile(),
-		queryFn: getUser,
-		retry: false,
-	});
+  queryOptions({
+    queryKey: userKeys.profile(),
+    queryFn: getUser,
+    retry: false,
+  });
 
 export const tagsQueryOptions = () =>
-	queryOptions({
-		queryKey: userKeys.tags(),
-		queryFn: getTags,
-		retry: false,
-	});
+  queryOptions({
+    queryKey: userKeys.tags(),
+    queryFn: getTags,
+    retry: false,
+  });
 
-const postUserPosition = (position: Position) =>
-	api.post<ApiResponse<string>>("/api/v1/users/position", { position });
+const postUserPosition = async (position: Position): Promise<void> => {
+  const supabase = createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) throw new Error("Unauthenticated");
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ position })
+    .eq("id", user.id);
+
+  if (error) throw error;
+};
 
 export const updatePositionMutationOptions = () =>
-	mutationOptions({ mutationFn: postUserPosition });
+  mutationOptions({ mutationFn: postUserPosition });
 
-const postLogout = () => api.post("/api/mock/auth/logout", {});
-
-export function redirectToGoogleLogin() {
-	const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-	if (!backendUrl) {
-		throw new Error("NEXT_PUBLIC_BACKEND_URL is not defined");
-	}
-	const url = new URL("/oauth2/authorization/google", backendUrl);
-	url.searchParams.set("redirectUri", window.location.origin);
-	window.location.href = url.href;
+export async function signInWithGoogle() {
+  const supabase = createClient();
+  await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
+  });
 }
 
+const signOut = async (): Promise<void> => {
+  const supabase = createClient();
+  await supabase.auth.signOut();
+};
+
 export const logoutMutationOptions = () =>
-	mutationOptions({
-		mutationFn: postLogout,
-		onSuccess: () => window.location.reload(),
-	});
+  mutationOptions({
+    mutationFn: signOut,
+    onSuccess: () => window.location.reload(),
+  });
