@@ -139,10 +139,28 @@ begin
 end;
 $$;
 
+create or replace function public.prevent_client_credit_update()
+returns trigger
+language plpgsql
+as $$
+begin
+  if auth.uid() is not null and new.credit is distinct from old.credit then
+    raise exception 'profiles.credit cannot be changed by client requests';
+  end if;
+
+  return new;
+end;
+$$;
+
 drop trigger if exists set_profiles_updated_at on public.profiles;
 create trigger set_profiles_updated_at
 before update on public.profiles
 for each row execute function public.set_updated_at();
+
+drop trigger if exists prevent_client_credit_update on public.profiles;
+create trigger prevent_client_credit_update
+before update on public.profiles
+for each row execute function public.prevent_client_credit_update();
 
 drop trigger if exists set_insights_updated_at on public.insights;
 create trigger set_insights_updated_at
@@ -212,7 +230,7 @@ for select using (id = auth.uid());
 
 drop policy if exists profiles_insert_own on public.profiles;
 create policy profiles_insert_own on public.profiles
-for insert with check (id = auth.uid());
+for insert with check (id = auth.uid() and credit = 100);
 
 drop policy if exists profiles_update_own on public.profiles;
 create policy profiles_update_own on public.profiles
