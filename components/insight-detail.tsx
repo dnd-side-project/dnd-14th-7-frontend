@@ -29,7 +29,7 @@ interface InsightDetailSectionProps {
 }
 
 export function InsightDetailSection({ insightId }: InsightDetailSectionProps) {
-	return <InsightDetailContent insightId={insightId} />;
+	return <InsightDetailContent key={insightId} insightId={insightId} />;
 }
 
 function InsightDetailError() {
