@@ -118,7 +118,17 @@ function TabLabel({ tab }: { tab: Tab }) {
 }
 
 function InsightTabLabel({ insightId }: { insightId: number }) {
-	const { data } = useQuery(insightDetailQueryOptions(insightId));
+	const { data, isError, isLoading } = useQuery(
+		insightDetailQueryOptions(insightId),
+	);
+
+	if (isLoading) {
+		return <TextTabLabel>로딩 중...</TextTabLabel>;
+	}
+
+	if (isError) {
+		return <TextTabLabel>로드 실패</TextTabLabel>;
+	}
 
 	return <TextTabLabel>{data?.title || "제목 없는 인사이트"}</TextTabLabel>;
 }

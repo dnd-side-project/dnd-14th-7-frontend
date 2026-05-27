@@ -65,12 +65,16 @@ function HomePage() {
 	const { dispatch } = useDashboardTabs();
 	const [isLatest, setIsLatest] = useState(true);
 	const sort = isLatest ? "LATEST" : "VIEWS";
-	const { data: insightsData, isLoading: isInsightsLoading } = useQuery(
-		insightsQueryOptions({ page: 0, size: 12, sort }),
-	);
-	const { data: tags = [], isLoading: isTagsLoading } = useQuery(
-		tagsQueryOptions(),
-	);
+	const {
+		data: insightsData,
+		isError: isInsightsError,
+		isLoading: isInsightsLoading,
+	} = useQuery(insightsQueryOptions({ page: 0, size: 12, sort }));
+	const {
+		data: tags = [],
+		isError: isTagsError,
+		isLoading: isTagsLoading,
+	} = useQuery(tagsQueryOptions());
 	const insights = insightsData?.content ?? [];
 	const tagPreviewMap = buildTagPreviewMap(insights);
 
@@ -119,27 +123,34 @@ function HomePage() {
 				>
 					{isInsightsLoading
 						? INSIGHT_SKELETON_KEYS.map((key) => <HomeCardSkeleton key={key} />)
-						: insights.length > 0
-							? insights.map((insight) => (
-									<HomeInsightCard
-										key={`insight-${insight.insightId}`}
-										id={insight.insightId}
-										title={getInsightTitle(insight)}
-										content={insight.confirmedContent}
-										date={formatInsightDate(insight.createdDate)}
-										tags={insight.tags.map((tag) => ({
-											id: tag.tagId,
-											name: tag.tagName,
-										}))}
-										onOpen={() => openInsight(insight.insightId)}
-									/>
-								))
-							: [
+						: isInsightsError
+							? [
 									<EmptyHomeCard
-										key="empty-insights"
-										message="아직 생성한 인사이트가 없어요."
+										key="insights-error"
+										message="인사이트를 불러오지 못했어요."
 									/>,
-								]}
+								]
+							: insights.length > 0
+								? insights.map((insight) => (
+										<HomeInsightCard
+											key={`insight-${insight.insightId}`}
+											id={insight.insightId}
+											title={getInsightTitle(insight)}
+											content={insight.confirmedContent}
+											date={formatInsightDate(insight.createdDate)}
+											tags={insight.tags.map((tag) => ({
+												id: tag.tagId,
+												name: tag.tagName,
+											}))}
+											onOpen={() => openInsight(insight.insightId)}
+										/>
+									))
+								: [
+										<EmptyHomeCard
+											key="empty-insights"
+											message="아직 생성한 인사이트가 없어요."
+										/>,
+									]}
 				</HomeInsightList>
 
 				<HomeInsightList
@@ -155,23 +166,30 @@ function HomePage() {
 				>
 					{isTagsLoading
 						? TAG_SKELETON_KEYS.map((key) => <HomeCardSkeleton key={key} />)
-						: tags.length > 0
-							? tags.map((tag) => (
-									<HomeTagCard
-										key={`tag-${tag.tagId}`}
-										id={tag.tagId}
-										name={tag.tagName}
-										insights={tagPreviewMap.get(tag.tagId) ?? []}
-										totalCount={tag.insightCount}
-										onOpen={() => openTag(tag.tagId, tag.tagName)}
-									/>
-								))
-							: [
+						: isTagsError
+							? [
 									<EmptyHomeCard
-										key="empty-tags"
-										message="아직 등록된 태그가 없어요."
+										key="tags-error"
+										message="태그를 불러오지 못했어요."
 									/>,
-								]}
+								]
+							: tags.length > 0
+								? tags.map((tag) => (
+										<HomeTagCard
+											key={`tag-${tag.tagId}`}
+											id={tag.tagId}
+											name={tag.tagName}
+											insights={tagPreviewMap.get(tag.tagId) ?? []}
+											totalCount={tag.insightCount}
+											onOpen={() => openTag(tag.tagId, tag.tagName)}
+										/>
+									))
+								: [
+										<EmptyHomeCard
+											key="empty-tags"
+											message="아직 등록된 태그가 없어요."
+										/>,
+									]}
 				</HomeInsightList>
 			</div>
 		</div>
