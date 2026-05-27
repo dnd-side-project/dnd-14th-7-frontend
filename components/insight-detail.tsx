@@ -1,10 +1,6 @@
 "use client";
 
-import {
-	useMutation,
-	useQueryClient,
-	useSuspenseQueries,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreVertical } from "lucide-react";
 import Image from "next/image";
 import {
@@ -12,12 +8,10 @@ import {
 	type KeyboardEvent,
 	type ReactNode,
 	type RefObject,
-	Suspense,
 	useContext,
 	useRef,
 	useState,
 } from "react";
-import { ErrorBoundary } from "react-error-boundary";
 import type { GetInsightResponse, InsightPiece } from "@/lib/queries/insight";
 import {
 	insightDetailQueryOptions,
@@ -35,12 +29,21 @@ interface InsightDetailSectionProps {
 }
 
 export function InsightDetailSection({ insightId }: InsightDetailSectionProps) {
+	return <InsightDetailContent insightId={insightId} />;
+}
+
+function InsightDetailError() {
 	return (
-		<ErrorBoundary fallback={<div>Error loading insight</div>}>
-			<Suspense fallback={<InsightDetailSkeleton />}>
-				<InsightDetailContent insightId={insightId} />
-			</Suspense>
-		</ErrorBoundary>
+		<div className="flex min-h-[calc(100vh-56px)] items-center justify-center px-6 text-center">
+			<div className="flex flex-col gap-3 rounded-[24px] border border-dnd-line-normal bg-white px-8 py-6 shadow-dnd-normal">
+				<h2 className="typo-heading-1 font-semibold text-dnd-label-normal">
+					인사이트를 불러올 수 없어요.
+				</h2>
+				<p className="typo-body-2 text-dnd-label-alternative">
+					삭제되었거나 접근 권한이 없는 인사이트일 수 있어요.
+				</p>
+			</div>
+		</div>
 	);
 }
 
@@ -99,12 +102,19 @@ function InsightDetailSkeleton() {
 }
 
 function InsightDetailContent({ insightId }: { insightId: number }) {
-	const [{ data }, { data: piecesData }] = useSuspenseQueries({
-		queries: [
-			insightDetailQueryOptions(insightId),
-			insightPiecesQueryOptions(insightId),
-		],
-	});
+	const detailQuery = useQuery(insightDetailQueryOptions(insightId));
+	const piecesQuery = useQuery(insightPiecesQueryOptions(insightId));
+
+	if (detailQuery.isPending || piecesQuery.isPending) {
+		return <InsightDetailSkeleton />;
+	}
+
+	if (detailQuery.isError || piecesQuery.isError) {
+		return <InsightDetailError />;
+	}
+
+	const data = detailQuery.data;
+	const piecesData = piecesQuery.data;
 
 	return (
 		<div className="flex gap-[80px] justify-center pl-[80px] pr-[24px]">
@@ -211,7 +221,7 @@ function InsightTitleRoot({
 				handleKeyDown,
 				handleTitleClick,
 				inputRef,
-				title: data.title,
+				title: data.title || "제목 없는 인사이트",
 			}}
 		>
 			{children}
@@ -250,13 +260,14 @@ function InsightTitleDisplay() {
 	if (isEditing) return null;
 
 	return (
-		<h1
-			className="typo-title-1 font-bold text-[var(--dnd-label-strong)] cursor-pointer hover:text-[var(--dnd-primary)] transition-colors"
+		<button
+			type="button"
+			className="text-left typo-title-1 font-bold text-[var(--dnd-label-strong)] cursor-pointer hover:text-[var(--dnd-primary)] transition-colors"
 			onClick={handleTitleClick}
 			title="클릭하여 제목 수정"
 		>
 			{title}
-		</h1>
+		</button>
 	);
 }
 
@@ -354,7 +365,7 @@ function MainInsightBox({
 		},
 	});
 
-	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === "Enter" && !e.nativeEvent.isComposing && inputValue.trim()) {
 			e.preventDefault();
 			mutate({ content: inputValue.trim() });
@@ -388,13 +399,13 @@ function MainInsightBox({
 				))}
 				{isInputVisible && (
 					<input
+						ref={(node) => node?.focus()}
 						className="w-full rounded-[16px] border-2 border-[var(--dnd-primary)] bg-white px-6 py-4 typo-body-1 text-[var(--dnd-label-normal)] placeholder-[var(--dnd-label-assistive)] focus:outline-none resize-none"
 						placeholder="새로운 인사이트를 입력하세요"
 						value={inputValue}
 						onChange={(e) => setInputValue(e.target.value)}
 						onKeyDown={handleKeyDown}
 						disabled={isPending}
-						autoFocus
 					/>
 				)}
 			</div>

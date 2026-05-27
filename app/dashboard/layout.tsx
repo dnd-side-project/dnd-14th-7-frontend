@@ -4,8 +4,8 @@ import {
 	QueryClient,
 } from "@tanstack/react-query";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { type Tag, type User, userKeys } from "@/lib/queries/user";
 import { createClient } from "@/lib/supabase/server";
-import { userKeys, type User, type Tag } from "@/lib/queries/user";
 import { DashboardMain } from "./_components/dashboard-main";
 import { DashboardTabBar } from "./_components/dashboard-tab-bar";
 import { ClientBoundary } from "./_components/error-wrapper";
@@ -29,7 +29,7 @@ export default async function DashboardLayout({
 			.from("profiles")
 			.select("nickname, email, credit, position")
 			.eq("id", authUser.id)
-			.single();
+			.maybeSingle();
 
 		if (profile) {
 			queryClient.setQueryData<User>(userKeys.profile(), {

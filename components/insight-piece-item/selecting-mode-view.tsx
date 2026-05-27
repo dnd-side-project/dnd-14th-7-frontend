@@ -41,14 +41,14 @@ export function SelectingModeView({
 						: "bg-[var(--dnd-bg-mint2)] text-[var(--dnd-label-strong)] hover:bg-[#e1f5f3]";
 
 				return (
-					// biome-ignore lint/a11y/useKeyWithClickEvents: Selection item
-					<div
-						key={candidateIndex}
+					<button
+						type="button"
+						key={candidate}
 						onClick={() => setSelectedCandidateIndex(candidateIndex)}
-						className={`p-4 rounded-[16px] cursor-pointer transition-colors text-[20px] font-medium leading-[1.4] tracking-[-0.24px] whitespace-pre-wrap ${candidateStyle}`}
+						className={`p-4 rounded-[16px] cursor-pointer transition-colors text-left text-[20px] font-medium leading-[1.4] tracking-[-0.24px] whitespace-pre-wrap ${candidateStyle}`}
 					>
 						{candidate}
-					</div>
+					</button>
 				);
 			})}
 			<div className="flex justify-end items-center gap-2">

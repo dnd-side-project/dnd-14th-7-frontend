@@ -135,12 +135,23 @@ function InsightCard({ insight }: { insight: InsightSummary }) {
 	);
 }
 
+const TAG_PAGE_SKELETON_KEYS = [
+	"tag-page-skeleton-1",
+	"tag-page-skeleton-2",
+	"tag-page-skeleton-3",
+	"tag-page-skeleton-4",
+	"tag-page-skeleton-5",
+	"tag-page-skeleton-6",
+	"tag-page-skeleton-7",
+	"tag-page-skeleton-8",
+];
+
 function TagPageSkeleton() {
 	return (
 		<div className="grid grid-cols-4 gap-[24px] animate-pulse">
-			{Array.from({ length: 8 }).map((_, i) => (
+			{TAG_PAGE_SKELETON_KEYS.map((key) => (
 				<div
-					key={`skeleton-${i}`}
+					key={key}
 					className="flex flex-col p-[24px] gap-[28px] bg-white rounded-[32px] border border-dnd-line-normal"
 				>
 					<div className="flex flex-col gap-[4px]">
