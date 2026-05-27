@@ -9,6 +9,7 @@ import {
 	type ReactNode,
 	type RefObject,
 	useContext,
+	useEffect,
 	useRef,
 	useState,
 } from "react";
@@ -34,7 +35,7 @@ export function InsightDetailSection({ insightId }: InsightDetailSectionProps) {
 
 function InsightDetailError() {
 	return (
-		<div className="flex min-h-[calc(100vh-56px items-center justify-center px-6 text-center">
+		<div className="flex min-h-[calc(100vh-56px)] items-center justify-center px-6 text-center">
 			<div className="flex flex-col gap-3 rounded-3xl border border-dnd-line-normal bg-white px-8 py-6 shadow-dnd-normal">
 				<h2 className="typo-heading-1 font-semibold text-dnd-label-normal">
 					인사이트를 불러올 수 없어요.
@@ -260,10 +261,10 @@ function InsightTitleDisplay() {
 	if (isEditing) return null;
 
 	return (
-		<h1>
+		<h1 className="typo-title-1 font-bold text-dnd-label-strong">
 			<button
 				type="button"
-				className="text-left typo-title-1 font-bold text-dnd-label-strong cursor-pointer hover:text-dnd-primary transition-colors"
+				className="cursor-pointer text-left transition-colors hover:text-dnd-primary"
 				onClick={handleTitleClick}
 				title="클릭하여 제목 수정"
 			>
@@ -353,6 +354,7 @@ function MainInsightBox({
 }) {
 	const [isInputVisible, setIsInputVisible] = useState(false);
 	const [inputValue, setInputValue] = useState("");
+	const inputRef = useRef<HTMLInputElement>(null);
 	const queryClient = useQueryClient();
 	const { mutate, isPending } = useMutation({
 		...insightPieceCreationMutationOptions(insightId),
@@ -364,6 +366,12 @@ function MainInsightBox({
 			setIsInputVisible(false);
 		},
 	});
+
+	useEffect(() => {
+		if (isInputVisible) {
+			inputRef.current?.focus();
+		}
+	}, [isInputVisible]);
 
 	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === "Enter" && !e.nativeEvent.isComposing && inputValue.trim()) {
@@ -397,7 +405,7 @@ function MainInsightBox({
 				))}
 				{isInputVisible && (
 					<input
-						ref={(node) => node?.focus()}
+						ref={inputRef}
 						className="w-full rounded-2xl border-2 border-dnd-primary bg-white px-6 py-4 typo-body-1 text-dnd-label-normal placeholder-dnd-label-assistive focus:outline-none resize-none"
 						placeholder="새로운 인사이트를 입력하세요"
 						value={inputValue}
