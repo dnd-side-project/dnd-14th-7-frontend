@@ -260,14 +260,16 @@ function InsightTitleDisplay() {
 	if (isEditing) return null;
 
 	return (
-		<button
-			type="button"
-			className="text-left typo-title-1 font-bold text-dnd-label-strong cursor-pointer hover:text-dnd-primary transition-colors"
-			onClick={handleTitleClick}
-			title="클릭하여 제목 수정"
-		>
-			{title}
-		</button>
+		<h1>
+			<button
+				type="button"
+				className="text-left typo-title-1 font-bold text-dnd-label-strong cursor-pointer hover:text-dnd-primary transition-colors"
+				onClick={handleTitleClick}
+				title="클릭하여 제목 수정"
+			>
+				{title}
+			</button>
+		</h1>
 	);
 }
 
@@ -337,9 +339,7 @@ function InitialThoughtBox({ initialThought }: { initialThought: string }) {
 			<span className="bg-dnd-fill-normal text-dnd-label-alternative rounded-lg px-2 py-1 typo-caption-1 font-medium shrink-0">
 				첫 생각
 			</span>
-			<p className="typo-body-1 text-dnd-label-normal">
-				{initialThought}
-			</p>
+			<p className="typo-body-1 text-dnd-label-normal">{initialThought}</p>
 		</div>
 	);
 }
@@ -377,9 +377,7 @@ function MainInsightBox({
 			<div className="group flex items-center justify-between py-4 px-5 gap-2">
 				<span className="typo-headline-2 font-bold text-dnd-label-neutral">
 					인사이트{" "}
-					<span className="text-dnd-primary">
-						{insightPieces.length}
-					</span>
+					<span className="text-dnd-primary">{insightPieces.length}</span>
 				</span>
 				<button
 					type="button"
