@@ -113,7 +113,14 @@ const getInsights = async (
 	params: InsightsParams = {},
 ): Promise<InsightsData> => {
 	const supabase = createClient();
-	const { page = 0, size = 20, sort = "LATEST", tag } = params;
+	const {
+		page: rawPage = 0,
+		size: rawSize = 20,
+		sort = "LATEST",
+		tag,
+	} = params;
+	const page = Math.max(0, Number(rawPage) || 0);
+	const size = Math.max(1, Number(rawSize) || 20);
 
 	const insightTagsSelect =
 		tag !== undefined
