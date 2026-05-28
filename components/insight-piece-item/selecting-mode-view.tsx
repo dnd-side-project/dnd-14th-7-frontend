@@ -24,7 +24,7 @@ export function SelectingModeView({
 	>(null);
 
 	return (
-		<div className="bg-white rounded-[24px] p-6 flex flex-col gap-3">
+		<div className="bg-white rounded-3xl p-6 flex flex-col gap-3">
 			<PieceHeader
 				index={index}
 				createdType={piece.createdType}
@@ -41,20 +41,21 @@ export function SelectingModeView({
 						: "bg-[var(--dnd-bg-mint2)] text-[var(--dnd-label-strong)] hover:bg-[#e1f5f3]";
 
 				return (
-					// biome-ignore lint/a11y/useKeyWithClickEvents: Selection item
-					<div
-						key={candidateIndex}
+					<button
+						type="button"
+						// biome-ignore lint/suspicious/noArrayIndexKey: candidate text can be duplicated, so the local index disambiguates options.
+						key={`${candidate}-${candidateIndex}`}
 						onClick={() => setSelectedCandidateIndex(candidateIndex)}
-						className={`p-4 rounded-[16px] cursor-pointer transition-colors text-[20px] font-medium leading-[1.4] tracking-[-0.24px] whitespace-pre-wrap ${candidateStyle}`}
+						className={`p-4 rounded-2xl cursor-pointer transition-colors text-left text-[20px] font-medium leading-[1.4] tracking-[-0.24px] whitespace-pre-wrap ${candidateStyle}`}
 					>
 						{candidate}
-					</div>
+					</button>
 				);
 			})}
 			<div className="flex justify-end items-center gap-2">
 				<button
 					type="button"
-					className="px-7 py-3 rounded-[12px] typo-body-1 font-medium bg-[var(--dnd-bg-alternative)] text-[var(--dnd-label-neutral)] hover:bg-[#ebebeb] transition-colors"
+					className="px-7 py-3 rounded-[12px] typo-body-1 font-medium bg-dnd-bg-alternative text-[var(--dnd-label-neutral)] hover:bg-[#ebebeb] transition-colors"
 					onClick={onCancel}
 				>
 					취소
@@ -64,7 +65,7 @@ export function SelectingModeView({
 					className={`px-7 py-3 rounded-[12px] typo-body-1 font-semibold transition-colors ${
 						selectedCandidateIndex !== null
 							? "bg-[#51ccbd] text-white hover:bg-[#43bfb0]"
-							: "bg-[var(--dnd-interaction-disable)] text-[var(--dnd-label-assistive)] cursor-not-allowed"
+							: "bg-dnd-interaction-disable text-dnd-label-assistive cursor-not-allowed"
 					}`}
 					onClick={() => {
 						if (selectedCandidateIndex !== null) {

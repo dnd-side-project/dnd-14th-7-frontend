@@ -1,10 +1,8 @@
 "use client";
 
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import Image from "next/image";
-import { Suspense } from "react";
-import { ErrorBoundary } from "react-error-boundary";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import { insightDetailQueryOptions } from "@/lib/queries/insight";
@@ -109,13 +107,7 @@ function TabLabel({ tab }: { tab: Tab }) {
 		case "tag":
 			return <TagTabLabel name={tab.name ?? ""} />;
 		case "insight":
-			return (
-				<ErrorBoundary fallback={<TextTabLabel>인사이트</TextTabLabel>}>
-					<Suspense fallback={<TextTabLabel>인사이트 생성 중...</TextTabLabel>}>
-						<InsightTabLabel insightId={Number(tab.id)} />
-					</Suspense>
-				</ErrorBoundary>
-			);
+			return <InsightTabLabel insightId={Number(tab.id)} />;
 		case "new":
 			return <TextTabLabel>새 페이지</TextTabLabel>;
 		case "trash":
@@ -126,8 +118,19 @@ function TabLabel({ tab }: { tab: Tab }) {
 }
 
 function InsightTabLabel({ insightId }: { insightId: number }) {
-	const { data } = useSuspenseQuery(insightDetailQueryOptions(insightId));
-	return <TextTabLabel>{data.title || "인사이트"}</TextTabLabel>;
+	const { data, isError, isLoading } = useQuery(
+		insightDetailQueryOptions(insightId),
+	);
+
+	if (isLoading) {
+		return <TextTabLabel>로딩 중...</TextTabLabel>;
+	}
+
+	if (isError) {
+		return <TextTabLabel>로드 실패</TextTabLabel>;
+	}
+
+	return <TextTabLabel>{data?.title || "제목 없는 인사이트"}</TextTabLabel>;
 }
 
 function TextTabLabel({ children }: { children: React.ReactNode }) {

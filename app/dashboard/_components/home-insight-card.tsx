@@ -15,6 +15,7 @@ export interface HomeInsightCardProps {
 	date: string;
 	tags: { id: number; name: string; colorClass?: string }[];
 	className?: string;
+	onOpen?: () => void;
 }
 
 export function HomeInsightCard({
@@ -24,14 +25,23 @@ export function HomeInsightCard({
 	date,
 	tags,
 	className,
+	onOpen,
 }: HomeInsightCardProps) {
 	return (
 		<div
 			className={cn(
-				"flex flex-col p-[24px] items-start gap-[28px] w-[calc(25%-18px)] shrink-0 bg-white rounded-[24px] border border-dnd-line-alternative shadow-dnd-normal group relative",
+				"relative flex h-[292px] w-[260px] shrink-0 flex-col items-start gap-[28px] rounded-[24px] border border-dnd-line-alternative bg-white p-[24px] shadow-dnd-normal group",
 				className,
 			)}
 		>
+			{onOpen && (
+				<button
+					type="button"
+					className="absolute inset-0 z-10 rounded-[24px] text-left"
+					onClick={onOpen}
+					aria-label={`${title || `인사이트 ${id}`} 열기`}
+				/>
+			)}
 			<div className="flex flex-col items-start gap-[8px] self-stretch w-full mb-0">
 				<div className="flex justify-between items-start self-stretch w-full">
 					<h3 className="typo-headline-1 font-semibold text-dnd-label-strong line-clamp-1">
@@ -41,7 +51,7 @@ export function HomeInsightCard({
 						<DropdownMenuTrigger asChild>
 							<button
 								type="button"
-								className="text-dnd-label-alternative p-1 hover:bg-dnd-bg-alternative rounded-full transition-colors"
+								className="relative z-20 text-dnd-label-alternative p-1 hover:bg-dnd-bg-alternative rounded-full transition-colors"
 								aria-label="메뉴"
 							>
 								<Image
@@ -70,11 +80,11 @@ export function HomeInsightCard({
 				</span>
 			</div>
 
-			<p className="typo-body-2 text-dnd-label-neutral line-clamp-3 self-stretch break-keep">
+			<p className="typo-body-2 min-h-[66px] text-dnd-label-neutral line-clamp-3 self-stretch break-keep">
 				{content}
 			</p>
 
-			<div className="flex flex-wrap gap-[8px] items-start self-stretch w-full">
+			<div className="mt-auto flex max-h-[68px] flex-wrap gap-[8px] items-start self-stretch w-full overflow-hidden">
 				{tags.map((tag) => (
 					<span
 						key={tag.id}

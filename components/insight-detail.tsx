@@ -1,10 +1,6 @@
 "use client";
 
-import {
-	useMutation,
-	useQueryClient,
-	useSuspenseQueries,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreVertical } from "lucide-react";
 import Image from "next/image";
 import {
@@ -12,12 +8,11 @@ import {
 	type KeyboardEvent,
 	type ReactNode,
 	type RefObject,
-	Suspense,
 	useContext,
+	useEffect,
 	useRef,
 	useState,
 } from "react";
-import { ErrorBoundary } from "react-error-boundary";
 import type { GetInsightResponse, InsightPiece } from "@/lib/queries/insight";
 import {
 	insightDetailQueryOptions,
@@ -35,63 +30,72 @@ interface InsightDetailSectionProps {
 }
 
 export function InsightDetailSection({ insightId }: InsightDetailSectionProps) {
+	return <InsightDetailContent key={insightId} insightId={insightId} />;
+}
+
+function InsightDetailError() {
 	return (
-		<ErrorBoundary fallback={<div>Error loading insight</div>}>
-			<Suspense fallback={<InsightDetailSkeleton />}>
-				<InsightDetailContent insightId={insightId} />
-			</Suspense>
-		</ErrorBoundary>
+		<div className="flex min-h-[calc(100vh-56px)] items-center justify-center px-6 text-center">
+			<div className="flex flex-col gap-3 rounded-3xl border border-dnd-line-normal bg-white px-8 py-6 shadow-dnd-normal">
+				<h2 className="typo-heading-1 font-semibold text-dnd-label-normal">
+					인사이트를 불러올 수 없어요.
+				</h2>
+				<p className="typo-body-2 text-dnd-label-alternative">
+					삭제되었거나 접근 권한이 없는 인사이트일 수 있어요.
+				</p>
+			</div>
+		</div>
 	);
 }
 
 function InsightDetailSkeleton() {
 	return (
-		<div className="flex gap-[80px] justify-center pl-[80px] pr-[24px] animate-pulse">
-			<div className="w-full flex flex-col gap-6 pt-[80px] pb-[80px]">
+		<div className="flex gap-20 justify-center pl-20 pr-6 animate-pulse">
+			<div className="w-full flex flex-col gap-6 pt-20 pb-20">
 				<div className="flex justify-between items-start">
 					<div className="flex flex-col gap-6 w-full">
-						<div className="h-10 w-2/3 bg-[var(--dnd-fill-strong)] rounded-md" />
+						<div className="h-10 w-2/3 bg-dnd-fill-strong rounded-md" />
 						<div className="flex flex-col gap-4">
-							<div className="h-5 w-1/3 bg-[var(--dnd-fill-normal)] rounded-md" />
+							<div className="h-5 w-1/3 bg-dnd-fill-normal rounded-md" />
 							<div className="flex gap-2">
-								<div className="h-7 w-16 bg-[var(--dnd-fill-normal)] rounded-[10px]" />
-								<div className="h-7 w-16 bg-[var(--dnd-fill-normal)] rounded-[10px]" />
-								<div className="h-7 w-16 bg-[var(--dnd-fill-normal)] rounded-[10px]" />
+								<div className="h-7 w-16 bg-dnd-fill-normal rounded-[10px]" />
+								<div className="h-7 w-16 bg-dnd-fill-normal rounded-[10px]" />
+								<div className="h-7 w-16 bg-dnd-fill-normal rounded-[10px]" />
 							</div>
 						</div>
 					</div>
-					<div className="w-6 h-6 bg-[var(--dnd-fill-normal)] rounded-full shrink-0" />
+					<div className="w-6 h-6 bg-dnd-fill-normal rounded-full shrink-0" />
 				</div>
 
-				<div className="bg-[var(--dnd-bg-alternative)] rounded-3xl p-6 h-[72px] w-full flex items-center gap-4">
-					<div className="h-6 w-16 bg-[var(--dnd-fill-normal)] rounded-[4px]" />
-					<div className="h-6 w-2/3 bg-[var(--dnd-fill-normal)] rounded-md" />
+				<div className="bg-dnd-bg-alternative rounded-3xl p-6 h-18 w-full flex items-center gap-4">
+					<div className="h-6 w-16 bg-dnd-fill-normal rounded-lg" />
+					<div className="h-6 w-2/3 bg-dnd-fill-normal rounded-md" />
 				</div>
 
 				<div className="flex flex-col gap-3">
-					<div className="h-8 w-24 bg-[var(--dnd-fill-normal)] rounded-md" />
-					<div className="bg-[var(--dnd-bg-insight-box)] rounded-[32px] p-6 gap-4 flex flex-col">
-						<div className="bg-white rounded-[24px] p-6 h-32 w-full" />
+					<div className="h-8 w-24 bg-dnd-fill-normal rounded-md" />
+					<div className="bg-dnd-bg-insight-box rounded-4xl p-6 gap-4 flex flex-col">
+						<div className="bg-white rounded-3xl p-6 h-32 w-full" />
 					</div>
 				</div>
 
 				<div className="flex flex-col gap-3">
-					<div className="h-5 w-10 bg-[var(--dnd-fill-normal)] rounded-md" />
-					<div className="h-[80px] w-full bg-[var(--dnd-fill-normal)] rounded-xl border border-[var(--dnd-line-normal)]" />
+					<div className="h-5 w-10 bg-dnd-fill-normal rounded-md" />
+					<div className="h-20 w-full bg-dnd-fill-normal rounded-xl border border-dnd-line-normal" />
 				</div>
 
 				<div className="flex flex-col gap-3">
-					<div className="h-5 w-10 bg-[var(--dnd-fill-normal)] rounded-md" />
+					<div className="h-5 w-10 bg-dnd-fill-normal rounded-md" />
 					<div className="flex gap-3">
-						<div className="h-[46px] flex-[1] bg-[var(--dnd-fill-normal)] rounded-xl border border-[var(--dnd-line-normal)]" />
-						<div className="h-[46px] flex-[2] bg-[var(--dnd-fill-normal)] rounded-xl border border-[var(--dnd-line-normal)]" />
-						<div className="h-[46px] w-[86px] bg-[var(--dnd-fill-normal)] rounded-xl" />
+						<div className="h-11.5 flex-1 bg-dnd-fill-normal rounded-xl border border-dnd-line-normal" />
+						<div className="h-11.5 flex-2 bg-dnd-fill-normal rounded-xl border border-dnd-line-normal" />
+						<div className="h-11.5 w-21.5 bg-dnd-fill-normal rounded-xl" />
 					</div>
 				</div>
 			</div>
 
 			{/* Q&A Panel Skeleton */}
-			<div className="pt-[24px] pb-[24px]">
+			<div className="pt-6 pb-6">
 				<InsightQnAPanelSkeleton />
 			</div>
 		</div>
@@ -99,23 +103,30 @@ function InsightDetailSkeleton() {
 }
 
 function InsightDetailContent({ insightId }: { insightId: number }) {
-	const [{ data }, { data: piecesData }] = useSuspenseQueries({
-		queries: [
-			insightDetailQueryOptions(insightId),
-			insightPiecesQueryOptions(insightId),
-		],
-	});
+	const detailQuery = useQuery(insightDetailQueryOptions(insightId));
+	const piecesQuery = useQuery(insightPiecesQueryOptions(insightId));
+
+	if (detailQuery.isPending || piecesQuery.isPending) {
+		return <InsightDetailSkeleton />;
+	}
+
+	if (detailQuery.isError || piecesQuery.isError) {
+		return <InsightDetailError />;
+	}
+
+	const data = detailQuery.data;
+	const piecesData = piecesQuery.data;
 
 	return (
-		<div className="flex gap-[80px] justify-center pl-[80px] pr-[24px]">
-			<div className="w-full flex flex-col gap-6 pt-[80px] pb-[80px]">
+		<div className="flex gap-20 justify-center pl-20 pr-6">
+			<div className="w-full flex flex-col gap-6 pt-20 pb-20">
 				<InsightHeader data={data} />
 				<InitialThoughtBox initialThought={data.initialThought} />
 				<MainInsightBox insightId={insightId} insightPieces={piecesData} />
 				<MemoSection />
 				<LinkSection />
 			</div>
-			<div className="pt-[24px] pb-[24px]">
+			<div className="pt-6 pb-6">
 				<InsightQnAPanel insightId={insightId} />
 			</div>
 		</div>
@@ -211,7 +222,7 @@ function InsightTitleRoot({
 				handleKeyDown,
 				handleTitleClick,
 				inputRef,
-				title: data.title,
+				title: data.title || "제목 없는 인사이트",
 			}}
 		>
 			{children}
@@ -239,7 +250,7 @@ function InsightTitleEditing() {
 			onChange={(e) => setEditValue(e.target.value)}
 			onBlur={handleSubmit}
 			onKeyDown={handleKeyDown}
-			className="typo-title-1 font-bold text-[var(--dnd-label-strong)] bg-transparent border-2 border-[var(--dnd-primary)] rounded-xl px-4 py-2 outline-none"
+			className="typo-title-1 font-bold text-dnd-label-strong bg-transparent border-2 border-dnd-primary rounded-xl px-4 py-2 outline-none"
 		/>
 	);
 }
@@ -250,12 +261,15 @@ function InsightTitleDisplay() {
 	if (isEditing) return null;
 
 	return (
-		<h1
-			className="typo-title-1 font-bold text-[var(--dnd-label-strong)] cursor-pointer hover:text-[var(--dnd-primary)] transition-colors"
-			onClick={handleTitleClick}
-			title="클릭하여 제목 수정"
-		>
-			{title}
+		<h1 className="typo-title-1 font-bold text-dnd-label-strong">
+			<button
+				type="button"
+				className="cursor-pointer text-left transition-colors hover:text-dnd-primary"
+				onClick={handleTitleClick}
+				title="클릭하여 제목 수정"
+			>
+				{title}
+			</button>
 		</h1>
 	);
 }
@@ -296,16 +310,16 @@ function InsightHeader({ data }: { data: GetInsightResponse }) {
 					<InsightTitle.Display />
 				</InsightTitle>
 				<div className="flex flex-col gap-4">
-					<div className="flex items-center gap-2 typo-body-2 text-[var(--dnd-label-alternative)]">
+					<div className="flex items-center gap-2 typo-body-2 text-dnd-label-alternative">
 						<span>{createdDateStr}</span>
-						<span className="w-[1px] h-3 bg-[var(--dnd-line-normal)]" />
+						<span className="w-px h-3 bg-dnd-line-normal" />
 						<span>{modifiedDateStr}</span>
 					</div>
-					<div className="flex gap-[8px]">
+					<div className="flex gap-2">
 						{data.tags.map((tag) => (
 							<span
 								key={tag.tagId}
-								className={`rounded-[10px] px-[11px] py-[7px] typo-caption-1 font-bold ${getTagStyle(tag.tagId)}`}
+								className={`rounded-[10px] px-2.75 py-1.75 typo-caption-1 font-bold ${getTagStyle(tag.tagId)}`}
 							>
 								{tag.tagName}
 							</span>
@@ -313,7 +327,7 @@ function InsightHeader({ data }: { data: GetInsightResponse }) {
 					</div>
 				</div>
 			</div>
-			<button type="button" className="p-2 text-[var(--dnd-label-alternative)]">
+			<button type="button" className="p-2 text-dnd-label-alternative">
 				<MoreVertical size={24} />
 			</button>
 		</div>
@@ -322,13 +336,11 @@ function InsightHeader({ data }: { data: GetInsightResponse }) {
 
 function InitialThoughtBox({ initialThought }: { initialThought: string }) {
 	return (
-		<div className="bg-[var(--dnd-bg-alternative)] rounded-3xl px-6 py-5 flex items-center gap-4">
-			<span className="bg-[var(--dnd-fill-normal)] text-[var(--dnd-label-alternative)] rounded-[4px] px-2 py-1 typo-caption-1 font-medium shrink-0">
+		<div className="bg-dnd-bg-alternative rounded-3xl px-6 py-5 flex items-center gap-4">
+			<span className="bg-dnd-fill-normal text-dnd-label-alternative rounded-lg px-2 py-1 typo-caption-1 font-medium shrink-0">
 				첫 생각
 			</span>
-			<p className="typo-body-1 text-[var(--dnd-label-normal)]">
-				{initialThought}
-			</p>
+			<p className="typo-body-1 text-dnd-label-normal">{initialThought}</p>
 		</div>
 	);
 }
@@ -342,6 +354,7 @@ function MainInsightBox({
 }) {
 	const [isInputVisible, setIsInputVisible] = useState(false);
 	const [inputValue, setInputValue] = useState("");
+	const inputRef = useRef<HTMLInputElement>(null);
 	const queryClient = useQueryClient();
 	const { mutate, isPending } = useMutation({
 		...insightPieceCreationMutationOptions(insightId),
@@ -354,7 +367,13 @@ function MainInsightBox({
 		},
 	});
 
-	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+	useEffect(() => {
+		if (isInputVisible) {
+			inputRef.current?.focus();
+		}
+	}, [isInputVisible]);
+
+	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === "Enter" && !e.nativeEvent.isComposing && inputValue.trim()) {
 			e.preventDefault();
 			mutate({ content: inputValue.trim() });
@@ -363,12 +382,10 @@ function MainInsightBox({
 
 	return (
 		<div className="flex flex-col gap-3">
-			<div className="group flex items-center justify-between py-[16px] px-[20px] gap-[8px]">
-				<span className="typo-headline-2 font-bold text-[var(--dnd-label-neutral)]">
+			<div className="group flex items-center justify-between py-4 px-5 gap-2">
+				<span className="typo-headline-2 font-bold text-dnd-label-neutral">
 					인사이트{" "}
-					<span className="text-[var(--dnd-primary)]">
-						{insightPieces.length}
-					</span>
+					<span className="text-dnd-primary">{insightPieces.length}</span>
 				</span>
 				<button
 					type="button"
@@ -378,7 +395,7 @@ function MainInsightBox({
 					<Image src="/plus.svg" alt="추가" width={24} height={24} />
 				</button>
 			</div>
-			<div className="rounded-[32px] p-6 flex flex-col gap-4 bg-[var(--dnd-bg-insight-box)] relative z-50">
+			<div className="rounded-4xl p-6 flex flex-col gap-4 bg-dnd-bg-insight-box relative z-50">
 				{insightPieces.map((piece, index) => (
 					<InsightPieceItem
 						key={piece.insightPieceId}
@@ -388,13 +405,13 @@ function MainInsightBox({
 				))}
 				{isInputVisible && (
 					<input
-						className="w-full rounded-[16px] border-2 border-[var(--dnd-primary)] bg-white px-6 py-4 typo-body-1 text-[var(--dnd-label-normal)] placeholder-[var(--dnd-label-assistive)] focus:outline-none resize-none"
+						ref={inputRef}
+						className="w-full rounded-2xl border-2 border-dnd-primary bg-white px-6 py-4 typo-body-1 text-dnd-label-normal placeholder-dnd-label-assistive focus:outline-none resize-none"
 						placeholder="새로운 인사이트를 입력하세요"
 						value={inputValue}
 						onChange={(e) => setInputValue(e.target.value)}
 						onKeyDown={handleKeyDown}
 						disabled={isPending}
-						autoFocus
 					/>
 				)}
 			</div>
@@ -407,13 +424,13 @@ function MemoSection() {
 		<div className="flex flex-col gap-3">
 			<label
 				htmlFor="memo"
-				className="typo-label-1 font-bold text-[var(--dnd-label-alternative)]"
+				className="typo-label-1 font-bold text-dnd-label-alternative"
 			>
 				메모
 			</label>
 			<textarea
 				id="memo"
-				className="w-full bg-transparent border border-[var(--dnd-line-normal)] rounded-xl p-4 min-h-[80px] placeholder-[var(--dnd-label-assistive)] typo-body-2 focus:outline-none focus:border-[var(--dnd-primary)] transition-colors resize-none"
+				className="w-full bg-transparent border border-dnd-line-normal rounded-xl p-4 min-h-20 placeholder-dnd-label-assistive typo-body-2 focus:outline-none focus:border-dnd-primary transition-colors resize-none"
 				placeholder="상황, 참고내용 등 추가 메모를 입력해주세요."
 			/>
 		</div>
@@ -425,7 +442,7 @@ function LinkSection() {
 		<div className="flex flex-col gap-3">
 			<label
 				htmlFor="link"
-				className="typo-label-1 font-bold text-[var(--dnd-label-alternative)]"
+				className="typo-label-1 font-bold text-dnd-label-alternative"
 			>
 				링크
 			</label>
@@ -434,19 +451,19 @@ function LinkSection() {
 					type="text"
 					id="link-title"
 					name="link-title"
-					className="flex-[1] bg-transparent border border-[var(--dnd-line-normal)] rounded-xl px-4 py-3 placeholder-[var(--dnd-label-assistive)] typo-body-2 focus:outline-none focus:border-[var(--dnd-primary)] transition-colors"
+					className="flex-1 bg-transparent border border-dnd-line-normal rounded-xl px-4 py-3 placeholder-dnd-label-assistive typo-body-2 focus:outline-none focus:border-dnd-primary transition-colors"
 					placeholder="링크 제목"
 				/>
 				<input
 					type="text"
 					id="link-url"
 					name="link-url"
-					className="flex-[2] bg-transparent border border-[var(--dnd-line-normal)] rounded-xl px-4 py-3 placeholder-[var(--dnd-label-assistive)] typo-body-2 focus:outline-none focus:border-[var(--dnd-primary)] transition-colors"
+					className="flex-2 bg-transparent border border-dnd-line-normal rounded-xl px-4 py-3 placeholder-dnd-label-assistive typo-body-2 focus:outline-none focus:border-dnd-primary transition-colors"
 					placeholder="https://"
 				/>
 				<button
 					type="button"
-					className="bg-[var(--dnd-bg-alternative)] text-[var(--dnd-label-assistant)] px-6 rounded-xl typo-body-2 font-medium hover:bg-[var(--dnd-fill-normal)] transition-colors"
+					className="bg-dnd-bg-alternative text-dnd-label-assistant px-6 rounded-xl typo-body-2 font-medium hover:bg-dnd-fill-normal transition-colors"
 				>
 					추가하기
 				</button>

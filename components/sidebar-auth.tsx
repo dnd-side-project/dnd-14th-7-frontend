@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { CircleAlert } from "lucide-react";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -8,7 +8,6 @@ import { PositionSelectModal } from "@/components/position-select-modal";
 import { Button } from "@/components/ui/button";
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import {
-	logoutMutationOptions,
 	signInWithGoogle,
 	type Tag,
 	tagsQueryOptions,

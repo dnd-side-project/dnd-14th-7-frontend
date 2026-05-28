@@ -1,14 +1,17 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { overlay } from "overlay-kit";
 import { useState } from "react";
 import { LoginModal } from "@/components/login-modal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { insightCreationMutationOptions } from "@/lib/queries/insight";
+import {
+	insightCreationMutationOptions,
+	insightKeys,
+} from "@/lib/queries/insight";
 import type { User } from "@/lib/queries/user";
-import { userQueryOptions } from "@/lib/queries/user";
+import { userKeys, userQueryOptions } from "@/lib/queries/user";
 
 const PLACEHOLDER_BY_POSITION: Record<
 	string,
@@ -103,6 +106,7 @@ function AuthenticatedInsightInput({
 	titleClassName,
 }: AuthenticatedInsightInputProps) {
 	const [value, setValue] = useState("");
+	const queryClient = useQueryClient();
 	const content = getPositionContent(user.position);
 	const { mutate: createInsight, isPending } = useMutation(
 		insightCreationMutationOptions(),
@@ -116,6 +120,8 @@ function AuthenticatedInsightInput({
 			{
 				onSuccess: (data) => {
 					setValue("");
+					queryClient.invalidateQueries({ queryKey: insightKeys.all });
+					queryClient.invalidateQueries({ queryKey: userKeys.tags() });
 					onSuccess?.(data.insightId);
 				},
 				onError: (error) => {
