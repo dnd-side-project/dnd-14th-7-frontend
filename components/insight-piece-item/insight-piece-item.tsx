@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import type { InsightPiece } from "@/lib/queries/insight";
 import { DefaultModeView } from "./default-mode-view";
 import { LoadingModeView } from "./loading-mode-view";
@@ -39,9 +38,13 @@ function createMockCandidates(content: string): RetryCandidate[] {
 export function InsightPieceItem({
 	piece,
 	index,
+	onRetryStart,
+	onRetryEnd,
 }: {
 	piece: InsightPiece;
 	index: number;
+	onRetryStart: (pieceId: number) => void;
+	onRetryEnd: () => void;
 }) {
 	const [retryState, setRetryState] = useState<RetryState>({ status: "idle" });
 	const [generatedContents, setGeneratedContents] = useState<string[]>([]);
@@ -64,6 +67,7 @@ export function InsightPieceItem({
 
 	const handleRetry = useCallback(() => {
 		clearRetryTimer();
+		onRetryStart(piece.insightPieceId);
 		setRetryState({ status: "loading" });
 		timeoutRef.current = setTimeout(() => {
 			setRetryState({
@@ -72,19 +76,24 @@ export function InsightPieceItem({
 			});
 			timeoutRef.current = null;
 		}, RETRY_DELAY_MS);
-	}, [clearRetryTimer, piece.content]);
+	}, [clearRetryTimer, onRetryStart, piece.content, piece.insightPieceId]);
 
 	const handleCancel = useCallback(() => {
 		clearRetryTimer();
 		setRetryState({ status: "idle" });
-	}, [clearRetryTimer]);
+		onRetryEnd();
+	}, [clearRetryTimer, onRetryEnd]);
 
-	const handleSelect = useCallback((content: string) => {
-		setGeneratedContents((prev) => [...prev, content]);
-		setRetryState({ status: "idle" });
-	}, []);
+	const handleSelect = useCallback(
+		(content: string) => {
+			setGeneratedContents((prev) => [...prev, content]);
+			setRetryState({ status: "idle" });
+			onRetryEnd();
+		},
+		[onRetryEnd],
+	);
 
-	const content = (
+	return (
 		<div className="flex flex-col gap-4">
 			<DefaultModeView
 				piece={piece}
@@ -112,12 +121,6 @@ export function InsightPieceItem({
 			)}
 		</div>
 	);
-
-	if (retryState.status === "idle") {
-		return content;
-	}
-
-	return <RetryOverlay>{content}</RetryOverlay>;
 }
 
 function GeneratedContentCard({
@@ -141,18 +144,5 @@ function GeneratedContentCard({
 				{content}
 			</p>
 		</div>
-	);
-}
-
-function RetryOverlay({ children }: { children: React.ReactNode }) {
-	return (
-		<>
-			{typeof document !== "undefined" &&
-				createPortal(
-					<div className="fixed inset-0 z-40 bg-black/40" />,
-					document.body,
-				)}
-			<div className="relative z-50">{children}</div>
-		</>
 	);
 }
