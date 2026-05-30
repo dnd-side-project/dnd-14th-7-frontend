@@ -46,6 +46,7 @@ export function SelectingModeView({
 							type="button"
 							key={candidate.id}
 							onClick={() => setSelectedCandidateId(candidate.id)}
+							aria-pressed={isSelected}
 							className={cn(
 								"flex flex-col gap-3 rounded-2xl border p-5 text-left transition-colors",
 								isSelected

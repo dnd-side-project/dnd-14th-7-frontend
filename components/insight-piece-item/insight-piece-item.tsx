@@ -105,7 +105,7 @@ export function InsightPieceItem({
 				<GeneratedContentCard
 					// biome-ignore lint/suspicious/noArrayIndexKey: locally appended retry results do not have persisted ids yet.
 					key={`${content}-${generatedIndex}`}
-					index={index + generatedIndex + 1}
+					index={generatedIndex + 1}
 					content={content}
 				/>
 			))}

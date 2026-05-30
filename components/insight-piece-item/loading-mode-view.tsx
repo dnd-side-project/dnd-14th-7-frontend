@@ -17,7 +17,10 @@ export function LoadingModeView({ onCancel }: LoadingModeViewProps) {
 				</button>
 			</div>
 
-			<div className="flex flex-col items-center gap-4 rounded-3xl bg-dnd-bg-mint2 px-6 py-10 text-center">
+			<div
+				className="flex flex-col items-center gap-4 rounded-3xl bg-dnd-bg-mint2 px-6 py-10 text-center"
+				aria-live="polite"
+			>
 				<Image src="/sparkle.svg" alt="" width={28} height={28} />
 				<div className="flex flex-col gap-2">
 					<p className="typo-heading-1 font-semibold text-dnd-label-normal">
