@@ -353,6 +353,9 @@ function MainInsightBox({
 	insightPieces: InsightPiece[];
 }) {
 	const [isInputVisible, setIsInputVisible] = useState(false);
+	const [activeRetryPieceId, setActiveRetryPieceId] = useState<number | null>(
+		null,
+	);
 	const [inputValue, setInputValue] = useState("");
 	const inputRef = useRef<HTMLInputElement>(null);
 	const queryClient = useQueryClient();
@@ -395,25 +398,34 @@ function MainInsightBox({
 					<Image src="/plus.svg" alt="추가" width={24} height={24} />
 				</button>
 			</div>
-			<div className="rounded-4xl p-6 flex flex-col gap-4 bg-dnd-bg-insight-box relative z-50">
-				{insightPieces.map((piece, index) => (
-					<InsightPieceItem
-						key={piece.insightPieceId}
-						piece={piece}
-						index={index}
-					/>
-				))}
-				{isInputVisible && (
-					<input
-						ref={inputRef}
-						className="w-full rounded-2xl border-2 border-dnd-primary bg-white px-6 py-4 typo-body-1 text-dnd-label-normal placeholder-dnd-label-assistive focus:outline-none resize-none"
-						placeholder="새로운 인사이트를 입력하세요"
-						value={inputValue}
-						onChange={(e) => setInputValue(e.target.value)}
-						onKeyDown={handleKeyDown}
-						disabled={isPending}
-					/>
+			<div className="relative">
+				{activeRetryPieceId !== null && (
+					<div className="fixed inset-0 z-40 bg-black/40" />
 				)}
+				<div
+					className={`rounded-4xl p-6 flex flex-col gap-4 bg-dnd-bg-insight-box ${activeRetryPieceId !== null ? "relative z-50" : ""}`}
+				>
+					{insightPieces.map((piece, index) => (
+						<InsightPieceItem
+							key={piece.insightPieceId}
+							piece={piece}
+							index={index}
+							onRetryStart={setActiveRetryPieceId}
+							onRetryEnd={() => setActiveRetryPieceId(null)}
+						/>
+					))}
+					{isInputVisible && (
+						<input
+							ref={inputRef}
+							className="w-full rounded-2xl border-2 border-dnd-primary bg-white px-6 py-4 typo-body-1 text-dnd-label-normal placeholder-dnd-label-assistive focus:outline-none resize-none"
+							placeholder="새로운 인사이트를 입력하세요"
+							value={inputValue}
+							onChange={(e) => setInputValue(e.target.value)}
+							onKeyDown={handleKeyDown}
+							disabled={isPending}
+						/>
+					)}
+				</div>
 			</div>
 		</div>
 	);

@@ -1,80 +1,101 @@
 "use client";
 
 import { useState } from "react";
-import type { InsightPiece } from "@/lib/queries/insight";
-import { PieceHeader } from "./piece-header";
+import { cn } from "@/lib/utils";
+
+export interface RetryCandidate {
+	id: string;
+	content: string;
+}
 
 interface SelectingModeViewProps {
-	piece: InsightPiece;
-	index: number;
-	candidates: string[];
+	candidates: RetryCandidate[];
 	onCancel: () => void;
 	onSelect: (content: string) => void;
 }
 
 export function SelectingModeView({
-	piece,
-	index,
 	candidates,
 	onCancel,
 	onSelect,
 }: SelectingModeViewProps) {
-	const [selectedCandidateIndex, setSelectedCandidateIndex] = useState<
-		number | null
-	>(null);
+	const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(
+		candidates[0]?.id ?? null,
+	);
+	const selectedCandidate = candidates.find(
+		(candidate) => candidate.id === selectedCandidateId,
+	);
 
 	return (
-		<div className="bg-white rounded-3xl p-6 flex flex-col gap-3">
-			<PieceHeader
-				index={index}
-				createdType={piece.createdType}
-				createdDate={piece.createdDate}
-			/>
-			{candidates.map((candidate, candidateIndex) => {
-				const isSelected = selectedCandidateIndex === candidateIndex;
-				const isOriginal = candidateIndex === 0;
+		<div className="flex flex-col gap-6 rounded-3xl bg-white p-6 shadow-dnd-heavy">
+			<div className="flex flex-col gap-2">
+				<h3 className="typo-heading-1 font-semibold text-dnd-label-normal">
+					새로운 인사이트 후보
+				</h3>
+				<p className="typo-body-2 text-dnd-label-alternative">
+					마음에 드는 후보를 선택하면 기존 인사이트 아래에 쌓여요.
+				</p>
+			</div>
 
-				const candidateStyle = isSelected
-					? "bg-[var(--dnd-bg-mint2)] border-2 border-[var(--dnd-primary)] text-[var(--dnd-label-strong)]"
-					: isOriginal
-						? "bg-[var(--dnd-bg-alternative)] text-[var(--dnd-label-strong)] hover:bg-[#ebebeb]"
-						: "bg-[var(--dnd-bg-mint2)] text-[var(--dnd-label-strong)] hover:bg-[#e1f5f3]";
+			<div className="flex flex-col gap-3">
+				{candidates.map((candidate, candidateIndex) => {
+					const isSelected = selectedCandidateId === candidate.id;
 
-				return (
-					<button
-						type="button"
-						// biome-ignore lint/suspicious/noArrayIndexKey: candidate text can be duplicated, so the local index disambiguates options.
-						key={`${candidate}-${candidateIndex}`}
-						onClick={() => setSelectedCandidateIndex(candidateIndex)}
-						className={`p-4 rounded-2xl cursor-pointer transition-colors text-left text-[20px] font-medium leading-[1.4] tracking-[-0.24px] whitespace-pre-wrap ${candidateStyle}`}
-					>
-						{candidate}
-					</button>
-				);
-			})}
-			<div className="flex justify-end items-center gap-2">
+					return (
+						<button
+							type="button"
+							key={candidate.id}
+							onClick={() => setSelectedCandidateId(candidate.id)}
+							aria-pressed={isSelected}
+							className={cn(
+								"flex flex-col gap-3 rounded-2xl border p-5 text-left transition-colors",
+								isSelected
+									? "border-dnd-primary bg-dnd-bg-mint2"
+									: "border-dnd-line-alternative bg-dnd-bg-normal hover:bg-dnd-bg-alternative",
+							)}
+						>
+							<div className="flex items-center gap-2">
+								<span
+									className={cn(
+										"flex size-6 items-center justify-center rounded-full typo-caption-2 font-bold",
+										isSelected
+											? "bg-dnd-primary text-white"
+											: "bg-dnd-fill-normal text-dnd-label-alternative",
+									)}
+								>
+									{candidateIndex + 1}
+								</span>
+								<span className="typo-label-1 font-semibold text-dnd-label-alternative">
+									후보 {candidateIndex + 1}
+								</span>
+							</div>
+							<p className="typo-headline-2 whitespace-pre-wrap font-medium text-dnd-label-strong">
+								{candidate.content}
+							</p>
+						</button>
+					);
+				})}
+			</div>
+
+			<div className="flex justify-end gap-2">
 				<button
 					type="button"
-					className="px-7 py-3 rounded-[12px] typo-body-1 font-medium bg-dnd-bg-alternative text-[var(--dnd-label-neutral)] hover:bg-[#ebebeb] transition-colors"
+					className="typo-body-1 rounded-xl bg-dnd-bg-alternative px-7 py-3 font-medium text-dnd-label-neutral transition-colors hover:bg-dnd-fill-normal"
 					onClick={onCancel}
 				>
 					취소
 				</button>
 				<button
 					type="button"
-					className={`px-7 py-3 rounded-[12px] typo-body-1 font-semibold transition-colors ${
-						selectedCandidateIndex !== null
-							? "bg-[#51ccbd] text-white hover:bg-[#43bfb0]"
-							: "bg-dnd-interaction-disable text-dnd-label-assistive cursor-not-allowed"
-					}`}
+					className="typo-body-1 rounded-xl bg-dnd-primary px-7 py-3 font-semibold text-white transition-colors hover:bg-dnd-primary-strong disabled:cursor-not-allowed disabled:bg-dnd-interaction-disable disabled:text-dnd-label-assistive"
 					onClick={() => {
-						if (selectedCandidateIndex !== null) {
-							onSelect(candidates[selectedCandidateIndex]);
+						if (selectedCandidate) {
+							onSelect(selectedCandidate.content);
 						}
 					}}
-					disabled={selectedCandidateIndex === null}
+					disabled={!selectedCandidate}
 				>
-					선택
+					선택하기
 				</button>
 			</div>
 		</div>
