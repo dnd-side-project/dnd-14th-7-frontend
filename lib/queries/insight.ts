@@ -256,6 +256,29 @@ interface CreateInsightResponse {
 	insightId: number;
 }
 
+interface GeneratedInsightDraft {
+	title: string;
+	insight: string;
+	tags: string[];
+	questions: string[];
+}
+
+async function generateInsightDraft(
+	memo: string,
+): Promise<GeneratedInsightDraft> {
+	const response = await fetch("/api/ai/insight", {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify({ memo }),
+	});
+
+	if (!response.ok) {
+		throw new Error("Failed to generate insight with AI");
+	}
+
+	return response.json() as Promise<GeneratedInsightDraft>;
+}
+
 const createInsight = async (data: {
 	memo: string;
 }): Promise<CreateInsightResponse> => {
@@ -267,9 +290,15 @@ const createInsight = async (data: {
 
 	if (authError || !user) throw new Error("Unauthenticated");
 
+	const generated = await generateInsightDraft(data.memo);
+
 	const { data: insight, error } = await supabase
 		.from("insights")
-		.insert({ user_id: user.id, initial_thought: data.memo, title: "" })
+		.insert({
+			user_id: user.id,
+			initial_thought: data.memo,
+			title: generated.title,
+		})
 		.select("id")
 		.single();
 
@@ -277,11 +306,52 @@ const createInsight = async (data: {
 
 	const { error: pieceError } = await supabase.from("insight_pieces").insert({
 		insight_id: insight.id,
-		content: data.memo,
+		content: generated.insight,
 		created_type: "INIT",
 	});
 
 	if (pieceError) throw pieceError;
+
+	const tagNames = [...new Set(generated.tags.map((tag) => tag.trim()))].filter(
+		Boolean,
+	);
+
+	if (tagNames.length > 0) {
+		const { data: tags, error: tagError } = await supabase
+			.from("tags")
+			.upsert(
+				tagNames.map((name) => ({ user_id: user.id, name })),
+				{ onConflict: "user_id,name" },
+			)
+			.select("id");
+
+		if (tagError) throw tagError;
+
+		if (tags && tags.length > 0) {
+			const { error: insightTagError } = await supabase
+				.from("insight_tags")
+				.insert(
+					tags.map((tag) => ({ insight_id: insight.id, tag_id: tag.id })),
+				);
+
+			if (insightTagError) throw insightTagError;
+		}
+	}
+
+	const questions = generated.questions
+		.map((question) => question.trim())
+		.filter(Boolean);
+
+	if (questions.length > 0) {
+		const { error: questionError } = await supabase.from("questions").insert(
+			questions.map((content) => ({
+				insight_id: insight.id,
+				content,
+			})),
+		);
+
+		if (questionError) throw questionError;
+	}
 
 	return { insightId: insight.id };
 };

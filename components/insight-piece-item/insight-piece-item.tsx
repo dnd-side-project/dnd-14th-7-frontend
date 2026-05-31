@@ -9,30 +9,24 @@ import { type RetryCandidate, SelectingModeView } from "./selecting-mode-view";
 type RetryState =
 	| { status: "idle" }
 	| { status: "loading" }
-	| { status: "selecting"; candidates: RetryCandidate[] };
+	| { status: "selecting"; candidates: RetryCandidate[] }
+	| { status: "error"; message: string };
 
-const RETRY_DELAY_MS = 800;
+async function generateRetryCandidates(
+	content: string,
+): Promise<RetryCandidate[]> {
+	const response = await fetch("/api/ai/insight-candidates", {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify({ content }),
+	});
 
-function createMockCandidates(content: string): RetryCandidate[] {
-	return [
-		{
-			id: "evidence-based-debugging",
-			content:
-				"로그는 추측에 의존하는 디버깅을 데이터 기반의 판단으로 전환해 문제 원인 파악 비용을 줄여준다.",
-		},
-		{
-			id: "context-preserving-logging",
-			content:
-				"에러 발생 당시의 맥락을 남기는 로깅은 장애 재현의 불확실성을 낮추고 시스템 관측 가능성을 높인다.",
-		},
-		{
-			id: "proactive-incident-prevention",
-			content:
-				content.length > 80
-					? "잘 설계된 로그는 사후 분석을 넘어 반복되는 장애 패턴을 발견하고 선제적으로 예방하는 자산이 된다."
-					: "로그는 사후 분석뿐 아니라 반복되는 장애를 미리 발견하고 예방하는 데 필요한 핵심 자산이다.",
-		},
-	];
+	if (!response.ok) {
+		throw new Error("Failed to generate retry candidates");
+	}
+
+	const data = (await response.json()) as { candidates: RetryCandidate[] };
+	return data.candidates;
 }
 
 export function InsightPieceItem({
@@ -48,49 +42,46 @@ export function InsightPieceItem({
 }) {
 	const [retryState, setRetryState] = useState<RetryState>({ status: "idle" });
 	const [generatedContents, setGeneratedContents] = useState<string[]>([]);
-	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const requestIdRef = useRef(0);
 
 	useEffect(() => {
 		return () => {
-			if (timeoutRef.current) {
-				clearTimeout(timeoutRef.current);
-			}
+			requestIdRef.current += 1;
 		};
 	}, []);
 
-	const clearRetryTimer = useCallback(() => {
-		if (timeoutRef.current) {
-			clearTimeout(timeoutRef.current);
-			timeoutRef.current = null;
-		}
-	}, []);
-
-	const handleRetry = useCallback(() => {
-		clearRetryTimer();
-		onRetryStart(piece.insightPieceId);
-		setRetryState({ status: "loading" });
-		timeoutRef.current = setTimeout(() => {
-			setRetryState({
-				status: "selecting",
-				candidates: createMockCandidates(piece.content),
-			});
-			timeoutRef.current = null;
-		}, RETRY_DELAY_MS);
-	}, [clearRetryTimer, onRetryStart, piece.content, piece.insightPieceId]);
-
-	const handleCancel = useCallback(() => {
-		clearRetryTimer();
+	const finishRetry = useCallback(() => {
+		requestIdRef.current += 1;
 		setRetryState({ status: "idle" });
 		onRetryEnd();
-	}, [clearRetryTimer, onRetryEnd]);
+	}, [onRetryEnd]);
+
+	const handleRetry = useCallback(async () => {
+		const requestId = requestIdRef.current + 1;
+		requestIdRef.current = requestId;
+		onRetryStart(piece.insightPieceId);
+		setRetryState({ status: "loading" });
+
+		try {
+			const candidates = await generateRetryCandidates(piece.content);
+			if (requestIdRef.current !== requestId) return;
+			setRetryState({ status: "selecting", candidates });
+		} catch (error) {
+			if (requestIdRef.current !== requestId) return;
+			console.error("Failed to generate retry candidates:", error);
+			setRetryState({
+				status: "error",
+				message: "후보를 생성하지 못했어요. 잠시 후 다시 시도해주세요.",
+			});
+		}
+	}, [onRetryStart, piece.content, piece.insightPieceId]);
 
 	const handleSelect = useCallback(
 		(content: string) => {
 			setGeneratedContents((prev) => [...prev, content]);
-			setRetryState({ status: "idle" });
-			onRetryEnd();
+			finishRetry();
 		},
-		[onRetryEnd],
+		[finishRetry],
 	);
 
 	return (
@@ -110,13 +101,20 @@ export function InsightPieceItem({
 				/>
 			))}
 			{retryState.status === "loading" && (
-				<LoadingModeView onCancel={handleCancel} />
+				<LoadingModeView onCancel={finishRetry} />
 			)}
 			{retryState.status === "selecting" && (
 				<SelectingModeView
 					candidates={retryState.candidates}
-					onCancel={handleCancel}
+					onCancel={finishRetry}
 					onSelect={handleSelect}
+				/>
+			)}
+			{retryState.status === "error" && (
+				<RetryErrorCard
+					message={retryState.message}
+					onRetry={handleRetry}
+					onCancel={finishRetry}
 				/>
 			)}
 		</div>
@@ -143,6 +141,38 @@ function GeneratedContentCard({
 			<p className="typo-headline-2 whitespace-pre-wrap font-medium text-dnd-label-strong">
 				{content}
 			</p>
+		</div>
+	);
+}
+
+function RetryErrorCard({
+	message,
+	onRetry,
+	onCancel,
+}: {
+	message: string;
+	onRetry: () => void;
+	onCancel: () => void;
+}) {
+	return (
+		<div className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-dnd-heavy">
+			<p className="typo-body-1 text-dnd-status-negative">{message}</p>
+			<div className="flex justify-end gap-2">
+				<button
+					type="button"
+					className="typo-body-1 rounded-xl bg-dnd-bg-alternative px-7 py-3 font-medium text-dnd-label-neutral transition-colors hover:bg-dnd-fill-normal"
+					onClick={onCancel}
+				>
+					닫기
+				</button>
+				<button
+					type="button"
+					className="typo-body-1 rounded-xl bg-dnd-primary px-7 py-3 font-semibold text-white transition-colors hover:bg-dnd-primary-strong"
+					onClick={onRetry}
+				>
+					다시 시도
+				</button>
+			</div>
 		</div>
 	);
 }
