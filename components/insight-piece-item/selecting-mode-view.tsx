@@ -33,7 +33,7 @@ export function SelectingModeView({
 					새로운 인사이트 후보
 				</h3>
 				<p className="typo-body-2 text-dnd-label-alternative">
-					마음에 드는 후보를 선택하면 기존 인사이트 아래에 쌓여요.
+					마음에 드는 후보를 선택하면 현재 인사이트 조각에 반영돼요.
 				</p>
 			</div>
 

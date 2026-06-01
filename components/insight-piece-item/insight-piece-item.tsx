@@ -41,8 +41,13 @@ export function InsightPieceItem({
 	onRetryEnd: () => void;
 }) {
 	const [retryState, setRetryState] = useState<RetryState>({ status: "idle" });
-	const [generatedContents, setGeneratedContents] = useState<string[]>([]);
+	const [currentContent, setCurrentContent] = useState(piece.content);
 	const requestIdRef = useRef(0);
+
+	useEffect(() => {
+		setCurrentContent(piece.content);
+		setRetryState({ status: "idle" });
+	}, [piece.content]);
 
 	useEffect(() => {
 		return () => {
@@ -63,7 +68,7 @@ export function InsightPieceItem({
 		setRetryState({ status: "loading" });
 
 		try {
-			const candidates = await generateRetryCandidates(piece.content);
+			const candidates = await generateRetryCandidates(currentContent);
 			if (requestIdRef.current !== requestId) return;
 			setRetryState({ status: "selecting", candidates });
 		} catch (error) {
@@ -74,11 +79,11 @@ export function InsightPieceItem({
 				message: "후보를 생성하지 못했어요. 잠시 후 다시 시도해주세요.",
 			});
 		}
-	}, [onRetryStart, piece.content, piece.insightPieceId]);
+	}, [currentContent, onRetryStart, piece.insightPieceId]);
 
 	const handleSelect = useCallback(
 		(content: string) => {
-			setGeneratedContents((prev) => [...prev, content]);
+			setCurrentContent(content);
 			finishRetry();
 		},
 		[finishRetry],
@@ -89,17 +94,9 @@ export function InsightPieceItem({
 			<DefaultModeView
 				piece={piece}
 				index={index}
-				currentContent={piece.content}
+				currentContent={currentContent}
 				onRetry={handleRetry}
 			/>
-			{generatedContents.map((content, generatedIndex) => (
-				<GeneratedContentCard
-					// biome-ignore lint/suspicious/noArrayIndexKey: locally appended retry results do not have persisted ids yet.
-					key={`${content}-${generatedIndex}`}
-					index={generatedIndex + 1}
-					content={content}
-				/>
-			))}
 			{retryState.status === "loading" && (
 				<LoadingModeView onCancel={finishRetry} />
 			)}
@@ -117,30 +114,6 @@ export function InsightPieceItem({
 					onCancel={finishRetry}
 				/>
 			)}
-		</div>
-	);
-}
-
-function GeneratedContentCard({
-	index,
-	content,
-}: {
-	index: number;
-	content: string;
-}) {
-	return (
-		<div className="flex flex-col gap-6 rounded-3xl bg-white p-6">
-			<div className="flex items-center gap-2">
-				<span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-dnd-bg-insight-box typo-caption-2 font-bold text-dnd-primary">
-					{index + 1}
-				</span>
-				<div className="typo-caption-1 text-dnd-label-alternative">
-					인사이트
-				</div>
-			</div>
-			<p className="typo-headline-2 whitespace-pre-wrap font-medium text-dnd-label-strong">
-				{content}
-			</p>
 		</div>
 	);
 }
