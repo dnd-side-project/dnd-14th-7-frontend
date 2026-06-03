@@ -370,6 +370,19 @@ const createInsightPiece = async (
 	if (error) throw error;
 };
 
+const updateInsightPieceContent = async (
+	pieceId: number,
+	data: { content: string },
+): Promise<void> => {
+	const supabase = createClient();
+	const { error } = await supabase
+		.from("insight_pieces")
+		.update({ content: data.content })
+		.eq("id", pieceId);
+
+	if (error) throw error;
+};
+
 const mapInsightQuestion = (q: FetchedQuestionRow): InsightQuestion => ({
 	questionId: q.id,
 	content: q.content,
@@ -535,6 +548,12 @@ export const insightPieceCreationMutationOptions = (insightId: number) =>
 	mutationOptions({
 		mutationFn: (data: { content: string }) =>
 			createInsightPiece(insightId, data),
+	});
+
+export const insightPieceUpdateMutationOptions = (pieceId: number) =>
+	mutationOptions({
+		mutationFn: (data: { content: string }) =>
+			updateInsightPieceContent(pieceId, data),
 	});
 
 export const convertAnswerToBlockMutationOptions = (insightId: number) =>

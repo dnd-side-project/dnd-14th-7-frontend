@@ -408,6 +408,7 @@ function MainInsightBox({
 					{insightPieces.map((piece, index) => (
 						<InsightPieceItem
 							key={piece.insightPieceId}
+							insightId={insightId}
 							piece={piece}
 							index={index}
 							onRetryStart={setActiveRetryPieceId}

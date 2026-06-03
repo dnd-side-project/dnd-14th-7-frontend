@@ -1,7 +1,12 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { InsightPiece } from "@/lib/queries/insight";
+import {
+	type InsightPiece,
+	insightKeys,
+	insightPieceUpdateMutationOptions,
+} from "@/lib/queries/insight";
 import { DefaultModeView } from "./default-mode-view";
 import { LoadingModeView } from "./loading-mode-view";
 import { type RetryCandidate, SelectingModeView } from "./selecting-mode-view";
@@ -30,11 +35,13 @@ async function generateRetryCandidates(
 }
 
 export function InsightPieceItem({
+	insightId,
 	piece,
 	index,
 	onRetryStart,
 	onRetryEnd,
 }: {
+	insightId: number;
 	piece: InsightPiece;
 	index: number;
 	onRetryStart: (pieceId: number) => void;
@@ -43,6 +50,23 @@ export function InsightPieceItem({
 	const [retryState, setRetryState] = useState<RetryState>({ status: "idle" });
 	const [currentContent, setCurrentContent] = useState(piece.content);
 	const requestIdRef = useRef(0);
+	const queryClient = useQueryClient();
+	const { mutate: updatePieceContent } = useMutation({
+		...insightPieceUpdateMutationOptions(piece.insightPieceId),
+		onSuccess: (_, { content }) => {
+			setCurrentContent(content);
+			queryClient.invalidateQueries({
+				queryKey: insightKeys.pieces(insightId),
+			});
+			finishRetry();
+		},
+		onError: () => {
+			setRetryState({
+				status: "error",
+				message: "선택한 후보를 반영하지 못했어요. 잠시 후 다시 시도해주세요.",
+			});
+		},
+	});
 
 	useEffect(() => {
 		setCurrentContent(piece.content);
@@ -83,10 +107,9 @@ export function InsightPieceItem({
 
 	const handleSelect = useCallback(
 		(content: string) => {
-			setCurrentContent(content);
-			finishRetry();
+			updatePieceContent({ content });
 		},
-		[finishRetry],
+		[updatePieceContent],
 	);
 
 	return (
