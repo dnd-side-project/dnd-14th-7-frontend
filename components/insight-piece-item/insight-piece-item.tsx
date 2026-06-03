@@ -85,7 +85,7 @@ export function InsightPieceItem({
 	onRetryEnd: () => void;
 }) {
 	const [retryState, setRetryState] = useState<RetryState>({ status: "idle" });
-	const [currentContent, setCurrentContent] = useState(piece.content);
+	const [currentContent, setCurrentContent] = useState(() => piece.content);
 	const requestIdRef = useRef(0);
 	const queryClient = useQueryClient();
 	const { mutate: updatePieceContent } = useMutation({
@@ -106,9 +106,10 @@ export function InsightPieceItem({
 	});
 
 	useEffect(() => {
-		setCurrentContent(piece.content);
-		setRetryState({ status: "idle" });
-	}, [piece.content]);
+		if (retryState.status === "idle") {
+			setCurrentContent(piece.content);
+		}
+	}, [piece.content, retryState.status]);
 
 	useEffect(() => {
 		return () => {
