@@ -66,8 +66,14 @@ export async function POST(request: Request) {
 	try {
 		const aiText = await askOpenAI(createPrompt(memo));
 		const parsed = parseOpenAIJson<InsightGenerationResponse>(aiText);
-		const title = parsed.title?.trim() || "제목 없는 인사이트";
-		const insight = parsed.insight?.trim() || memo;
+		const title =
+			typeof parsed.title === "string" && parsed.title.trim()
+				? parsed.title.trim()
+				: "제목 없는 인사이트";
+		const insight =
+			typeof parsed.insight === "string" && parsed.insight.trim()
+				? parsed.insight.trim()
+				: memo;
 		const tags = normalizeStrings(parsed.tags, 3);
 		const questions = normalizeStrings(parsed.questions, 3);
 

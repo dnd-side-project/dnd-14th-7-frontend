@@ -17,21 +17,58 @@ type RetryState =
 	| { status: "selecting"; candidates: RetryCandidate[] }
 	| { status: "error"; message: string };
 
+const RETRY_CANDIDATES_TIMEOUT_MS = 10_000;
+
+function isRetryCandidate(value: unknown): value is RetryCandidate {
+	if (typeof value !== "object" || value === null) return false;
+
+	const candidate = value as Record<string, unknown>;
+	return (
+		typeof candidate.id === "string" && typeof candidate.content === "string"
+	);
+}
+
 async function generateRetryCandidates(
 	content: string,
 ): Promise<RetryCandidate[]> {
-	const response = await fetch("/api/ai/insight-candidates", {
-		method: "POST",
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify({ content }),
-	});
+	const controller = new AbortController();
+	const timeoutId = setTimeout(
+		() => controller.abort(),
+		RETRY_CANDIDATES_TIMEOUT_MS,
+	);
 
-	if (!response.ok) {
-		throw new Error("Failed to generate retry candidates");
+	try {
+		const response = await fetch("/api/ai/insight-candidates", {
+			method: "POST",
+			signal: controller.signal,
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ content }),
+		});
+
+		if (!response.ok) {
+			throw new Error("Failed to generate retry candidates");
+		}
+
+		const data = (await response.json()) as unknown;
+		if (typeof data !== "object" || data === null || !("candidates" in data)) {
+			throw new Error("Retry candidates response is malformed");
+		}
+
+		const { candidates } = data as { candidates: unknown };
+		if (!Array.isArray(candidates) || !candidates.every(isRetryCandidate)) {
+			throw new Error("Retry candidates response has invalid candidates");
+		}
+
+		return candidates;
+	} catch (error) {
+		if (error instanceof DOMException && error.name === "AbortError") {
+			throw new Error("Retry candidates request timed out");
+		}
+
+		throw error;
+	} finally {
+		clearTimeout(timeoutId);
 	}
-
-	const data = (await response.json()) as { candidates: RetryCandidate[] };
-	return data.candidates;
 }
 
 export function InsightPieceItem({

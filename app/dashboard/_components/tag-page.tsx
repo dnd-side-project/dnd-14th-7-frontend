@@ -112,6 +112,7 @@ function InsightCard({ insight }: { insight: InsightSummary }) {
 					<button
 						type="button"
 						className="relative z-20 p-1 text-dnd-label-alternative"
+						aria-label="인사이트 더보기"
 						onClick={(e) => e.stopPropagation()}
 					>
 						<MoreVertical size={24} />

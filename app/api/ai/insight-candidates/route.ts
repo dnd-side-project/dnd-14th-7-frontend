@@ -70,8 +70,10 @@ export async function POST(request: Request) {
 		const parsed = parseOpenAIJson<InsightCandidatesResponse>(aiText);
 		const candidates = normalizeCandidates(parsed.insightCandidates);
 
-		if (candidates.length === 0) {
-			throw new Error("No candidates generated");
+		if (candidates.length !== 3) {
+			throw new Error(
+				`Expected exactly 3 candidates, received ${candidates.length}: ${aiText}`,
+			);
 		}
 
 		return NextResponse.json({ candidates });
