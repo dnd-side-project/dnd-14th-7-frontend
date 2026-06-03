@@ -4,6 +4,12 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { InsightInput } from "@/components/insight-input";
 import { TopNavigation } from "@/components/top-navigation";
+import intro1Image from "../public/intro-1.webp";
+import intro2Image from "../public/intro-2.webp";
+import intro3Image from "../public/intro-3.webp";
+import intro4Image from "../public/intro-4.webp";
+
+const INTRO_IMAGE_SIZES = "(max-width: 768px) 100vw, calc(100vw - 480px)";
 
 export default function Page() {
 	const router = useRouter();
@@ -22,35 +28,28 @@ export default function Page() {
 				<InsightInput onSuccess={handleSuccess} />
 				<div className="flex flex-col items-center gap-16 w-full pt-[20px]">
 					<Image
-						src="/intro-1.png"
+						src={intro1Image}
 						alt="Intro 1"
-						width={4096}
-						height={1445}
-						unoptimized
+						sizes={INTRO_IMAGE_SIZES}
+						priority
 						className="w-full h-auto"
 					/>
 					<Image
-						src="/intro-2.png"
+						src={intro2Image}
 						alt="Intro 2"
-						width={4096}
-						height={1445}
-						unoptimized
+						sizes={INTRO_IMAGE_SIZES}
 						className="w-full h-auto"
 					/>
 					<Image
-						src="/intro-3.png"
+						src={intro3Image}
 						alt="Intro 3"
-						width={4096}
-						height={1445}
-						unoptimized
+						sizes={INTRO_IMAGE_SIZES}
 						className="w-full h-auto"
 					/>
 					<Image
-						src="/intro-4.png"
+						src={intro4Image}
 						alt="Intro 4"
-						width={4096}
-						height={1445}
-						unoptimized
+						sizes={INTRO_IMAGE_SIZES}
 						className="w-full h-auto"
 					/>
 				</div>
