@@ -22,34 +22,34 @@ export default function Page() {
 				<InsightInput onSuccess={handleSuccess} />
 				<div className="flex flex-col items-center gap-16 w-full pt-[20px]">
 					<Image
-						src="/intro-1.png"
+						src="/intro-1.webp"
 						alt="Intro 1"
-						width={4096}
-						height={1445}
+						width={5760}
+						height={2033}
 						unoptimized
 						className="w-full h-auto"
 					/>
 					<Image
-						src="/intro-2.png"
+						src="/intro-2.webp"
 						alt="Intro 2"
-						width={4096}
-						height={1445}
+						width={5760}
+						height={2032}
 						unoptimized
 						className="w-full h-auto"
 					/>
 					<Image
-						src="/intro-3.png"
+						src="/intro-3.webp"
 						alt="Intro 3"
-						width={4096}
-						height={1445}
+						width={5760}
+						height={2032}
 						unoptimized
 						className="w-full h-auto"
 					/>
 					<Image
-						src="/intro-4.png"
+						src="/intro-4.webp"
 						alt="Intro 4"
-						width={4096}
-						height={1445}
+						width={5760}
+						height={2032}
 						unoptimized
 						className="w-full h-auto"
 					/>
