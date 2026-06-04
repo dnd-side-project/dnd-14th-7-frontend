@@ -85,13 +85,15 @@ export function InsightPieceItem({
 	onRetryEnd: () => void;
 }) {
 	const [retryState, setRetryState] = useState<RetryState>({ status: "idle" });
-	const [currentContent, setCurrentContent] = useState(() => piece.content);
+	const [selectedContent, setSelectedContent] = useState(() => piece.content);
+	const displayContent =
+		retryState.status === "idle" ? piece.content : selectedContent;
 	const requestIdRef = useRef(0);
 	const queryClient = useQueryClient();
 	const { mutate: updatePieceContent } = useMutation({
 		...insightPieceUpdateMutationOptions(piece.insightPieceId),
 		onSuccess: (_, { content }) => {
-			setCurrentContent(content);
+			setSelectedContent(content);
 			queryClient.invalidateQueries({
 				queryKey: insightKeys.pieces(insightId),
 			});
@@ -104,12 +106,6 @@ export function InsightPieceItem({
 			});
 		},
 	});
-
-	useEffect(() => {
-		if (retryState.status === "idle") {
-			setCurrentContent(piece.content);
-		}
-	}, [piece.content, retryState.status]);
 
 	useEffect(() => {
 		return () => {
@@ -125,12 +121,15 @@ export function InsightPieceItem({
 
 	const handleRetry = useCallback(async () => {
 		const requestId = requestIdRef.current + 1;
+		const retryContent =
+			retryState.status === "idle" ? piece.content : selectedContent;
 		requestIdRef.current = requestId;
 		onRetryStart(piece.insightPieceId);
+		setSelectedContent(retryContent);
 		setRetryState({ status: "loading" });
 
 		try {
-			const candidates = await generateRetryCandidates(currentContent);
+			const candidates = await generateRetryCandidates(retryContent);
 			if (requestIdRef.current !== requestId) return;
 			setRetryState({ status: "selecting", candidates });
 		} catch (error) {
@@ -141,7 +140,13 @@ export function InsightPieceItem({
 				message: "후보를 생성하지 못했어요. 잠시 후 다시 시도해주세요.",
 			});
 		}
-	}, [currentContent, onRetryStart, piece.insightPieceId]);
+	}, [
+		onRetryStart,
+		piece.content,
+		piece.insightPieceId,
+		retryState.status,
+		selectedContent,
+	]);
 
 	const handleSelect = useCallback(
 		(content: string) => {
@@ -155,7 +160,7 @@ export function InsightPieceItem({
 			<DefaultModeView
 				piece={piece}
 				index={index}
-				currentContent={currentContent}
+				currentContent={displayContent}
 				onRetry={handleRetry}
 			/>
 			{retryState.status === "loading" && (
