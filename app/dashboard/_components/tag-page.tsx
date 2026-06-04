@@ -1,10 +1,9 @@
 "use client";
 
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { MoreVertical } from "lucide-react";
 import Image from "next/image";
-import { Suspense } from "react";
-import { ErrorBoundary } from "react-error-boundary";
+
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import type { InsightSummary } from "@/lib/queries/insight";
 import { insightsQueryOptions } from "@/lib/queries/insight";
@@ -20,17 +19,7 @@ export function TagPage({ tagId, tagName }: TagPageProps) {
 		<div className="flex flex-col items-center w-full pb-[100px] pt-[60px]">
 			<div className="w-full max-w-[1180px] mx-auto flex flex-col gap-[24px]">
 				<TagPageHeader tagName={tagName} />
-				<ErrorBoundary
-					fallback={
-						<div className="text-dnd-label-alternative">
-							인사이트를 불러오는 중 오류가 발생했습니다.
-						</div>
-					}
-				>
-					<Suspense fallback={<TagPageSkeleton />}>
-						<TagInsightGrid tagId={tagId} />
-					</Suspense>
-				</ErrorBoundary>
+				<TagInsightGrid tagId={tagId} />
 			</div>
 		</div>
 	);
@@ -55,8 +44,34 @@ function TagPageHeader({ tagName }: { tagName: string }) {
 }
 
 function TagInsightGrid({ tagId }: { tagId: number }) {
-	const { data } = useSuspenseQuery(insightsQueryOptions({ tag: tagId }));
+	const { data, isError, isLoading } = useQuery(
+		insightsQueryOptions({ tag: tagId }),
+	);
 	const { dispatch } = useDashboardTabs();
+	const openInsight = (insightId: number) => {
+		dispatch(
+			{
+				type: "add",
+				tab: `insight:${insightId}`,
+			},
+			{
+				type: "activate",
+				tab: `insight:${insightId}`,
+			},
+		);
+	};
+
+	if (isLoading) {
+		return <TagPageSkeleton />;
+	}
+
+	if (isError || !data) {
+		return (
+			<div className="text-dnd-label-alternative">
+				인사이트를 불러오는 중 오류가 발생했습니다.
+			</div>
+		);
+	}
 
 	if (data.content.length === 0) {
 		return (
@@ -69,25 +84,15 @@ function TagInsightGrid({ tagId }: { tagId: number }) {
 	return (
 		<div className="grid grid-cols-4 gap-[24px]">
 			{data.content.map((insight) => (
-				<button
-					key={insight.insightId}
-					type="button"
-					className="text-left"
-					onClick={() =>
-						dispatch(
-							{
-								type: "add",
-								tab: `insight:${insight.insightId}`,
-							},
-							{
-								type: "activate",
-								tab: `insight:${insight.insightId}`,
-							},
-						)
-					}
-				>
+				<div key={insight.insightId} className="relative">
 					<InsightCard insight={insight} />
-				</button>
+					<button
+						type="button"
+						className="absolute inset-0 z-10 rounded-[32px] text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-dnd-primary focus-visible:ring-offset-2"
+						aria-label={`${insight.title || "제목 없는 인사이트"} 인사이트 열기`}
+						onClick={() => openInsight(insight.insightId)}
+					/>
+				</div>
 			))}
 		</div>
 	);
@@ -106,7 +111,8 @@ function InsightCard({ insight }: { insight: InsightSummary }) {
 					</h3>
 					<button
 						type="button"
-						className="p-1 text-dnd-label-alternative"
+						className="relative z-20 p-1 text-dnd-label-alternative"
+						aria-label="인사이트 더보기"
 						onClick={(e) => e.stopPropagation()}
 					>
 						<MoreVertical size={24} />
