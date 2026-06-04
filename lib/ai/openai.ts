@@ -53,7 +53,7 @@ export async function askOpenAI(prompt: string): Promise<string> {
 		}
 
 		const data = (await response.json()) as OpenAIMessageResponse;
-		const text = data.choices[0]?.message?.content?.trim();
+		const text = data?.choices?.[0]?.message?.content?.trim();
 
 		if (!text) {
 			throw new Error("OpenAI API returned empty content");
