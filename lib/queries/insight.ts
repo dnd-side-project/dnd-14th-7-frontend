@@ -263,6 +263,39 @@ interface GeneratedInsightDraft {
 	questions: string[];
 }
 
+function normalizeGeneratedInsightDraft(
+	value: unknown,
+	memo: string,
+): GeneratedInsightDraft {
+	const draft =
+		typeof value === "object" && value !== null
+			? (value as Record<string, unknown>)
+			: {};
+
+	const title =
+		typeof draft.title === "string" && draft.title.trim()
+			? draft.title.trim()
+			: "제목 없는 인사이트";
+	const insight =
+		typeof draft.insight === "string" && draft.insight.trim()
+			? draft.insight.trim()
+			: memo;
+	const tags = Array.isArray(draft.tags)
+		? draft.tags
+				.filter((tag): tag is string => typeof tag === "string")
+				.map((tag) => tag.trim())
+				.filter(Boolean)
+		: [];
+	const questions = Array.isArray(draft.questions)
+		? draft.questions
+				.filter((question): question is string => typeof question === "string")
+				.map((question) => question.trim())
+				.filter(Boolean)
+		: [];
+
+	return { title, insight, tags, questions };
+}
+
 async function generateInsightDraft(
 	memo: string,
 ): Promise<GeneratedInsightDraft> {
@@ -276,7 +309,8 @@ async function generateInsightDraft(
 		throw new Error("Failed to generate insight with AI");
 	}
 
-	return response.json() as Promise<GeneratedInsightDraft>;
+	const draft = (await response.json()) as unknown;
+	return normalizeGeneratedInsightDraft(draft, memo);
 }
 
 const createInsight = async (data: {
