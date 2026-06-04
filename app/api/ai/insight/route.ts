@@ -56,8 +56,13 @@ export async function POST(request: Request) {
 		return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
 	}
 
-	const body = (await request.json()) as { memo?: unknown };
-	const memo = typeof body.memo === "string" ? body.memo.trim() : "";
+	let memo = "";
+	try {
+		const body = (await request.json()) as { memo?: unknown };
+		memo = typeof body.memo === "string" ? body.memo.trim() : "";
+	} catch {
+		return NextResponse.json({ message: "Invalid JSON body" }, { status: 400 });
+	}
 
 	if (!memo) {
 		return NextResponse.json({ message: "memo is required" }, { status: 400 });
@@ -67,15 +72,15 @@ export async function POST(request: Request) {
 		const aiText = await askOpenAI(createPrompt(memo));
 		const parsed = parseOpenAIJson<InsightGenerationResponse>(aiText);
 		const title =
-			typeof parsed.title === "string" && parsed.title.trim()
+			typeof parsed?.title === "string" && parsed.title.trim()
 				? parsed.title.trim()
 				: "제목 없는 인사이트";
 		const insight =
-			typeof parsed.insight === "string" && parsed.insight.trim()
+			typeof parsed?.insight === "string" && parsed.insight.trim()
 				? parsed.insight.trim()
 				: memo;
-		const tags = normalizeStrings(parsed.tags, 3);
-		const questions = normalizeStrings(parsed.questions, 3);
+		const tags = normalizeStrings(parsed?.tags, 3);
+		const questions = normalizeStrings(parsed?.questions, 3);
 
 		return NextResponse.json({ title, insight, tags, questions });
 	} catch (error) {

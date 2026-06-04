@@ -55,8 +55,13 @@ export async function POST(request: Request) {
 		return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
 	}
 
-	const body = (await request.json()) as { content?: unknown };
-	const content = typeof body.content === "string" ? body.content.trim() : "";
+	let content = "";
+	try {
+		const body = (await request.json()) as { content?: unknown };
+		content = typeof body.content === "string" ? body.content.trim() : "";
+	} catch {
+		return NextResponse.json({ message: "Invalid JSON body" }, { status: 400 });
+	}
 
 	if (!content) {
 		return NextResponse.json(
@@ -68,7 +73,7 @@ export async function POST(request: Request) {
 	try {
 		const aiText = await askOpenAI(createPrompt(content));
 		const parsed = parseOpenAIJson<InsightCandidatesResponse>(aiText);
-		const candidates = normalizeCandidates(parsed.insightCandidates);
+		const candidates = normalizeCandidates(parsed?.insightCandidates);
 
 		if (candidates.length !== 3) {
 			throw new Error(
