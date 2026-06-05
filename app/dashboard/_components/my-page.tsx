@@ -58,8 +58,8 @@ function MyPageContent() {
 	const queryClient = useQueryClient();
 	const [isEditing, setIsEditing] = useState(false);
 	const [nickname, setNickname] = useState(() => user.nickname);
-	const [position, setPosition] = useState<User["position"]>(() =>
-		user.position === "NONE" ? "DEV" : user.position,
+	const [position, setPosition] = useState<User["position"]>(
+		() => user.position,
 	);
 	const [errorMessage, setErrorMessage] = useState("");
 	const { mutate: updateProfile, isPending } = useMutation({
@@ -80,14 +80,14 @@ function MyPageContent() {
 
 	const startEdit = () => {
 		setNickname(user.nickname);
-		setPosition(user.position === "NONE" ? "DEV" : user.position);
+		setPosition(user.position);
 		setErrorMessage("");
 		setIsEditing(true);
 	};
 
 	const cancelEdit = () => {
 		setNickname(user.nickname);
-		setPosition(user.position === "NONE" ? "DEV" : user.position);
+		setPosition(user.position);
 		setErrorMessage("");
 		setIsEditing(false);
 	};
@@ -188,12 +188,12 @@ function ProfileEditForm({
 			<div className="flex flex-col gap-2">
 				<span className="typo-body-1 text-dnd-label-alternative">직군</span>
 				<Select
-					value={position}
+					value={position === "NONE" ? undefined : position}
 					disabled={isPending}
 					onValueChange={(value) => onPositionChange(value as User["position"])}
 				>
 					<SelectTrigger className="min-h-12 w-full rounded-[12px] border-dnd-line-neutral px-4 typo-body-1">
-						<SelectValue />
+						<SelectValue placeholder="직군을 선택해주세요" />
 					</SelectTrigger>
 					<SelectContent className="rounded-2xl bg-white">
 						{EDITABLE_POSITIONS.map((value) => (
