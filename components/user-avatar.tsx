@@ -13,23 +13,24 @@ const AVATAR_SIZE_CLASS = {
 	lg: "size-14 typo-title-2",
 } as const;
 
-function getAvatarColor(seed: string) {
+function getAvatarColor(seed: string | null | undefined) {
 	let hash = 0;
+	const safeSeed = seed ?? "";
 
-	for (const char of seed) {
+	for (const char of safeSeed) {
 		hash = (hash * 31 + char.charCodeAt(0)) | 0;
 	}
 
 	return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-function getAvatarInitial(nickname: string) {
-	return Array.from(nickname.trim())[0]?.toUpperCase() ?? "?";
+function getAvatarInitial(nickname: string | null | undefined) {
+	return Array.from(nickname?.trim() ?? "")[0]?.toUpperCase() ?? "?";
 }
 
 interface UserAvatarProps {
-	nickname: string;
-	seed: string;
+	nickname: string | null | undefined;
+	seed: string | null | undefined;
 	size?: keyof typeof AVATAR_SIZE_CLASS;
 	className?: string;
 }
