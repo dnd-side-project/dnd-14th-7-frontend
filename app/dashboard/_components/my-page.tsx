@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	QueryErrorResetBoundary,
 	useMutation,
 	useQueryClient,
 	useSuspenseQuery,
@@ -35,11 +36,20 @@ const EDITABLE_POSITIONS = ["DEV", "DESIGN", "PROMOTER", "OTHER"] as const;
 
 export function MyPage() {
 	return (
-		<ErrorBoundary fallback={<MyPageError />}>
-			<Suspense fallback={<MyPageSkeleton />}>
-				<MyPageContent />
-			</Suspense>
-		</ErrorBoundary>
+		<QueryErrorResetBoundary>
+			{({ reset }) => (
+				<ErrorBoundary
+					onReset={reset}
+					fallbackRender={({ resetErrorBoundary }) => (
+						<MyPageError onRetry={resetErrorBoundary} />
+					)}
+				>
+					<Suspense fallback={<MyPageSkeleton />}>
+						<MyPageContent />
+					</Suspense>
+				</ErrorBoundary>
+			)}
+		</QueryErrorResetBoundary>
 	);
 }
 
@@ -231,10 +241,17 @@ function MyPageSkeleton() {
 	);
 }
 
-function MyPageError() {
+function MyPageError({ onRetry }: { onRetry: () => void }) {
 	return (
-		<div className="flex min-h-screen items-center justify-center text-dnd-label-alternative">
-			사용자 정보를 불러오지 못했어요.
+		<div className="flex min-h-screen items-center justify-center">
+			<div className="flex flex-col items-center gap-4 rounded-3xl bg-white px-8 py-6 shadow-dnd-normal">
+				<p className="typo-body-1 text-dnd-label-alternative">
+					사용자 정보를 불러오지 못했어요.
+				</p>
+				<Button variant="secondary" onClick={onRetry}>
+					다시 시도
+				</Button>
+			</div>
 		</div>
 	);
 }
