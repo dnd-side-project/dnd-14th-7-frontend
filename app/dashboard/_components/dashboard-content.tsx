@@ -18,6 +18,7 @@ import {
 	HomeToggleHeader,
 } from "./home-insight-list";
 import { HomeTagCard } from "./home-tag-card";
+import { MyPage } from "./my-page";
 import { TagPage } from "./tag-page";
 
 const INSIGHT_SKELETON_KEYS = [
@@ -93,8 +94,8 @@ function HomePage() {
 	};
 
 	return (
-		<div className="flex flex-col items-center gap-[80px] w-full pb-[100px] pt-[60px] max-w-[1200px] mx-auto px-[40px]">
-			<div className="flex flex-col items-center gap-[24px]">
+		<div className="flex flex-col items-center gap-20 w-full pb-25 pt-15 max-w-300 mx-auto px-10">
+			<div className="flex flex-col items-center gap-6">
 				<Image
 					src="/ahaive.svg"
 					alt="Aha!ve"
@@ -114,7 +115,7 @@ function HomePage() {
 				}
 			/>
 
-			<div className="flex flex-col gap-[80px] w-full mt-[40px]">
+			<div className="flex flex-col gap-20 w-full mt-10">
 				<HomeInsightList
 					header={
 						<HomeToggleHeader isLatest={isLatest} onToggle={setIsLatest} />
@@ -198,19 +199,19 @@ function HomePage() {
 
 function HomeCardSkeleton() {
 	return (
-		<div className="flex h-[292px] w-[260px] shrink-0 flex-col gap-[28px] rounded-[24px] border border-dnd-line-alternative bg-white p-[24px] shadow-dnd-normal animate-pulse">
-			<div className="flex flex-col gap-[8px]">
-				<div className="h-[22px] w-3/4 rounded-md bg-dnd-fill-normal" />
-				<div className="h-[14px] w-1/3 rounded-md bg-dnd-fill-normal" />
+		<div className="flex h-73 w-65 shrink-0 flex-col gap-7 rounded-3xl border border-dnd-line-alternative bg-white p-6 shadow-dnd-normal animate-pulse">
+			<div className="flex flex-col gap-2">
+				<div className="h-5.5 w-3/4 rounded-md bg-dnd-fill-normal" />
+				<div className="h-3.5 w-1/3 rounded-md bg-dnd-fill-normal" />
 			</div>
-			<div className="flex flex-col gap-[6px]">
-				<div className="h-[18px] w-full rounded-md bg-dnd-fill-normal" />
-				<div className="h-[18px] w-5/6 rounded-md bg-dnd-fill-normal" />
-				<div className="h-[18px] w-2/3 rounded-md bg-dnd-fill-normal" />
+			<div className="flex flex-col gap-1.5">
+				<div className="h-4.5 w-full rounded-md bg-dnd-fill-normal" />
+				<div className="h-4.5 w-5/6 rounded-md bg-dnd-fill-normal" />
+				<div className="h-4.5 w-2/3 rounded-md bg-dnd-fill-normal" />
 			</div>
-			<div className="flex gap-[8px]">
-				<div className="h-[28px] w-[54px] rounded-[8px] bg-dnd-fill-normal" />
-				<div className="h-[28px] w-[54px] rounded-[8px] bg-dnd-fill-normal" />
+			<div className="flex gap-2">
+				<div className="h-4 w-13.5 rounded-xl bg-dnd-fill-normal" />
+				<div className="h-4 w-13.5 rounded-xl bg-dnd-fill-normal" />
 			</div>
 		</div>
 	);
@@ -218,7 +219,7 @@ function HomeCardSkeleton() {
 
 function EmptyHomeCard({ message }: { message: string }) {
 	return (
-		<div className="flex h-[180px] w-[280px] shrink-0 items-center justify-center rounded-[24px] border border-dashed border-dnd-line-normal bg-white px-[24px] text-center typo-body-1 text-dnd-label-alternative">
+		<div className="flex h-45 w-70 shrink-0 items-center justify-center rounded-3xl border border-dashed border-dnd-line-normal bg-white px-6 text-center typo-body-1 text-dnd-label-alternative">
 			{message}
 		</div>
 	);
@@ -228,7 +229,7 @@ function NewInsightPage() {
 	const { dispatch } = useDashboardTabs();
 
 	return (
-		<div className="flex min-h-screen flex-col items-center justify-center gap-[40px] px-[240px]">
+		<div className="flex min-h-screen flex-col items-center justify-center gap-10 px-60">
 			<InsightInput
 				onSuccess={(id) =>
 					dispatch({
@@ -255,6 +256,8 @@ export function DashboardContent() {
 			return <InsightDetailSection insightId={Number(currentTabObj.id)} />;
 		case "trash":
 			return <div className="p-4">휴지통 화면 (준비중)</div>;
+		case "mypage":
+			return <MyPage />;
 		case "tag":
 			return (
 				<TagPage

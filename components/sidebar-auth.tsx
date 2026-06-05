@@ -5,7 +5,7 @@ import {
 	useQueryClient,
 	useSuspenseQuery,
 } from "@tanstack/react-query";
-import { CircleAlert, LogOut } from "lucide-react";
+import { CircleAlert, LogOut, User } from "lucide-react";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { PositionSelectModal } from "@/components/position-select-modal";
@@ -61,6 +61,7 @@ function SidebarPositionSetup() {
 function SidebarUserProfile() {
 	const { data: user } = useSuspenseQuery(userQueryOptions());
 	const queryClient = useQueryClient();
+	const { dispatch } = useDashboardTabs();
 	const { mutate: logout, isPending } = useMutation(
 		logoutMutationOptions(queryClient),
 	);
@@ -84,6 +85,18 @@ function SidebarUserProfile() {
 				align="start"
 				className="w-55 rounded-2xl border border-dnd-line-normal bg-white p-2 shadow-dnd-normal"
 			>
+				<DropdownMenuItem
+					className="cursor-pointer gap-2 rounded-[10px] px-3 py-2.5 typo-body-1 text-dnd-label-neutral focus:bg-dnd-bg-alternative"
+					onSelect={() =>
+						dispatch(
+							{ type: "add", tab: "mypage" },
+							{ type: "activate", tab: "mypage" },
+						)
+					}
+				>
+					<User className="size-4.5 text-dnd-label-alternative" />
+					마이페이지
+				</DropdownMenuItem>
 				<DropdownMenuItem
 					className="cursor-pointer gap-2 rounded-[10px] px-3 py-2.5 typo-body-1 text-dnd-status-negative focus:bg-dnd-bg-alternative"
 					disabled={isPending}

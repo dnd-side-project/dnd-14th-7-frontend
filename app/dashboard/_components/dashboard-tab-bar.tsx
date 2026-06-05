@@ -8,6 +8,7 @@ import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import { insightDetailQueryOptions } from "@/lib/queries/insight";
 import type { Tab } from "@/lib/tabs/tab-utils";
 import { deserializeTab } from "@/lib/tabs/tab-utils";
+import { cn } from "@/lib/utils";
 
 export function DashboardTabBar() {
 	const { state, dispatch } = useDashboardTabs();
@@ -16,15 +17,15 @@ export function DashboardTabBar() {
 
 	return (
 		<div
-			className={`fixed top-0 right-0 z-10 flex h-[56px] items-center border-b border-[#e1e2e4] bg-dnd-bg-mint transition-[left] duration-300 ${
-				open ? "left-[260px]" : "left-0"
+			className={`fixed top-0 right-0 z-10 flex h-14 items-center border-b border-[#e1e2e4] bg-dnd-bg-mint transition-[left] duration-300 ${
+				open ? "left-65" : "left-0"
 			}`}
 		>
 			{!open && (
 				<button
 					type="button"
 					onClick={toggleSidebar}
-					className="flex h-full shrink-0 items-center justify-center border-r border-[#e1e2e4] px-[16px] text-dnd-label-neutral hover:bg-white/60"
+					className="flex h-full shrink-0 items-center justify-center border-r border-[#e1e2e4] px-4 text-dnd-label-neutral hover:bg-white/60"
 				>
 					<Image src="/side-bar.svg" alt="side-bar" width={24} height={24} />
 				</button>
@@ -32,7 +33,7 @@ export function DashboardTabBar() {
 			<button
 				type="button"
 				onClick={() => dispatch({ type: "activate", tab: null })}
-				className={`flex h-full shrink-0 items-center justify-center border-r border-[#e1e2e4] px-[16px] transition-colors ${
+				className={`flex h-full shrink-0 items-center justify-center border-r border-[#e1e2e4] px-4 transition-colors ${
 					currentTabKey === "home"
 						? "bg-white"
 						: "bg-dnd-bg-mint hover:bg-white/60"
@@ -59,9 +60,9 @@ export function DashboardTabBar() {
 
 			<button
 				type="button"
-				className="flex h-full shrink-0 items-center justify-center px-[16px] text-dnd-label-neutral hover:text-dnd-label-normal"
+				className="flex h-full shrink-0 items-center justify-center px-4 text-dnd-label-neutral hover:text-dnd-label-normal"
 			>
-				<Search className="size-[20px]" />
+				<Search className="size-5" />
 			</button>
 		</div>
 	);
@@ -81,9 +82,10 @@ function TabItem({ tabKey, tab, isActive, onNavigate, onClose }: TabItemProps) {
 			role="tab"
 			tabIndex={0}
 			aria-selected={isActive}
-			className={`group flex h-[56px] w-[224px] shrink-0 cursor-pointer items-center gap-[8px] border-r border-[#e1e2e4] px-[16px] transition-colors ${
-				isActive ? "bg-white" : "bg-dnd-bg-mint"
-			}`}
+			className={cn(
+				"group flex h-14 w-56 shrink-0 cursor-pointer items-center gap-2 border-r border-[#e1e2e4] px-4 transition-colors",
+				isActive ? "bg-white" : "bg-dnd-bg-mint",
+			)}
 			onClick={() => onNavigate(tabKey)}
 			onKeyDown={(e) => e.key === "Enter" && onNavigate(tabKey)}
 		>
@@ -94,7 +96,7 @@ function TabItem({ tabKey, tab, isActive, onNavigate, onClose }: TabItemProps) {
 					e.stopPropagation();
 					onClose(tabKey);
 				}}
-				className="shrink-0 rounded p-[2px] opacity-0 transition-opacity group-hover:opacity-100 cursor-pointer"
+				className="shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 cursor-pointer"
 			>
 				<Image src="/cross.svg" alt="close" width={24} height={24} />
 			</button>
@@ -112,6 +114,8 @@ function TabLabel({ tab }: { tab: Tab }) {
 			return <TextTabLabel>새 페이지</TextTabLabel>;
 		case "trash":
 			return <TextTabLabel>휴지통</TextTabLabel>;
+		case "mypage":
+			return <TextTabLabel>마이페이지</TextTabLabel>;
 		default:
 			return null;
 	}
@@ -143,7 +147,7 @@ function TextTabLabel({ children }: { children: React.ReactNode }) {
 
 function TagTabLabel({ name }: { name: string }) {
 	return (
-		<div className="flex min-w-0 flex-1 items-center gap-[8px]">
+		<div className="flex min-w-0 flex-1 items-center gap-2">
 			<Image
 				src="/hash-tag.svg"
 				alt="#"
