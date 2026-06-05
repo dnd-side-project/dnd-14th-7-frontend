@@ -1,13 +1,24 @@
 "use client";
 
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { CircleAlert } from "lucide-react";
+import {
+	useMutation,
+	useQueryClient,
+	useSuspenseQuery,
+} from "@tanstack/react-query";
+import { CircleAlert, LogOut } from "lucide-react";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { PositionSelectModal } from "@/components/position-select-modal";
 import { Button } from "@/components/ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import {
+	logoutMutationOptions,
 	signInWithGoogle,
 	type Tag,
 	tagsQueryOptions,
@@ -49,19 +60,40 @@ function SidebarPositionSetup() {
 
 function SidebarUserProfile() {
 	const { data: user } = useSuspenseQuery(userQueryOptions());
+	const queryClient = useQueryClient();
+	const { mutate: logout, isPending } = useMutation(
+		logoutMutationOptions(queryClient),
+	);
 
 	return (
-		<button
-			type="button"
-			className="flex flex-1 cursor-pointer items-center gap-[8px]"
-		>
-			<div className="flex size-[32px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200">
-				<div className="size-full bg-gray-300" />
-			</div>
-			<p className="typo-headline-1 font-medium text-dnd-label-neutral">
-				{user.nickname}
-			</p>
-		</button>
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<button
+					type="button"
+					className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-dnd-primary"
+				>
+					<div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200">
+						<div className="size-full bg-gray-300" />
+					</div>
+					<p className="typo-headline-1 truncate font-medium text-dnd-label-neutral">
+						{user.nickname}
+					</p>
+				</button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent
+				align="start"
+				className="w-55 rounded-2xl border border-dnd-line-normal bg-white p-2 shadow-dnd-normal"
+			>
+				<DropdownMenuItem
+					className="cursor-pointer gap-2 rounded-[10px] px-3 py-2.5 typo-body-1 text-dnd-status-negative focus:bg-dnd-bg-alternative"
+					disabled={isPending}
+					onSelect={() => logout()}
+				>
+					<LogOut className="size-4.5" />
+					로그아웃
+				</DropdownMenuItem>
+			</DropdownMenuContent>
+		</DropdownMenu>
 	);
 }
 
@@ -69,7 +101,7 @@ function SidebarTagList() {
 	const { data: tags } = useSuspenseQuery(tagsQueryOptions());
 
 	return (
-		<div className="flex w-full flex-col items-start gap-[2px]">
+		<div className="flex w-full flex-col items-start gap-0.5">
 			{tags.map((tag) => (
 				<SidebarTag key={tag.tagId} tag={tag} />
 			))}
@@ -84,7 +116,7 @@ function SidebarTag({ tag }: { tag: Tag }) {
 	return (
 		<Button
 			variant="text-secondary"
-			className="w-full justify-start gap-[8px] px-[8px] py-[8px] h-auto"
+			className="w-full justify-start gap-2 px-2 py-2 h-auto"
 			onClick={() =>
 				dispatch(
 					{ type: "add", tab: tabKey },
@@ -105,9 +137,9 @@ function SidebarUserProfileFallback() {
 		<button
 			type="button"
 			onClick={() => signInWithGoogle()}
-			className="flex flex-1 cursor-pointer items-center gap-[8px]"
+			className="flex flex-1 cursor-pointer items-center gap-2"
 		>
-			<div className="flex size-[32px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-dnd-fill-strong" />
+			<div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-dnd-fill-strong" />
 			<p className="typo-headline-1 font-medium text-dnd-label-neutral">
 				로그인
 			</p>
@@ -117,24 +149,24 @@ function SidebarUserProfileFallback() {
 
 function SidebarUserProfileSkeleton() {
 	return (
-		<div className="flex flex-1 items-center gap-[8px]">
-			<div className="size-[32px] shrink-0 animate-pulse rounded-full bg-dnd-fill-strong" />
-			<div className="h-[18px] w-[60px] animate-pulse rounded bg-dnd-fill-strong" />
+		<div className="flex flex-1 items-center gap-2">
+			<div className="size-8 shrink-0 animate-pulse rounded-full bg-dnd-fill-strong" />
+			<div className="h-4.5 w-15 animate-pulse rounded bg-dnd-fill-strong" />
 		</div>
 	);
 }
 
 function SidebarTagListFallback() {
 	return (
-		<div className="flex w-full flex-col gap-[4px] rounded-[16px] bg-white p-[16px]">
-			<CircleAlert className="size-[24px] text-dnd-label-alternative" />
+		<div className="flex w-full flex-col gap-1 rounded-2xl bg-white p-4">
+			<CircleAlert className="size-6 text-dnd-label-alternative" />
 			<p className="typo-label-1 font-normal text-dnd-label-neutral">
 				인사이트를 저장하려면 로그인하세요. 로그인하면 태그기능을 이용할 수
 				있어요.
 			</p>
 			<Button
 				variant="ghost"
-				className="mt-[12px] h-auto w-full rounded-[10px] bg-[#e1f5f3] px-[20px] py-[9px] hover:bg-[#d0eeeb]"
+				className="mt-3 h-auto w-full rounded-[10px] bg-[#e1f5f3] px-5 py-2.25 hover:bg-[#d0eeeb]"
 				onClick={() => signInWithGoogle()}
 			>
 				<span className="typo-body-2 font-semibold text-dnd-primary-strong">
@@ -147,10 +179,10 @@ function SidebarTagListFallback() {
 
 function SidebarTagListSkeleton() {
 	return (
-		<div className="flex w-full flex-col gap-[4px]">
-			<div className="h-[32px] w-full animate-pulse rounded bg-dnd-fill-strong" />
-			<div className="h-[32px] w-full animate-pulse rounded bg-dnd-fill-strong" />
-			<div className="h-[32px] w-3/4 animate-pulse rounded bg-dnd-fill-strong" />
+		<div className="flex w-full flex-col gap-1">
+			<div className="h-8 w-full animate-pulse rounded bg-dnd-fill-strong" />
+			<div className="h-8 w-full animate-pulse rounded bg-dnd-fill-strong" />
+			<div className="h-8 w-3/4 animate-pulse rounded bg-dnd-fill-strong" />
 		</div>
 	);
 }

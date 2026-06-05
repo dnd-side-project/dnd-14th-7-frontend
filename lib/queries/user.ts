@@ -1,4 +1,8 @@
-import { mutationOptions, queryOptions } from "@tanstack/react-query";
+import {
+	mutationOptions,
+	type QueryClient,
+	queryOptions,
+} from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 
 // Supabase는 count 집계 결과를 타입 추론하지 못하므로 명시적으로 선언
@@ -123,13 +127,72 @@ export async function signInWithGoogle() {
 	});
 }
 
+function expireClientCookies() {
+	for (const cookie of document.cookie.split(";")) {
+		const name = cookie.split("=")[0]?.trim();
+		if (!name) continue;
+
+		// biome-ignore lint/suspicious/noDocumentCookie: 로그아웃 시 클라이언트 쿠키를 강제로 만료합니다.
+		document.cookie = `${name}=; Max-Age=0; path=/`;
+		// biome-ignore lint/suspicious/noDocumentCookie: 로그아웃 시 클라이언트 쿠키를 강제로 만료합니다.
+		document.cookie = `${name}=; Max-Age=0; path=/; domain=${window.location.hostname}`;
+	}
+}
+
+async function clearBrowserCaches() {
+	if (!("caches" in window)) return;
+
+	const cacheNames = await window.caches.keys();
+	await Promise.all(
+		cacheNames.map((cacheName) => window.caches.delete(cacheName)),
+	);
+}
+
+async function clearIndexedDB() {
+	if (!("indexedDB" in window)) return;
+
+	const indexedDBWithDatabases = window.indexedDB as IDBFactory & {
+		databases?: () => Promise<Array<{ name?: string | null }>>;
+	};
+	const databases = await indexedDBWithDatabases.databases?.();
+	if (!databases) return;
+
+	await Promise.all(
+		databases.map(
+			(database) =>
+				new Promise<void>((resolve) => {
+					if (!database.name) {
+						resolve();
+						return;
+					}
+
+					const request = window.indexedDB.deleteDatabase(database.name);
+					request.onsuccess = () => resolve();
+					request.onerror = () => resolve();
+					request.onblocked = () => resolve();
+				}),
+		),
+	);
+}
+
+async function clearClientSessionData() {
+	window.localStorage.clear();
+	window.sessionStorage.clear();
+	expireClientCookies();
+	await Promise.allSettled([clearBrowserCaches(), clearIndexedDB()]);
+}
+
 const signOut = async (): Promise<void> => {
 	const supabase = createClient();
-	await supabase.auth.signOut();
+	await supabase.auth.signOut({ scope: "global" });
 };
 
-export const logoutMutationOptions = () =>
+export const logoutMutationOptions = (queryClient?: QueryClient) =>
 	mutationOptions({
 		mutationFn: signOut,
-		onSuccess: () => window.location.reload(),
+		onSettled: async () => {
+			queryClient?.clear();
+			await clearClientSessionData();
+			window.location.replace("/");
+		},
 	});
