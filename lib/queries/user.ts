@@ -97,7 +97,7 @@ export const tagsQueryOptions = () =>
 		retry: false,
 	});
 
-const postUserPosition = async (position: Position): Promise<void> => {
+const getAuthenticatedUserId = async () => {
 	const supabase = createClient();
 	const {
 		data: { user },
@@ -106,16 +106,49 @@ const postUserPosition = async (position: Position): Promise<void> => {
 
 	if (authError || !user) throw new Error("Unauthenticated");
 
+	return { supabase, userId: user.id };
+};
+
+const postUserPosition = async (position: Position): Promise<void> => {
+	const { supabase, userId } = await getAuthenticatedUserId();
+
 	const { error } = await supabase
 		.from("profiles")
 		.update({ position })
-		.eq("id", user.id);
+		.eq("id", userId);
 
 	if (error) throw error;
 };
 
 export const updatePositionMutationOptions = () =>
 	mutationOptions({ mutationFn: postUserPosition });
+
+interface ProfileUpdateInput {
+	nickname: string;
+	position: User["position"];
+}
+
+const updateProfile = async ({
+	nickname,
+	position,
+}: ProfileUpdateInput): Promise<void> => {
+	const { supabase, userId } = await getAuthenticatedUserId();
+	const trimmedNickname = nickname.trim();
+
+	if (!trimmedNickname) {
+		throw new Error("Nickname is required");
+	}
+
+	const { error } = await supabase
+		.from("profiles")
+		.update({ nickname: trimmedNickname, position })
+		.eq("id", userId);
+
+	if (error) throw error;
+};
+
+export const updateProfileMutationOptions = () =>
+	mutationOptions({ mutationFn: updateProfile });
 
 export async function signInWithGoogle() {
 	const supabase = createClient();

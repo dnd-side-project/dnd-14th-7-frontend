@@ -1,5 +1,5 @@
 export type Tab =
-	| { type: "home" | "new" | "trash" }
+	| { type: "home" | "new" | "trash" | "mypage" }
 	| { type: "insight"; id: string }
 	| { type: "tag"; id: string; name: string };
 
@@ -8,6 +8,7 @@ export function serializeTab(tab: Tab): string {
 		case "home":
 		case "new":
 		case "trash":
+		case "mypage":
 			return tab.type;
 		case "insight":
 			return `insight:${tab.id}`;
@@ -19,7 +20,7 @@ export function serializeTab(tab: Tab): string {
 export function deserializeTab(str: string | null | undefined): Tab {
 	if (!str) return { type: "home" };
 
-	if (str === "home" || str === "new" || str === "trash") {
+	if (str === "home" || str === "new" || str === "trash" || str === "mypage") {
 		return { type: str };
 	}
 
