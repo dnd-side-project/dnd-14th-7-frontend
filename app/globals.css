@@ -50,6 +50,17 @@
 	--color-dnd-bg-mint2: var(--dnd-bg-mint2);
 	--color-dnd-bg-question: var(--dnd-bg-question);
 
+	/* DND Design System - Avatar */
+	--color-dnd-avatar-mint-2: var(--dnd-avatar-mint-2);
+	--color-dnd-avatar-mint-3: var(--dnd-avatar-mint-3);
+	--color-dnd-avatar-mint-4: var(--dnd-avatar-mint-4);
+	--color-dnd-avatar-mint-5: var(--dnd-avatar-mint-5);
+	--color-dnd-avatar-text-1: var(--dnd-avatar-text-1);
+	--color-dnd-avatar-text-2: var(--dnd-avatar-text-2);
+	--color-dnd-avatar-text-3: var(--dnd-avatar-text-3);
+	--color-dnd-avatar-text-4: var(--dnd-avatar-text-4);
+	--color-dnd-avatar-text-5: var(--dnd-avatar-text-5);
+
 	/* DND Design System - Interaction */
 	--color-dnd-interaction-inactive: var(--dnd-interaction-inactive);
 	--color-dnd-interaction-disable: var(--dnd-interaction-disable);
@@ -167,6 +178,17 @@
 	--dnd-bg-mint: #e1f5f3;
 	--dnd-bg-mint2: #f2faf9;
 	--dnd-bg-question: #ebebeb;
+
+	/* DND Design System - Avatar */
+	--dnd-avatar-mint-2: #d4f0ec;
+	--dnd-avatar-mint-3: #c7eae5;
+	--dnd-avatar-mint-4: #b9e4de;
+	--dnd-avatar-mint-5: #a7dcd5;
+	--dnd-avatar-text-1: #008c7e;
+	--dnd-avatar-text-2: #00796d;
+	--dnd-avatar-text-3: #006d62;
+	--dnd-avatar-text-4: #006158;
+	--dnd-avatar-text-5: #00574f;
 
 	/* DND Design System - Interaction */
 	--dnd-interaction-inactive: #989ba2;

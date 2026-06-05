@@ -1,11 +1,11 @@
 import { cn } from "@/lib/utils";
 
 const AVATAR_COLORS = [
-	"bg-[#E1F5F3] text-[#008C7E]",
-	"bg-[#D4F0EC] text-[#00796D]",
-	"bg-[#C7EAE5] text-[#006D62]",
-	"bg-[#B9E4DE] text-[#006158]",
-	"bg-[#A7DCD5] text-[#00574F]",
+	"bg-dnd-bg-mint text-dnd-avatar-text-1",
+	"bg-dnd-avatar-mint-2 text-dnd-avatar-text-2",
+	"bg-dnd-avatar-mint-3 text-dnd-avatar-text-3",
+	"bg-dnd-avatar-mint-4 text-dnd-avatar-text-4",
+	"bg-dnd-avatar-mint-5 text-dnd-avatar-text-5",
 ] as const;
 
 const AVATAR_SIZE_CLASS = {
