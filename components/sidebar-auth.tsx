@@ -16,6 +16,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { UserAvatar } from "@/components/user-avatar";
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import {
 	logoutMutationOptions,
@@ -73,9 +74,7 @@ function SidebarUserProfile() {
 					type="button"
 					className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-dnd-primary"
 				>
-					<div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200">
-						<div className="size-full bg-gray-300" />
-					</div>
+					<UserAvatar nickname={user.nickname} seed={user.email} />
 					<p className="typo-headline-1 truncate font-medium text-dnd-label-neutral">
 						{user.nickname}
 					</p>
