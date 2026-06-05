@@ -70,7 +70,7 @@ function SidebarUserProfile() {
 			<DropdownMenuTrigger asChild>
 				<button
 					type="button"
-					className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-dnd-primary"
+					className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-dnd-primary"
 				>
 					<div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200">
 						<div className="size-full bg-gray-300" />
