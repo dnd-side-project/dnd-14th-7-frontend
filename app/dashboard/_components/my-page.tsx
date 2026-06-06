@@ -17,6 +17,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { UserAvatar } from "@/components/user-avatar";
 import {
 	type User,
 	updateProfileMutationOptions,
@@ -102,9 +103,7 @@ function MyPageContent() {
 			<section className="flex w-full max-w-180 flex-col gap-6 rounded-4xl bg-white p-8 shadow-dnd-normal">
 				<div className="flex items-center justify-between gap-4">
 					<div className="flex min-w-0 items-center gap-4">
-						<div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200">
-							<div className="size-full bg-gray-300" />
-						</div>
+						<UserAvatar nickname={user.nickname} seed={user.email} size="lg" />
 						<div className="flex min-w-0 flex-col gap-1">
 							<h1 className="typo-title-2 truncate font-semibold text-dnd-label-normal">
 								{user.nickname}
