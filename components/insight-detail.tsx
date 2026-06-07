@@ -50,52 +50,52 @@ function InsightDetailError() {
 
 function InsightDetailSkeleton() {
 	return (
-		<div className="flex gap-20 justify-center pl-20 pr-6 animate-pulse">
-			<div className="w-full flex flex-col gap-6 pt-20 pb-20">
+		<div className="flex min-w-0 flex-col gap-8 px-6 xl:flex-row xl:justify-center xl:gap-12 xl:px-10 2xl:gap-20 2xl:pl-20 2xl:pr-6">
+			<div className="flex w-full min-w-0 max-w-190 flex-col gap-6 pt-20 pb-20">
 				<div className="flex justify-between items-start">
 					<div className="flex flex-col gap-6 w-full">
-						<div className="h-10 w-2/3 bg-dnd-fill-strong rounded-md" />
+						<div className="h-10 w-2/3 animate-pulse rounded-md bg-dnd-fill-strong" />
 						<div className="flex flex-col gap-4">
-							<div className="h-5 w-1/3 bg-dnd-fill-normal rounded-md" />
+							<div className="h-5 w-1/3 animate-pulse rounded-md bg-dnd-fill-normal" />
 							<div className="flex gap-2">
-								<div className="h-7 w-16 bg-dnd-fill-normal rounded-[10px]" />
-								<div className="h-7 w-16 bg-dnd-fill-normal rounded-[10px]" />
-								<div className="h-7 w-16 bg-dnd-fill-normal rounded-[10px]" />
+								<div className="h-7 w-16 animate-pulse rounded-[10px] bg-dnd-fill-normal" />
+								<div className="h-7 w-16 animate-pulse rounded-[10px] bg-dnd-fill-normal" />
+								<div className="h-7 w-16 animate-pulse rounded-[10px] bg-dnd-fill-normal" />
 							</div>
 						</div>
 					</div>
-					<div className="w-6 h-6 bg-dnd-fill-normal rounded-full shrink-0" />
+					<div className="w-6 h-6 shrink-0 animate-pulse rounded-full bg-dnd-fill-normal" />
 				</div>
 
 				<div className="bg-dnd-bg-alternative rounded-3xl p-6 h-18 w-full flex items-center gap-4">
-					<div className="h-6 w-16 bg-dnd-fill-normal rounded-lg" />
-					<div className="h-6 w-2/3 bg-dnd-fill-normal rounded-md" />
+					<div className="h-6 w-16 animate-pulse rounded-lg bg-dnd-fill-normal" />
+					<div className="h-6 w-2/3 animate-pulse rounded-md bg-dnd-fill-normal" />
 				</div>
 
 				<div className="flex flex-col gap-3">
-					<div className="h-8 w-24 bg-dnd-fill-normal rounded-md" />
+					<div className="h-8 w-24 animate-pulse rounded-md bg-dnd-fill-normal" />
 					<div className="bg-dnd-bg-insight-box rounded-4xl p-6 gap-4 flex flex-col">
-						<div className="bg-white rounded-3xl p-6 h-32 w-full" />
+						<div className="h-32 w-full animate-pulse rounded-3xl bg-white p-6" />
 					</div>
 				</div>
 
 				<div className="flex flex-col gap-3">
-					<div className="h-5 w-10 bg-dnd-fill-normal rounded-md" />
-					<div className="h-20 w-full bg-dnd-fill-normal rounded-xl border border-dnd-line-normal" />
+					<div className="h-5 w-10 animate-pulse rounded-md bg-dnd-fill-normal" />
+					<div className="h-20 w-full animate-pulse rounded-xl border border-dnd-line-normal bg-dnd-fill-normal" />
 				</div>
 
 				<div className="flex flex-col gap-3">
-					<div className="h-5 w-10 bg-dnd-fill-normal rounded-md" />
+					<div className="h-5 w-10 animate-pulse rounded-md bg-dnd-fill-normal" />
 					<div className="flex gap-3">
-						<div className="h-11.5 flex-1 bg-dnd-fill-normal rounded-xl border border-dnd-line-normal" />
-						<div className="h-11.5 flex-2 bg-dnd-fill-normal rounded-xl border border-dnd-line-normal" />
-						<div className="h-11.5 w-21.5 bg-dnd-fill-normal rounded-xl" />
+						<div className="h-11.5 flex-1 animate-pulse rounded-xl border border-dnd-line-normal bg-dnd-fill-normal" />
+						<div className="h-11.5 flex-2 animate-pulse rounded-xl border border-dnd-line-normal bg-dnd-fill-normal" />
+						<div className="h-11.5 w-21.5 animate-pulse rounded-xl bg-dnd-fill-normal" />
 					</div>
 				</div>
 			</div>
 
 			{/* Q&A Panel Skeleton */}
-			<div className="pt-6 pb-6">
+			<div className="pb-6 xl:pt-6">
 				<InsightQnAPanelSkeleton />
 			</div>
 		</div>
@@ -118,15 +118,15 @@ function InsightDetailContent({ insightId }: { insightId: number }) {
 	const piecesData = piecesQuery.data;
 
 	return (
-		<div className="flex gap-20 justify-center pl-20 pr-6">
-			<div className="w-full flex flex-col gap-6 pt-20 pb-20">
+		<div className="flex min-w-0 flex-col gap-8 px-6 xl:flex-row xl:justify-center xl:gap-12 xl:px-10 2xl:gap-20 2xl:pl-20 2xl:pr-6">
+			<div className="flex w-full min-w-0 max-w-190 flex-col gap-6 pt-20 pb-20">
 				<InsightHeader data={data} />
 				<InitialThoughtBox initialThought={data.initialThought} />
 				<MainInsightBox insightId={insightId} insightPieces={piecesData} />
 				<MemoSection />
 				<LinkSection />
 			</div>
-			<div className="pt-6 pb-6">
+			<div className="pb-6 xl:pt-6">
 				<InsightQnAPanel insightId={insightId} />
 			</div>
 		</div>
