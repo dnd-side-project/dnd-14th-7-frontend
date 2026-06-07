@@ -18,7 +18,7 @@ export function DashboardTabBar() {
 	return (
 		<div
 			className={`fixed top-0 right-0 z-10 flex h-14 items-center border-b border-[#e1e2e4] bg-dnd-bg-mint transition-[left] duration-300 ${
-				open ? "left-65" : "left-0"
+				open ? "left-[var(--sidebar-width)]" : "left-0"
 			}`}
 		>
 			{!open && (

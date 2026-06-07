@@ -1,8 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import {
+	QueryErrorResetBoundary,
+	useSuspenseQuery,
+} from "@tanstack/react-query";
 import { MoreVertical } from "lucide-react";
 import Image from "next/image";
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import type { InsightSummary } from "@/lib/queries/insight";
@@ -16,10 +21,23 @@ interface TagPageProps {
 
 export function TagPage({ tagId, tagName }: TagPageProps) {
 	return (
-		<div className="flex flex-col items-center w-full pb-[100px] pt-[60px]">
-			<div className="w-full max-w-[1180px] mx-auto flex flex-col gap-[24px]">
+		<div className="flex w-full flex-col items-center px-10 pb-25 pt-15">
+			<div className="w-full max-w-295 mx-auto flex flex-col gap-6">
 				<TagPageHeader tagName={tagName} />
-				<TagInsightGrid tagId={tagId} />
+				<QueryErrorResetBoundary>
+					{({ reset }) => (
+						<ErrorBoundary
+							onReset={reset}
+							fallbackRender={({ resetErrorBoundary }) => (
+								<TagPageError onRetry={resetErrorBoundary} />
+							)}
+						>
+							<Suspense fallback={<TagPageSkeleton />}>
+								<TagInsightGrid tagId={tagId} />
+							</Suspense>
+						</ErrorBoundary>
+					)}
+				</QueryErrorResetBoundary>
 			</div>
 		</div>
 	);
@@ -27,9 +45,9 @@ export function TagPage({ tagId, tagName }: TagPageProps) {
 
 function TagPageHeader({ tagName }: { tagName: string }) {
 	return (
-		<div className="flex gap-[12px] items-center">
-			<div className="bg-white rounded-[12px] p-[14.4px] flex items-center justify-center shrink-0">
-				<Image src="/hash-tag.svg" alt="#" width={24} height={24} />
+		<div className="flex items-center gap-3">
+			<div className="flex shrink-0 items-center justify-center rounded-xl bg-white p-3.5">
+				<Image src="/hash-tag.svg" alt="" width={24} height={24} />
 			</div>
 			<div className="flex flex-1 items-center justify-between">
 				<h1 className="typo-title-1 font-bold text-dnd-label-normal">
@@ -43,10 +61,28 @@ function TagPageHeader({ tagName }: { tagName: string }) {
 	);
 }
 
-function TagInsightGrid({ tagId }: { tagId: number }) {
-	const { data, isError, isLoading } = useQuery(
-		insightsQueryOptions({ tag: tagId }),
+function TagPageError({ onRetry }: { onRetry: () => void }) {
+	return (
+		<div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-dnd-line-normal bg-white px-8 py-12 text-center shadow-dnd-normal">
+			<p className="typo-headline-1 font-semibold text-dnd-label-normal">
+				인사이트를 불러오지 못했어요.
+			</p>
+			<p className="typo-body-2 text-dnd-label-alternative">
+				잠시 후 다시 시도해주세요.
+			</p>
+			<button
+				type="button"
+				onClick={onRetry}
+				className="rounded-xl bg-dnd-primary px-5 py-2 typo-body-2 font-semibold text-white transition-colors hover:bg-dnd-primary-strong"
+			>
+				다시 시도
+			</button>
+		</div>
 	);
+}
+
+function TagInsightGrid({ tagId }: { tagId: number }) {
+	const { data } = useSuspenseQuery(insightsQueryOptions({ tag: tagId }));
 	const { dispatch } = useDashboardTabs();
 	const openInsight = (insightId: number) => {
 		dispatch(
@@ -61,34 +97,22 @@ function TagInsightGrid({ tagId }: { tagId: number }) {
 		);
 	};
 
-	if (isLoading) {
-		return <TagPageSkeleton />;
-	}
-
-	if (isError || !data) {
-		return (
-			<div className="text-dnd-label-alternative">
-				인사이트를 불러오는 중 오류가 발생했습니다.
-			</div>
-		);
-	}
-
 	if (data.content.length === 0) {
 		return (
-			<div className="flex items-center justify-center py-[80px] text-dnd-label-alternative typo-headline-1">
+			<div className="flex items-center justify-center py-20 text-dnd-label-alternative typo-headline-1">
 				아직 이 태그에 인사이트가 없어요.
 			</div>
 		);
 	}
 
 	return (
-		<div className="grid grid-cols-4 gap-[24px]">
+		<div className="grid grid-cols-4 gap-6">
 			{data.content.map((insight) => (
 				<div key={insight.insightId} className="relative">
 					<InsightCard insight={insight} />
 					<button
 						type="button"
-						className="absolute inset-0 z-10 rounded-[32px] text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-dnd-primary focus-visible:ring-offset-2"
+						className="absolute inset-0 z-10 rounded-4xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-dnd-primary focus-visible:ring-offset-2"
 						aria-label={`${insight.title || "제목 없는 인사이트"} 인사이트 열기`}
 						onClick={() => openInsight(insight.insightId)}
 					/>
@@ -103,8 +127,8 @@ function InsightCard({ insight }: { insight: InsightSummary }) {
 	const dateStr = `${year}. ${month}. ${day}.`;
 
 	return (
-		<div className="flex flex-col p-[24px] items-start gap-[28px] bg-white rounded-[32px] border border-dnd-line-normal">
-			<div className="flex flex-col gap-[4px] w-full">
+		<div className="flex flex-col items-start gap-7 rounded-4xl border border-dnd-line-normal bg-white p-6">
+			<div className="flex w-full flex-col gap-1">
 				<div className="flex items-center justify-between w-full">
 					<h3 className="typo-heading-1 font-semibold text-dnd-label-normal line-clamp-1">
 						{insight.title}
@@ -127,11 +151,11 @@ function InsightCard({ insight }: { insight: InsightSummary }) {
 				{insight.confirmedContent}
 			</p>
 
-			<div className="flex flex-wrap gap-[8px]">
+			<div className="flex flex-wrap gap-2">
 				{insight.tags.map((tag) => (
 					<span
 						key={tag.tagId}
-						className="px-[10px] py-[6px] rounded-[8px] typo-label-1 font-medium text-dnd-primary border border-dnd-primary/40 bg-dnd-primary/5"
+						className="rounded-lg border border-dnd-primary/40 bg-dnd-primary/5 px-2.5 py-1.5 typo-label-1 font-medium text-dnd-primary"
 					>
 						{tag.tagName}
 					</span>
@@ -154,24 +178,24 @@ const TAG_PAGE_SKELETON_KEYS = [
 
 function TagPageSkeleton() {
 	return (
-		<div className="grid grid-cols-4 gap-[24px] animate-pulse">
+		<div className="grid animate-pulse grid-cols-4 gap-6">
 			{TAG_PAGE_SKELETON_KEYS.map((key) => (
 				<div
 					key={key}
-					className="flex flex-col p-[24px] gap-[28px] bg-white rounded-[32px] border border-dnd-line-normal"
+					className="flex flex-col gap-7 rounded-4xl border border-dnd-line-normal bg-white p-6"
 				>
-					<div className="flex flex-col gap-[4px]">
-						<div className="h-[22px] w-3/4 bg-dnd-fill-normal rounded-md" />
-						<div className="h-[14px] w-1/3 bg-dnd-fill-normal rounded-md" />
+					<div className="flex flex-col gap-1">
+						<div className="h-5.5 w-3/4 rounded-md bg-dnd-fill-normal" />
+						<div className="h-3.5 w-1/3 rounded-md bg-dnd-fill-normal" />
 					</div>
-					<div className="flex flex-col gap-[4px]">
-						<div className="h-[18px] w-full bg-dnd-fill-normal rounded-md" />
-						<div className="h-[18px] w-full bg-dnd-fill-normal rounded-md" />
-						<div className="h-[18px] w-2/3 bg-dnd-fill-normal rounded-md" />
+					<div className="flex flex-col gap-1">
+						<div className="h-4.5 w-full rounded-md bg-dnd-fill-normal" />
+						<div className="h-4.5 w-full rounded-md bg-dnd-fill-normal" />
+						<div className="h-4.5 w-2/3 rounded-md bg-dnd-fill-normal" />
 					</div>
-					<div className="flex gap-[8px]">
-						<div className="h-[26px] w-[48px] bg-dnd-fill-normal rounded-[8px]" />
-						<div className="h-[26px] w-[48px] bg-dnd-fill-normal rounded-[8px]" />
+					<div className="flex gap-2">
+						<div className="h-6.5 w-12 rounded-lg bg-dnd-fill-normal" />
+						<div className="h-6.5 w-12 rounded-lg bg-dnd-fill-normal" />
 					</div>
 				</div>
 			))}
