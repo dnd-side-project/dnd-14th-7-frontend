@@ -103,15 +103,15 @@ function AuthenticatedInsightInputWithUser({
 
 function InsightInputSkeleton({ titleClassName }: { titleClassName?: string }) {
 	return (
-		<section className="flex w-full max-w-240 animate-pulse flex-col items-start gap-8">
+		<section className="flex w-full max-w-240 flex-col items-start gap-8">
 			<div
 				className={cn(
-					"h-8 w-2/3 rounded-md bg-dnd-fill-normal",
+					"h-8 w-2/3 animate-pulse rounded-md bg-dnd-fill-normal",
 					titleClassName,
 				)}
 			/>
 			<div className="min-h-54 w-full rounded-3xl border border-dnd-line-normal bg-white p-6">
-				<div className="h-5 w-1/2 rounded-md bg-dnd-fill-normal" />
+				<div className="h-5 w-1/2 animate-pulse rounded-md bg-dnd-fill-normal" />
 			</div>
 		</section>
 	);
