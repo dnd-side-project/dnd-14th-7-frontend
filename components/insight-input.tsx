@@ -1,8 +1,15 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	QueryErrorResetBoundary,
+	useMutation,
+	useQueryClient,
+	useSuspenseQuery,
+} from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { overlay } from "overlay-kit";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { LoginModal } from "@/components/login-modal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +19,7 @@ import {
 } from "@/lib/queries/insight";
 import type { User } from "@/lib/queries/user";
 import { userKeys, userQueryOptions } from "@/lib/queries/user";
+import { cn } from "@/lib/utils";
 
 const PLACEHOLDER_BY_POSITION: Record<
 	string,
@@ -47,12 +55,42 @@ interface InsightInputProps {
 	titleClassName?: string;
 }
 
-export function InsightInput({ onSuccess, titleClassName }: InsightInputProps) {
-	const { data: user, isError } = useQuery(userQueryOptions());
+export const InsightInput = dynamic<InsightInputProps>(
+	() => Promise.resolve(InsightInputContent),
+	{
+		ssr: false,
+		loading: () => <InsightInputSkeleton />,
+	},
+);
 
-	if (isError || !user) {
-		return <GuestInsightInput titleClassName={titleClassName} />;
-	}
+function InsightInputContent(props: InsightInputProps) {
+	return (
+		<QueryErrorResetBoundary>
+			{({ reset }) => (
+				<ErrorBoundary
+					onReset={reset}
+					fallbackRender={() => (
+						<GuestInsightInput titleClassName={props.titleClassName} />
+					)}
+				>
+					<Suspense
+						fallback={
+							<InsightInputSkeleton titleClassName={props.titleClassName} />
+						}
+					>
+						<AuthenticatedInsightInputWithUser {...props} />
+					</Suspense>
+				</ErrorBoundary>
+			)}
+		</QueryErrorResetBoundary>
+	);
+}
+
+function AuthenticatedInsightInputWithUser({
+	onSuccess,
+	titleClassName,
+}: InsightInputProps) {
+	const { data: user } = useSuspenseQuery(userQueryOptions());
 
 	return (
 		<AuthenticatedInsightInput
@@ -63,13 +101,32 @@ export function InsightInput({ onSuccess, titleClassName }: InsightInputProps) {
 	);
 }
 
+function InsightInputSkeleton({ titleClassName }: { titleClassName?: string }) {
+	return (
+		<section className="flex w-full max-w-240 animate-pulse flex-col items-start gap-8">
+			<div
+				className={cn(
+					"h-8 w-2/3 rounded-md bg-dnd-fill-normal",
+					titleClassName,
+				)}
+			/>
+			<div className="min-h-54 w-full rounded-3xl border border-dnd-line-normal bg-white p-6">
+				<div className="h-5 w-1/2 rounded-md bg-dnd-fill-normal" />
+			</div>
+		</section>
+	);
+}
+
 function GuestInsightInput({ titleClassName }: { titleClassName?: string }) {
 	const content = getPositionContent(undefined);
 
 	return (
-		<section className="flex flex-col items-start gap-[32px] w-full max-w-[960px]">
+		<section className="flex w-full max-w-240 flex-col items-start gap-8">
 			<h1
-				className={`typo-title-2 font-medium text-dnd-label-strong ${titleClassName ?? ""}`}
+				className={cn(
+					"typo-title-2 font-medium text-dnd-label-strong",
+					titleClassName,
+				)}
 			>
 				{content.title}
 			</h1>
@@ -132,9 +189,12 @@ function AuthenticatedInsightInput({
 	};
 
 	return (
-		<section className="flex flex-col items-start gap-[32px] w-full max-w-[960px]">
+		<section className="flex w-full max-w-240 flex-col items-start gap-8">
 			<h1
-				className={`typo-title-2 font-medium text-dnd-label-strong ${titleClassName ?? ""}`}
+				className={cn(
+					"typo-title-2 font-medium text-dnd-label-strong",
+					titleClassName,
+				)}
 			>
 				{content.title}
 			</h1>
