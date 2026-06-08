@@ -82,7 +82,7 @@ export function MemoSection({ insightId, initialMemo }: MemoSectionProps) {
 					oldData
 						? {
 								...oldData,
-								memo: updatedInsight?.memo,
+								memo: updatedInsight.memo,
 								updatedDate: updatedInsight.updatedDate,
 							}
 						: oldData,
