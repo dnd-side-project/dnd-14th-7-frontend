@@ -53,6 +53,7 @@ interface InsightsData {
 export interface GetInsightResponse {
 	insightId: number;
 	initialThought: string;
+	memo: string;
 	title: string;
 	tags: Tag[];
 	createdDate: string;
@@ -203,6 +204,7 @@ const getInsight = async (id: number): Promise<GetInsightResponse> => {
       id,
       title,
       initial_thought,
+      memo,
       created_at,
       updated_at,
       insight_tags(tag_id, tags(id, name))
@@ -225,6 +227,7 @@ const getInsight = async (id: number): Promise<GetInsightResponse> => {
 	return {
 		insightId: data.id,
 		initialThought: data.initial_thought ?? "",
+		memo: data.memo ?? "",
 		title: data.title ?? "",
 		tags,
 		createdDate: data.created_at,
@@ -494,6 +497,32 @@ const updateInsightTitle = async (
 	if (error) throw error;
 };
 
+interface UpdateInsightMemoResponse {
+	memo: string;
+	updatedDate: string;
+}
+
+const updateInsightMemo = async (
+	insightId: number,
+	data: { memo: string },
+): Promise<UpdateInsightMemoResponse> => {
+	const supabase = createClient();
+	const { data: updatedInsight, error } = await supabase
+		.from("insights")
+		.update({ memo: data.memo })
+		.eq("id", insightId)
+		.select("memo, updated_at")
+		.single();
+
+	if (error) throw error;
+	if (!updatedInsight) throw new Error("Failed to update insight memo");
+
+	return {
+		memo: updatedInsight.memo,
+		updatedDate: updatedInsight.updated_at,
+	};
+};
+
 const convertAnswerToBlock = async (
 	insightId: number,
 	answerId: number,
@@ -605,4 +634,9 @@ export const updateInsightTitleMutationOptions = (insightId: number) =>
 	mutationOptions({
 		mutationFn: (data: { title: string }) =>
 			updateInsightTitle(insightId, data),
+	});
+
+export const updateInsightMemoMutationOptions = (insightId: number) =>
+	mutationOptions({
+		mutationFn: (data: { memo: string }) => updateInsightMemo(insightId, data),
 	});
