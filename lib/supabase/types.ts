@@ -51,6 +51,7 @@ export interface Database {
 					user_id: string;
 					title: string;
 					initial_thought: string;
+					memo: string;
 					views: number;
 					trashed_at: string | null;
 					created_at: string;
@@ -60,6 +61,7 @@ export interface Database {
 					user_id: string;
 					title?: string;
 					initial_thought: string;
+					memo?: string;
 					views?: number;
 					trashed_at?: string | null;
 					created_at?: string;
@@ -68,6 +70,7 @@ export interface Database {
 				Update: {
 					title?: string;
 					initial_thought?: string;
+					memo?: string;
 					views?: number;
 					trashed_at?: string | null;
 					updated_at?: string;

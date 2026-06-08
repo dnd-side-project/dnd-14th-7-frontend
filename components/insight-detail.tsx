@@ -22,6 +22,7 @@ import {
 	updateInsightTitleMutationOptions,
 } from "@/lib/queries/insight";
 import { formatDate } from "@/lib/utils/date";
+import { MemoSection } from "./insight-detail/memo-section";
 import { InsightPieceItem } from "./insight-piece-item/insight-piece-item";
 import { InsightQnAPanel, InsightQnAPanelSkeleton } from "./insight-qna-panel";
 
@@ -123,7 +124,7 @@ function InsightDetailContent({ insightId }: { insightId: number }) {
 				<InsightHeader data={data} />
 				<InitialThoughtBox initialThought={data.initialThought} />
 				<MainInsightBox insightId={insightId} insightPieces={piecesData} />
-				<MemoSection />
+				<MemoSection insightId={insightId} initialMemo={data.memo} />
 				<LinkSection />
 			</div>
 			<div className="pb-6 xl:pt-6">
@@ -428,24 +429,6 @@ function MainInsightBox({
 					)}
 				</div>
 			</div>
-		</div>
-	);
-}
-
-function MemoSection() {
-	return (
-		<div className="flex flex-col gap-3">
-			<label
-				htmlFor="memo"
-				className="typo-label-1 font-bold text-dnd-label-alternative"
-			>
-				메모
-			</label>
-			<textarea
-				id="memo"
-				className="w-full bg-transparent border border-dnd-line-normal rounded-xl p-4 min-h-20 placeholder-dnd-label-assistive typo-body-2 focus:outline-none focus:border-dnd-primary transition-colors resize-none"
-				placeholder="상황, 참고내용 등 추가 메모를 입력해주세요."
-			/>
 		</div>
 	);
 }
