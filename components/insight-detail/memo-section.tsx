@@ -153,7 +153,6 @@ export function MemoSection({ insightId, initialMemo }: MemoSectionProps) {
 			) : (
 				<button
 					type="button"
-					aria-labelledby={labelId}
 					className="relative flex min-h-32 w-full items-start rounded-xl border border-dnd-line-normal bg-transparent p-4 pr-16 text-left typo-body-2 text-dnd-label-normal transition-colors hover:border-dnd-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dnd-primary focus-visible:ring-offset-2"
 					onClick={() => dispatch({ type: "START_EDIT", memo: initialMemo })}
 				>
