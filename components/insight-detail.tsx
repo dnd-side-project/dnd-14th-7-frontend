@@ -22,6 +22,7 @@ import {
 	updateInsightTitleMutationOptions,
 } from "@/lib/queries/insight";
 import { formatDate } from "@/lib/utils/date";
+import { LinkSection } from "./insight-detail/link-section";
 import { MemoSection } from "./insight-detail/memo-section";
 import { InsightPieceItem } from "./insight-piece-item/insight-piece-item";
 import { InsightQnAPanel, InsightQnAPanelSkeleton } from "./insight-qna-panel";
@@ -125,7 +126,7 @@ function InsightDetailContent({ insightId }: { insightId: number }) {
 				<InitialThoughtBox initialThought={data.initialThought} />
 				<MainInsightBox insightId={insightId} insightPieces={piecesData} />
 				<MemoSection insightId={insightId} initialMemo={data.memo} />
-				<LinkSection />
+				<LinkSection insightId={insightId} />
 			</div>
 			<div className="pb-6 xl:pt-6">
 				<InsightQnAPanel insightId={insightId} />
@@ -428,41 +429,6 @@ function MainInsightBox({
 						/>
 					)}
 				</div>
-			</div>
-		</div>
-	);
-}
-
-function LinkSection() {
-	return (
-		<div className="flex flex-col gap-3">
-			<label
-				htmlFor="link"
-				className="typo-label-1 font-bold text-dnd-label-alternative"
-			>
-				링크
-			</label>
-			<div className="flex gap-3">
-				<input
-					type="text"
-					id="link-title"
-					name="link-title"
-					className="flex-1 bg-transparent border border-dnd-line-normal rounded-xl px-4 py-3 placeholder-dnd-label-assistive typo-body-2 focus:outline-none focus:border-dnd-primary transition-colors"
-					placeholder="링크 제목"
-				/>
-				<input
-					type="text"
-					id="link-url"
-					name="link-url"
-					className="flex-2 bg-transparent border border-dnd-line-normal rounded-xl px-4 py-3 placeholder-dnd-label-assistive typo-body-2 focus:outline-none focus:border-dnd-primary transition-colors"
-					placeholder="https://"
-				/>
-				<button
-					type="button"
-					className="bg-dnd-bg-alternative text-dnd-label-assistant px-6 rounded-xl typo-body-2 font-medium hover:bg-dnd-fill-normal transition-colors"
-				>
-					추가하기
-				</button>
 			</div>
 		</div>
 	);
