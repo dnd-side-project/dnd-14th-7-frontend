@@ -202,6 +202,9 @@ export function LinkSection({ insightId }: LinkSectionProps) {
 					{links.map((link) => {
 						const isDeletingThisLink =
 							isDeleting && deletingLinkId === link.linkId;
+						const safeLinkUrl = isAllowedLinkUrl(link.url)
+							? link.url
+							: undefined;
 
 						return (
 							<li
@@ -209,7 +212,7 @@ export function LinkSection({ insightId }: LinkSectionProps) {
 								className="flex items-center justify-between gap-3 rounded-xl border border-dnd-line-normal px-4 py-3"
 							>
 								<a
-									href={link.url}
+									href={safeLinkUrl}
 									target="_blank"
 									rel="noreferrer"
 									className="flex min-w-0 flex-1 items-center gap-2 text-dnd-label-normal hover:text-dnd-primary"
