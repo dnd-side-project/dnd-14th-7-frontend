@@ -7,6 +7,10 @@ export function useCopyFeedback() {
 	const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const copyText = useCallback(async (text: string) => {
+		if (!navigator.clipboard) {
+			throw new Error("Clipboard API is not supported in this environment.");
+		}
+
 		await navigator.clipboard.writeText(text);
 
 		if (resetTimeoutRef.current) {

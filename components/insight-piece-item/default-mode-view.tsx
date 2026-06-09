@@ -56,7 +56,7 @@ export function DefaultModeView({
 							<>
 								<DropdownMenuItem
 									className="p-3 rounded-xl bg-dnd-bg-alternative cursor-pointer flex items-start gap-3 w-40 focus:bg-dnd-bg-alternative"
-									onClick={onRetry}
+									onSelect={onRetry}
 								>
 									<Image
 										src="/re-try.svg"
@@ -81,7 +81,7 @@ export function DefaultModeView({
 
 						<DropdownMenuItem
 							className="px-3 h-12 rounded-lg typo-body-1 font-normal text-dnd-label-neutral cursor-pointer focus:bg-dnd-bg-alternative flex items-center gap-3"
-							onClick={onEdit}
+							onSelect={onEdit}
 						>
 							<Image src="/edit.svg" alt="수정" width={24} height={24} />
 							수정
@@ -100,7 +100,7 @@ export function DefaultModeView({
 						{canDelete && (
 							<DropdownMenuItem
 								className="px-3 h-12 rounded-lg typo-body-1 font-normal text-dnd-status-negative cursor-pointer focus:bg-dnd-bg-alternative focus:text-dnd-status-negative flex items-center gap-3 data-disabled:opacity-50"
-								onClick={onDelete}
+								onSelect={onDelete}
 								disabled={isDeleting}
 							>
 								<Image src="/delete.svg" alt="삭제" width={24} height={24} />

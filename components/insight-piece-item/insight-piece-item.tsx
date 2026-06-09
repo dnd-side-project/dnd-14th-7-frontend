@@ -45,6 +45,9 @@ export function InsightPieceItem({
 	const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(
 		null,
 	);
+	const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(
+		null,
+	);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const displayContent = piece.content;
 	const canDelete = piece.createdType !== "INIT";
@@ -111,7 +114,7 @@ export function InsightPieceItem({
 			setIsDeleteDialogOpen(false);
 		},
 		onError: () => {
-			setActionErrorMessage("인사이트를 삭제하지 못했어요. 다시 시도해주세요.");
+			setDeleteErrorMessage("인사이트를 삭제하지 못했어요. 다시 시도해주세요.");
 		},
 	});
 
@@ -153,15 +156,21 @@ export function InsightPieceItem({
 		}
 	};
 
+	const handleDeleteDialogOpenChange = (open: boolean) => {
+		setIsDeleteDialogOpen(open);
+		if (!open) setDeleteErrorMessage(null);
+	};
+
 	const handleOpenDeleteDialog = () => {
 		if (!canDelete) return;
 		setActionErrorMessage(null);
+		setDeleteErrorMessage(null);
 		setIsDeleteDialogOpen(true);
 	};
 
 	const handleConfirmDelete = () => {
 		if (isDeleting || !canDelete) return;
-		setActionErrorMessage(null);
+		setDeleteErrorMessage(null);
 		deletePiece(piece.insightPieceId);
 	};
 
@@ -199,7 +208,7 @@ export function InsightPieceItem({
 			/>
 			<AlertDialog
 				open={isDeleteDialogOpen}
-				onOpenChange={setIsDeleteDialogOpen}
+				onOpenChange={handleDeleteDialogOpenChange}
 			>
 				<AlertDialogContent size="sm">
 					<AlertDialogHeader>
@@ -211,6 +220,14 @@ export function InsightPieceItem({
 							삭제한 인사이트는 다시 복구할 수 없어요.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
+					{deleteErrorMessage && (
+						<p
+							className="typo-body-2 text-center text-dnd-status-negative"
+							role="alert"
+						>
+							{deleteErrorMessage}
+						</p>
+					)}
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={isDeleting}>취소</AlertDialogCancel>
 						<AlertDialogAction
