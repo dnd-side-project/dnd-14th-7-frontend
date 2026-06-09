@@ -196,6 +196,37 @@ export interface Database {
 					},
 				];
 			};
+			links: {
+				Row: {
+					id: number;
+					insight_id: number;
+					title: string;
+					content: string;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					insight_id: number;
+					title?: string;
+					content?: string;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					title?: string;
+					content?: string;
+					updated_at?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "links_insight_id_fkey";
+						columns: ["insight_id"];
+						isOneToOne: false;
+						referencedRelation: "insights";
+						referencedColumns: ["id"];
+					},
+				];
+			};
 			answers: {
 				Row: {
 					id: number;

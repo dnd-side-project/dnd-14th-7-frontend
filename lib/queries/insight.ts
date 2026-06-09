@@ -83,6 +83,14 @@ export interface InsightAnswerCard {
 	createdDate: string;
 }
 
+export interface InsightLink {
+	linkId: number;
+	title: string;
+	url: string;
+	createdDate: string;
+	updatedDate: string;
+}
+
 export interface GetInsightQuestionsResponse {
 	questions: InsightQuestion[];
 	answerCards: InsightAnswerCard[];
@@ -106,6 +114,7 @@ export const insightKeys = {
 	detail: (id: number) => [...insightKeys.all, "detail", id] as const,
 	pieces: (id: number) => [...insightKeys.all, "pieces", id] as const,
 	questions: (id: number) => [...insightKeys.all, "questions", id] as const,
+	links: (id: number) => [...insightKeys.all, "links", id] as const,
 };
 
 // ── API Functions ──
@@ -502,6 +511,58 @@ interface UpdateInsightMemoResponse {
 	updatedDate: string;
 }
 
+const getInsightLinks = async (insightId: number): Promise<InsightLink[]> => {
+	const supabase = createClient();
+	const { data, error } = await supabase
+		.from("links")
+		.select("id, title, content, created_at, updated_at")
+		.eq("insight_id", insightId)
+		.order("created_at", { ascending: false });
+
+	if (error) throw error;
+
+	return (data ?? []).map((link) => ({
+		linkId: link.id,
+		title: link.title,
+		url: link.content,
+		createdDate: link.created_at,
+		updatedDate: link.updated_at,
+	}));
+};
+
+const createInsightLink = async (
+	insightId: number,
+	data: { title: string; url: string },
+): Promise<InsightLink> => {
+	const supabase = createClient();
+	const { data: link, error } = await supabase
+		.from("links")
+		.insert({
+			insight_id: insightId,
+			title: data.title,
+			content: data.url,
+		})
+		.select("id, title, content, created_at, updated_at")
+		.single();
+
+	if (error) throw error;
+
+	return {
+		linkId: link.id,
+		title: link.title,
+		url: link.content,
+		createdDate: link.created_at,
+		updatedDate: link.updated_at,
+	};
+};
+
+const deleteInsightLink = async (linkId: number): Promise<void> => {
+	const supabase = createClient();
+	const { error } = await supabase.from("links").delete().eq("id", linkId);
+
+	if (error) throw error;
+};
+
 const updateInsightMemo = async (
 	insightId: number,
 	data: { memo: string },
@@ -600,6 +661,12 @@ export const insightQuestionsQueryOptions = (id: number) =>
 		queryFn: () => getInsightQuestions(id),
 	});
 
+export const insightLinksQueryOptions = (id: number) =>
+	queryOptions({
+		queryKey: insightKeys.links(id),
+		queryFn: () => getInsightLinks(id),
+	});
+
 // ── Mutation Options ──
 
 export const insightCreationMutationOptions = () =>
@@ -611,6 +678,17 @@ export const insightPieceCreationMutationOptions = (insightId: number) =>
 	mutationOptions({
 		mutationFn: (data: { content: string }) =>
 			createInsightPiece(insightId, data),
+	});
+
+export const insightLinkCreationMutationOptions = (insightId: number) =>
+	mutationOptions({
+		mutationFn: (data: { title: string; url: string }) =>
+			createInsightLink(insightId, data),
+	});
+
+export const insightLinkDeletionMutationOptions = () =>
+	mutationOptions({
+		mutationFn: (linkId: number) => deleteInsightLink(linkId),
 	});
 
 export const insightPieceUpdateMutationOptions = (pieceId: number) =>
