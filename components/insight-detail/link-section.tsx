@@ -216,7 +216,7 @@ export function LinkSection({ insightId }: LinkSectionProps) {
 								<a
 									href={safeLinkUrl}
 									target="_blank"
-									rel="noreferrer"
+									rel="noopener noreferrer"
 									className="flex min-w-0 flex-1 items-center gap-2 text-dnd-label-normal hover:text-dnd-primary"
 								>
 									<ExternalLink className="size-4 shrink-0" />
