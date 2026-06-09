@@ -146,6 +146,7 @@ export function LinkSection({ insightId }: LinkSectionProps) {
 						type="text"
 						id={`link-title-${insightId}`}
 						name="link-title"
+						aria-label="링크 제목"
 						className="flex-1 bg-transparent border border-dnd-line-normal rounded-xl px-4 py-3 placeholder-dnd-label-assistive typo-body-2 focus:outline-none focus:border-dnd-primary transition-colors disabled:text-dnd-label-disable"
 						placeholder="링크 제목"
 						value={title}
@@ -159,6 +160,7 @@ export function LinkSection({ insightId }: LinkSectionProps) {
 						type="url"
 						id={`link-url-${insightId}`}
 						name="link-url"
+						aria-label="링크 URL"
 						className="flex-2 bg-transparent border border-dnd-line-normal rounded-xl px-4 py-3 placeholder-dnd-label-assistive typo-body-2 focus:outline-none focus:border-dnd-primary transition-colors disabled:text-dnd-label-disable"
 						placeholder="https://"
 						value={url}
