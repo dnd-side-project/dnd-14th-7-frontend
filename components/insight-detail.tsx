@@ -8,6 +8,7 @@ import {
 	type KeyboardEvent,
 	type ReactNode,
 	type RefObject,
+	useCallback,
 	useContext,
 	useEffect,
 	useRef,
@@ -136,14 +137,11 @@ function InsightDetailContent({ insightId }: { insightId: number }) {
 }
 
 interface InsightTitleContextValue {
-	isEditing: boolean;
 	editValue: string;
-	setEditValue: (v: string) => void;
-	handleSubmit: () => void;
+	handleChange: (value: string) => void;
+	handleBlur: () => void;
 	handleKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
-	handleTitleClick: () => void;
 	inputRef: RefObject<HTMLInputElement | null>;
-	title: string;
 }
 
 const InsightTitleContext = createContext<InsightTitleContextValue | null>(
@@ -168,63 +166,117 @@ function InsightTitleRoot({
 	children: ReactNode;
 }) {
 	const queryClient = useQueryClient();
-	const [isEditing, setIsEditing] = useState(false);
 	const [editValue, setEditValue] = useState(data.title);
+	const [savedTitle, setSavedTitle] = useState(data.title);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const savedTitleRef = useRef(data.title);
+	const pendingTitleRef = useRef<string | null>(null);
+	const titleSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const titleSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
 
-	const { mutate: updateTitle } = useMutation({
+	const clearTitleSaveTimer = useCallback(() => {
+		if (!titleSaveTimerRef.current) return;
+		clearTimeout(titleSaveTimerRef.current);
+		titleSaveTimerRef.current = null;
+	}, []);
+
+	const { mutateAsync: updateTitle } = useMutation({
 		...updateInsightTitleMutationOptions(data.insightId),
-		onSuccess: () => {
+		onSuccess: (_, variables) => {
+			savedTitleRef.current = variables.title;
+			setSavedTitle(variables.title);
 			queryClient.invalidateQueries({
 				queryKey: insightKeys.detail(data.insightId),
 			});
 		},
 		onError: () => {
-			setEditValue(data.title);
+			setEditValue(savedTitleRef.current);
 		},
 	});
 
-	const handleSubmit = () => {
-		const trimmed = editValue.trim();
-		if (!trimmed || trimmed === data.title) {
-			setEditValue(data.title);
-			setIsEditing(false);
+	const enqueueTitleSave = useCallback(
+		(title: string) => {
+			const trimmed = title.trim();
+			if (
+				!trimmed ||
+				trimmed === savedTitleRef.current ||
+				trimmed === pendingTitleRef.current
+			) {
+				return;
+			}
+
+			pendingTitleRef.current = trimmed;
+			titleSaveQueueRef.current = titleSaveQueueRef.current
+				.catch(() => undefined)
+				.then(async () => {
+					if (trimmed === savedTitleRef.current) return;
+					await updateTitle({ title: trimmed });
+				})
+				.finally(() => {
+					if (pendingTitleRef.current === trimmed) {
+						pendingTitleRef.current = null;
+					}
+				});
+		},
+		[updateTitle],
+	);
+
+	useEffect(() => {
+		const nextTitle = editValue.trim();
+		if (!nextTitle || nextTitle === savedTitle) {
+			clearTitleSaveTimer();
 			return;
 		}
-		updateTitle({ title: trimmed });
-		setIsEditing(false);
+
+		clearTitleSaveTimer();
+		titleSaveTimerRef.current = setTimeout(() => {
+			enqueueTitleSave(nextTitle);
+			titleSaveTimerRef.current = null;
+		}, 600);
+
+		return clearTitleSaveTimer;
+	}, [clearTitleSaveTimer, editValue, enqueueTitleSave, savedTitle]);
+
+	const handleChange = (value: string) => {
+		setEditValue(value);
+	};
+
+	const handleBlur = () => {
+		const trimmed = editValue.trim();
+		clearTitleSaveTimer();
+
+		if (!trimmed) {
+			setEditValue(savedTitle);
+			return;
+		}
+
+		if (trimmed !== savedTitle) {
+			setEditValue(trimmed);
+			enqueueTitleSave(trimmed);
+		}
 	};
 
 	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+		if (e.nativeEvent.isComposing) return;
+
 		if (e.key === "Enter") {
 			e.preventDefault();
-			handleSubmit();
+			e.currentTarget.blur();
 		} else if (e.key === "Escape") {
-			setEditValue(data.title);
-			setIsEditing(false);
+			clearTitleSaveTimer();
+			setEditValue(savedTitle);
+			e.currentTarget.blur();
 		}
-	};
-
-	const handleTitleClick = () => {
-		setIsEditing(true);
-		setEditValue(data.title);
-		requestAnimationFrame(() => {
-			inputRef.current?.focus();
-			inputRef.current?.select();
-		});
 	};
 
 	return (
 		<InsightTitleContext.Provider
 			value={{
-				isEditing,
 				editValue,
-				setEditValue,
-				handleSubmit,
+				handleChange,
+				handleBlur,
 				handleKeyDown,
-				handleTitleClick,
 				inputRef,
-				title: data.title || "제목 없는 인사이트",
 			}}
 		>
 			{children}
@@ -233,47 +285,26 @@ function InsightTitleRoot({
 }
 
 function InsightTitleEditing() {
-	const {
-		isEditing,
-		editValue,
-		setEditValue,
-		handleSubmit,
-		handleKeyDown,
-		inputRef,
-	} = useInsightTitleContext();
-
-	if (!isEditing) return null;
+	const { editValue, handleChange, handleBlur, handleKeyDown, inputRef } =
+		useInsightTitleContext();
 
 	return (
 		<input
 			ref={inputRef}
 			type="text"
 			value={editValue}
-			onChange={(e) => setEditValue(e.target.value)}
-			onBlur={handleSubmit}
+			placeholder="제목 없는 인사이트"
+			onChange={(e) => handleChange(e.target.value)}
+			onBlur={handleBlur}
 			onKeyDown={handleKeyDown}
-			className="typo-title-1 font-bold text-dnd-label-strong bg-transparent border-2 border-dnd-primary rounded-xl px-4 py-2 outline-none"
+			className="w-full bg-transparent typo-title-1 font-bold text-dnd-label-strong placeholder-dnd-label-assistive outline-none transition-colors focus:text-dnd-primary"
+			aria-label="인사이트 제목"
 		/>
 	);
 }
 
 function InsightTitleDisplay() {
-	const { isEditing, title, handleTitleClick } = useInsightTitleContext();
-
-	if (isEditing) return null;
-
-	return (
-		<h1 className="typo-title-1 font-bold text-dnd-label-strong">
-			<button
-				type="button"
-				className="cursor-pointer text-left transition-colors hover:text-dnd-primary"
-				onClick={handleTitleClick}
-				title="클릭하여 제목 수정"
-			>
-				{title}
-			</button>
-		</h1>
-	);
+	return null;
 }
 
 const InsightTitle = Object.assign(InsightTitleRoot, {
@@ -359,16 +390,26 @@ function MainInsightBox({
 		null,
 	);
 	const [inputValue, setInputValue] = useState("");
-	const inputRef = useRef<HTMLInputElement>(null);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const inputRef = useRef<HTMLTextAreaElement>(null);
 	const queryClient = useQueryClient();
-	const { mutate, isPending } = useMutation({
+	const { mutate: createPiece, isPending } = useMutation({
 		...insightPieceCreationMutationOptions(insightId),
-		onSuccess: () => {
+		onSuccess: (createdPiece) => {
+			queryClient.setQueryData<InsightPiece[]>(
+				insightKeys.pieces(insightId),
+				(currentPieces) =>
+					currentPieces ? [...currentPieces, createdPiece] : currentPieces,
+			);
 			queryClient.invalidateQueries({
 				queryKey: insightKeys.pieces(insightId),
 			});
 			setInputValue("");
+			setErrorMessage(null);
 			setIsInputVisible(false);
+		},
+		onError: () => {
+			setErrorMessage("인사이트를 저장하지 못했어요. 다시 시도해주세요.");
 		},
 	});
 
@@ -378,10 +419,20 @@ function MainInsightBox({
 		}
 	}, [isInputVisible]);
 
-	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter" && !e.nativeEvent.isComposing && inputValue.trim()) {
+	const canSave = inputValue.trim().length > 0;
+	const handleSave = () => {
+		if (!canSave || isPending) return;
+		createPiece({ content: inputValue.trim() });
+	};
+
+	const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+		if (
+			e.key === "Enter" &&
+			(e.metaKey || e.ctrlKey) &&
+			!e.nativeEvent.isComposing
+		) {
 			e.preventDefault();
-			mutate({ content: inputValue.trim() });
+			handleSave();
 		}
 	};
 
@@ -395,9 +446,13 @@ function MainInsightBox({
 				<button
 					type="button"
 					className="shrink-0"
-					onClick={() => setIsInputVisible((prev) => !prev)}
+					onClick={() => {
+						setErrorMessage(null);
+						setIsInputVisible((prev) => !prev);
+					}}
+					aria-label="인사이트 추가"
 				>
-					<Image src="/plus.svg" alt="추가" width={24} height={24} />
+					<Image src="/plus.svg" alt="" width={24} height={24} />
 				</button>
 			</div>
 			<div className="relative">
@@ -418,15 +473,52 @@ function MainInsightBox({
 						/>
 					))}
 					{isInputVisible && (
-						<input
-							ref={inputRef}
-							className="w-full rounded-2xl border-2 border-dnd-primary bg-white px-6 py-4 typo-body-1 text-dnd-label-normal placeholder-dnd-label-assistive focus:outline-none resize-none"
-							placeholder="새로운 인사이트를 입력하세요"
-							value={inputValue}
-							onChange={(e) => setInputValue(e.target.value)}
-							onKeyDown={handleKeyDown}
-							disabled={isPending}
-						/>
+						<div className="flex flex-col gap-2">
+							<div className="relative">
+								<textarea
+									ref={inputRef}
+									className="min-h-32 w-full resize-none rounded-2xl border border-dnd-line-normal bg-white p-4 pb-16 typo-body-1 text-dnd-label-normal placeholder-dnd-label-assistive transition-colors focus:border-dnd-primary focus:outline-none disabled:text-dnd-label-disable"
+									placeholder="새로운 인사이트를 입력하세요"
+									value={inputValue}
+									onChange={(e) => {
+										setInputValue(e.target.value);
+										setErrorMessage(null);
+									}}
+									onKeyDown={handleKeyDown}
+									disabled={isPending}
+								/>
+								<div className="absolute right-3 bottom-3 flex items-center gap-2">
+									<button
+										type="button"
+										className="rounded-xl bg-white/90 px-4 py-2 typo-body-2 font-medium text-dnd-label-alternative shadow-sm hover:bg-dnd-bg-alternative disabled:text-dnd-label-disable"
+										onClick={() => {
+											setInputValue("");
+											setErrorMessage(null);
+											setIsInputVisible(false);
+										}}
+										disabled={isPending}
+									>
+										취소
+									</button>
+									<button
+										type="button"
+										className="rounded-xl bg-dnd-primary px-4 py-2 typo-body-2 font-semibold text-white shadow-sm hover:bg-dnd-primary-strong disabled:bg-dnd-interaction-disable disabled:text-dnd-label-disable"
+										onClick={handleSave}
+										disabled={isPending || !canSave}
+									>
+										{isPending ? "저장 중..." : "저장"}
+									</button>
+								</div>
+							</div>
+							{errorMessage && (
+								<p
+									className="typo-body-2 text-dnd-status-negative"
+									role="alert"
+								>
+									{errorMessage}
+								</p>
+							)}
+						</div>
 					)}
 				</div>
 			</div>
