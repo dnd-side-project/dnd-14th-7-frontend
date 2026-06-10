@@ -1,10 +1,6 @@
 "use client";
 
-import {
-	useMutation,
-	useQueryClient,
-	useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,41 +8,63 @@ import {
 	answerQuestionMutationOptions,
 	type InsightQuestion,
 	insightKeys,
-	insightQuestionsQueryOptions,
 } from "@/lib/queries/insight";
+import { QuestionHistoryItem } from "./question-history-view";
 import { QuestionItem } from "./question-section";
 
 interface QuestionFormViewProps {
+	questions: InsightQuestion[];
 	selectedQuestionId: number;
 	onSelectQuestion: (id: number | null) => void;
 	insightId: number;
+	visibleStatuses?: InsightQuestion["status"][];
+	mode: "current" | "history";
 }
 
 export function QuestionFormView({
+	questions,
 	selectedQuestionId,
 	onSelectQuestion,
 	insightId,
+	visibleStatuses,
+	mode,
 }: QuestionFormViewProps) {
-	const { data } = useSuspenseQuery(insightQuestionsQueryOptions(insightId));
+	const visibleQuestions = visibleStatuses
+		? questions.filter((question) => visibleStatuses.includes(question.status))
+		: questions;
 
 	return (
 		<div className="flex flex-col gap-2 pb-8 h-max">
-			{data.questions.map((question) =>
-				selectedQuestionId === question.questionId ? (
-					<QuestionForm
-						key={question.questionId}
-						question={question}
-						insightId={insightId}
-						onCancel={() => onSelectQuestion(null)}
-					/>
+			{visibleQuestions.map((question) => {
+				if (selectedQuestionId === question.questionId) {
+					return (
+						<QuestionForm
+							key={question.questionId}
+							question={question}
+							insightId={insightId}
+							onCancel={() => onSelectQuestion(null)}
+						/>
+					);
+				}
+
+				return mode === "history" ? (
+					<QuestionHistoryItem key={question.questionId} question={question}>
+						<button
+							type="button"
+							className="shrink-0 rounded-lg bg-dnd-bg-alternative px-3 py-2 typo-caption-1 font-semibold text-dnd-primary hover:bg-dnd-fill-normal"
+							onClick={() => onSelectQuestion(question.questionId)}
+						>
+							답변하기
+						</button>
+					</QuestionHistoryItem>
 				) : (
 					<QuestionItem
 						key={question.questionId}
 						question={question}
 						onClick={() => onSelectQuestion(question.questionId)}
 					/>
-				),
-			)}
+				);
+			})}
 		</div>
 	);
 }

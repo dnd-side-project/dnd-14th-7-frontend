@@ -636,6 +636,35 @@ const convertAnswerToBlock = async (
 	if (updateError) throw updateError;
 };
 
+const generateInsightQuestions = async (
+	insightId: number,
+): Promise<InsightQuestion[]> => {
+	const response = await fetch("/api/ai/questions", {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify({ insightId }),
+	});
+
+	if (!response.ok) {
+		throw new Error("Failed to generate insight questions");
+	}
+
+	const data = (await response.json()) as { questions?: unknown };
+	if (!Array.isArray(data.questions)) return [];
+
+	return data.questions
+		.filter(
+			(question): question is FetchedQuestionRow =>
+				typeof question === "object" &&
+				question !== null &&
+				"id" in question &&
+				"content" in question &&
+				"status" in question &&
+				"created_at" in question,
+		)
+		.map(mapInsightQuestion);
+};
+
 const answerQuestion = async (
 	questionId: number,
 	data: { content: string },
@@ -727,6 +756,11 @@ export const insightPieceDeletionMutationOptions = () =>
 export const convertAnswerToBlockMutationOptions = (insightId: number) =>
 	mutationOptions({
 		mutationFn: (answerId: number) => convertAnswerToBlock(insightId, answerId),
+	});
+
+export const generateInsightQuestionsMutationOptions = (insightId: number) =>
+	mutationOptions({
+		mutationFn: () => generateInsightQuestions(insightId),
 	});
 
 export const answerQuestionMutationOptions = (_insightId: number) =>

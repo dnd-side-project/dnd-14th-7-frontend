@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronsUpDown } from "lucide-react";
+import { ChevronsUpDown, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ import { AnswerCardsSection } from "./answer-cards-section";
 import { QuestionSection } from "./question-section";
 
 export type QnAMode = "questions" | "answers";
+type QuestionMode = "current" | "history";
 
 interface InsightQnAPanelProps {
 	insightId: number;
@@ -15,10 +16,19 @@ interface InsightQnAPanelProps {
 
 export function InsightQnAPanel({ insightId }: InsightQnAPanelProps) {
 	const [mode, setMode] = useState<QnAMode>("questions");
+	const [questionMode, setQuestionMode] = useState<QuestionMode>("current");
 
 	return (
 		<div className="flex h-125 w-full flex-col overflow-hidden rounded-4xl border border-[var(--dnd-line-normal)] bg-[var(--dnd-bg-question)] shadow-sm xl:sticky xl:top-20 xl:h-[calc(100vh-100px)] xl:w-109 xl:shrink-0">
-			<QuestionSectionHeader onExpand={() => setMode("questions")} />
+			<QuestionSectionHeader
+				mode={questionMode}
+				onExpand={() => setMode("questions")}
+				onToggleHistory={() =>
+					setQuestionMode((currentMode) =>
+						currentMode === "history" ? "current" : "history",
+					)
+				}
+			/>
 
 			<div
 				className={cn(
@@ -28,7 +38,11 @@ export function InsightQnAPanel({ insightId }: InsightQnAPanelProps) {
 						: "flex-none h-0 overflow-hidden px-6 py-0 opacity-0 pointer-events-none",
 				)}
 			>
-				<QuestionSection insightId={insightId} />
+				<QuestionSection
+					key={questionMode}
+					insightId={insightId}
+					mode={questionMode}
+				/>
 			</div>
 
 			<div
@@ -62,21 +76,51 @@ export function InsightQnAPanel({ insightId }: InsightQnAPanelProps) {
 }
 
 interface QuestionSectionHeaderProps {
+	mode: QuestionMode;
 	onExpand: () => void;
+	onToggleHistory: () => void;
 }
 
-function QuestionSectionHeader({ onExpand }: QuestionSectionHeaderProps) {
+function QuestionSectionHeader({
+	mode,
+	onExpand,
+	onToggleHistory,
+}: QuestionSectionHeaderProps) {
+	const isHistoryMode = mode === "history";
+
 	return (
-		<button
-			type="button"
-			className="flex items-center justify-between rounded-t-4xl bg-[var(--dnd-bg-question)] px-8 py-4"
-			onClick={onExpand}
-		>
-			<h2 className="typo-headline-1 font-medium text-[var(--dnd-label-normal)]">
-				제안된 질문
-			</h2>
-			<Image src="/history-icon.svg" alt="history" width={20} height={20} />
-		</button>
+		<div className="flex items-center justify-between rounded-t-4xl bg-[var(--dnd-bg-question)] px-8 py-4">
+			<button type="button" className="text-left" onClick={onExpand}>
+				<h2 className="typo-headline-1 font-medium text-[var(--dnd-label-normal)]">
+					{isHistoryMode ? "질문 히스토리" : "제안된 질문"}
+				</h2>
+			</button>
+			<div className="relative group/history">
+				<button
+					type="button"
+					className="rounded-lg p-1 text-dnd-label-alternative hover:bg-white/50 hover:text-dnd-label-normal"
+					onClick={() => {
+						onExpand();
+						onToggleHistory();
+					}}
+					aria-label={
+						isHistoryMode ? "질문 히스토리 닫기" : "질문 히스토리 열기"
+					}
+				>
+					{isHistoryMode ? (
+						<X className="size-5" />
+					) : (
+						<Image src="/history-icon.svg" alt="" width={20} height={20} />
+					)}
+				</button>
+				{!isHistoryMode && (
+					<div className="pointer-events-none absolute top-full right-0 z-10 mt-2 w-48 rounded-lg bg-[var(--dnd-label-normal)] p-2.5 typo-body-2 text-sm text-[var(--dnd-bg-normal)] opacity-0 backdrop-blur-md transition-opacity duration-200 group-hover/history:opacity-100">
+						<div className="absolute top-[-6px] right-3 h-3 w-3 rotate-45 bg-[var(--dnd-label-normal)]" />
+						<div className="text-center">이전 질문을 확인해보세요</div>
+					</div>
+				)}
+			</div>
+		</div>
 	);
 }
 
