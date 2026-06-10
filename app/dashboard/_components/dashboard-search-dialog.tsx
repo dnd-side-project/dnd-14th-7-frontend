@@ -5,6 +5,7 @@ import { Hash, Search } from "lucide-react";
 import {
 	type KeyboardEvent as ReactKeyboardEvent,
 	useEffect,
+	useId,
 	useMemo,
 	useRef,
 	useState,
@@ -20,6 +21,7 @@ import type { InsightSummary } from "@/lib/queries/insight";
 import { insightsQueryOptions } from "@/lib/queries/insight";
 import type { Tag } from "@/lib/queries/user";
 import { tagsQueryOptions } from "@/lib/queries/user";
+import { serializeTab } from "@/lib/tabs/tab-utils";
 import { cn } from "@/lib/utils";
 
 function getInsightTitle(insight: InsightSummary) {
@@ -29,6 +31,12 @@ function getInsightTitle(insight: InsightSummary) {
 type SearchResult =
 	| { type: "tag"; tag: Tag }
 	| { type: "insight"; insight: InsightSummary };
+
+function getSearchResultId(baseId: string, result: SearchResult) {
+	return result.type === "tag"
+		? `${baseId}-tag-${result.tag.tagId}`
+		: `${baseId}-insight-${result.insight.insightId}`;
+}
 
 function normalizeSearchText(value: string) {
 	return value.trim().toLowerCase();
@@ -71,13 +79,17 @@ export function DashboardSearchDialog() {
 	const [searchValue, setSearchValue] = useState("");
 	const [activeResultIndex, setActiveResultIndex] = useState(0);
 	const resultListRef = useRef<HTMLDivElement>(null);
+	const searchInputId = useId();
+	const searchResultListId = useId();
 	const normalizedSearchValue = normalizeSearchText(searchValue);
-	const { data: insightsData, isLoading: isInsightsLoading } = useQuery(
-		insightsQueryOptions({ page: 0, size: 50 }),
-	);
-	const { data: tags = [], isLoading: isTagsLoading } = useQuery(
-		tagsQueryOptions(),
-	);
+	const { data: insightsData, isLoading: isInsightsLoading } = useQuery({
+		...insightsQueryOptions({ page: 0, size: 50 }),
+		enabled: open,
+	});
+	const { data: tags = [], isLoading: isTagsLoading } = useQuery({
+		...tagsQueryOptions(),
+		enabled: open,
+	});
 	const insights = insightsData?.content ?? [];
 
 	const filteredInsights = useMemo(() => {
@@ -111,18 +123,18 @@ export function DashboardSearchDialog() {
 	};
 
 	const openInsight = (insightId: number) => {
-		dispatch(
-			{ type: "add", tab: `insight:${insightId}` },
-			{ type: "activate", tab: `insight:${insightId}` },
-		);
+		const tabKey = serializeTab({ type: "insight", id: String(insightId) });
+		dispatch({ type: "add", tab: tabKey }, { type: "activate", tab: tabKey });
 		closeSearch();
 	};
 
 	const openTag = (tag: Tag) => {
-		dispatch(
-			{ type: "add", tab: `tag:${tag.tagId}:${tag.tagName}` },
-			{ type: "activate", tab: `tag:${tag.tagId}:${tag.tagName}` },
-		);
+		const tabKey = serializeTab({
+			type: "tag",
+			id: String(tag.tagId),
+			name: tag.tagName,
+		});
+		dispatch({ type: "add", tab: tabKey }, { type: "activate", tab: tabKey });
 		closeSearch();
 	};
 
@@ -138,6 +150,17 @@ export function DashboardSearchDialog() {
 	);
 	const isLoading = isInsightsLoading || isTagsLoading;
 	const isEmpty = !isLoading && searchResults.length === 0;
+	const activeResult = searchResults[activeResultIndex];
+	const activeResultId = activeResult
+		? getSearchResultId(searchResultListId, activeResult)
+		: undefined;
+
+	useEffect(() => {
+		setActiveResultIndex((currentIndex) => {
+			if (searchResults.length === 0) return 0;
+			return Math.min(currentIndex, searchResults.length - 1);
+		});
+	}, [searchResults.length]);
 
 	useEffect(() => {
 		const activeElement = resultListRef.current?.querySelector(
@@ -199,7 +222,16 @@ export function DashboardSearchDialog() {
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog
+			open={open}
+			onOpenChange={(nextOpen) => {
+				setOpen(nextOpen);
+				if (!nextOpen) {
+					setSearchValue("");
+					setActiveResultIndex(0);
+				}
+			}}
+		>
 			<DialogTrigger asChild>
 				<button
 					type="button"
@@ -208,7 +240,7 @@ export function DashboardSearchDialog() {
 				>
 					<Search className="size-5" />
 					<span className="hidden items-center gap-1 rounded-md border border-dnd-line-normal bg-white/70 px-1.5 py-0.5 typo-caption-1 text-dnd-label-alternative md:flex">
-						<kbd className="font-medium">⌘</kbd>
+						<kbd className="font-medium">⌘/Ctrl</kbd>
 						<kbd className="font-medium">K</kbd>
 					</span>
 				</button>
@@ -221,7 +253,13 @@ export function DashboardSearchDialog() {
 				<div className="flex items-center gap-3 border-b border-dnd-line-normal px-5 py-4">
 					<Search className="size-5 shrink-0 text-dnd-label-alternative" />
 					<input
+						id={searchInputId}
 						type="text"
+						role="combobox"
+						aria-expanded={open}
+						aria-controls={searchResultListId}
+						aria-activedescendant={activeResultId}
+						aria-autocomplete="list"
 						className="w-full bg-transparent typo-body-1 text-dnd-label-normal placeholder:text-dnd-label-assistive focus:outline-none"
 						placeholder="인사이트 또는 태그 검색"
 						value={searchValue}
@@ -233,20 +271,26 @@ export function DashboardSearchDialog() {
 						autoFocus
 					/>
 					<span className="hidden shrink-0 items-center gap-1 rounded-md border border-dnd-line-normal bg-dnd-bg-alternative px-1.5 py-0.5 typo-caption-1 text-dnd-label-alternative sm:flex">
-						<kbd className="font-medium">⌘</kbd>
+						<kbd className="font-medium">⌘/Ctrl</kbd>
 						<kbd className="font-medium">K</kbd>
 					</span>
 				</div>
 
-				<div ref={resultListRef} className="max-h-120 overflow-y-auto p-3">
+				<div
+					id={searchResultListId}
+					ref={resultListRef}
+					role="listbox"
+					aria-labelledby={searchInputId}
+					className="max-h-120 overflow-y-auto p-3"
+				>
 					{isLoading ? (
-						<div className="px-3 py-8 text-center typo-body-2 text-dnd-label-alternative">
+						<output className="block px-3 py-8 text-center typo-body-2 text-dnd-label-alternative">
 							검색 결과를 불러오는 중이에요.
-						</div>
+						</output>
 					) : isEmpty ? (
-						<div className="px-3 py-8 text-center typo-body-2 text-dnd-label-alternative">
+						<output className="block px-3 py-8 text-center typo-body-2 text-dnd-label-alternative">
 							검색 결과가 없어요.
-						</div>
+						</output>
 					) : (
 						<div className="flex flex-col gap-4">
 							<SearchSection title="태그">
@@ -254,6 +298,12 @@ export function DashboardSearchDialog() {
 									filteredTags.map((tag, index) => (
 										<button
 											type="button"
+											role="option"
+											id={getSearchResultId(searchResultListId, {
+												type: "tag",
+												tag,
+											})}
+											aria-selected={activeResultIndex === index}
 											key={tag.tagId}
 											data-result-index={index}
 											className={cn(
@@ -292,6 +342,12 @@ export function DashboardSearchDialog() {
 										return (
 											<button
 												type="button"
+												role="option"
+												id={getSearchResultId(searchResultListId, {
+													type: "insight",
+													insight,
+												})}
+												aria-selected={activeResultIndex === resultIndex}
 												key={insight.insightId}
 												data-result-index={resultIndex}
 												className={cn(
