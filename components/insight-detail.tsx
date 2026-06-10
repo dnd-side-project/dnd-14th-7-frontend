@@ -387,14 +387,14 @@ function MainInsightBox({
 
 	return (
 		<div className="flex flex-col gap-3">
-			<div className="group flex items-center justify-between py-4 px-5 gap-2">
+			<div className="flex items-center justify-between py-4 px-5 gap-2">
 				<span className="typo-headline-2 font-bold text-dnd-label-neutral">
 					인사이트{" "}
 					<span className="text-dnd-primary">{insightPieces.length}</span>
 				</span>
 				<button
 					type="button"
-					className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 shrink-0"
+					className="shrink-0"
 					onClick={() => setIsInputVisible((prev) => !prev)}
 				>
 					<Image src="/plus.svg" alt="추가" width={24} height={24} />

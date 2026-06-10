@@ -429,6 +429,16 @@ const updateInsightPieceContent = async (
 	if (error) throw error;
 };
 
+const deleteInsightPiece = async (pieceId: number): Promise<void> => {
+	const supabase = createClient();
+	const { error } = await supabase
+		.from("insight_pieces")
+		.delete()
+		.eq("id", pieceId);
+
+	if (error) throw error;
+};
+
 const mapInsightQuestion = (q: FetchedQuestionRow): InsightQuestion => ({
 	questionId: q.id,
 	content: q.content,
@@ -695,6 +705,11 @@ export const insightPieceUpdateMutationOptions = (pieceId: number) =>
 	mutationOptions({
 		mutationFn: (data: { content: string }) =>
 			updateInsightPieceContent(pieceId, data),
+	});
+
+export const insightPieceDeletionMutationOptions = () =>
+	mutationOptions({
+		mutationFn: (pieceId: number) => deleteInsightPiece(pieceId),
 	});
 
 export const convertAnswerToBlockMutationOptions = (insightId: number) =>

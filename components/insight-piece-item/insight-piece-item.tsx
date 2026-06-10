@@ -1,75 +1,31 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Trash2 } from "lucide-react";
+import { useCallback, useState } from "react";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogMedia,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
 	type InsightPiece,
 	insightKeys,
+	insightPieceDeletionMutationOptions,
 	insightPieceUpdateMutationOptions,
 } from "@/lib/queries/insight";
 import { DefaultModeView } from "./default-mode-view";
 import { LoadingModeView } from "./loading-mode-view";
-import { type RetryCandidate, SelectingModeView } from "./selecting-mode-view";
-
-type RetryState =
-	| { status: "idle" }
-	| { status: "loading" }
-	| { status: "selecting"; candidates: RetryCandidate[] }
-	| { status: "error"; message: string };
-
-const RETRY_CANDIDATES_TIMEOUT_MS = 10_000;
-
-function isRetryCandidate(value: unknown): value is RetryCandidate {
-	if (typeof value !== "object" || value === null) return false;
-
-	const candidate = value as Record<string, unknown>;
-	return (
-		typeof candidate.id === "string" && typeof candidate.content === "string"
-	);
-}
-
-async function generateRetryCandidates(
-	content: string,
-): Promise<RetryCandidate[]> {
-	const controller = new AbortController();
-	const timeoutId = setTimeout(
-		() => controller.abort(),
-		RETRY_CANDIDATES_TIMEOUT_MS,
-	);
-
-	try {
-		const response = await fetch("/api/ai/insight-candidates", {
-			method: "POST",
-			signal: controller.signal,
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify({ content }),
-		});
-
-		if (!response.ok) {
-			throw new Error("Failed to generate retry candidates");
-		}
-
-		const data = (await response.json()) as unknown;
-		if (typeof data !== "object" || data === null || !("candidates" in data)) {
-			throw new Error("Retry candidates response is malformed");
-		}
-
-		const { candidates } = data as { candidates: unknown };
-		if (!Array.isArray(candidates) || !candidates.every(isRetryCandidate)) {
-			throw new Error("Retry candidates response has invalid candidates");
-		}
-
-		return candidates;
-	} catch (error) {
-		if (error instanceof DOMException && error.name === "AbortError") {
-			throw new Error("Retry candidates request timed out");
-		}
-
-		throw error;
-	} finally {
-		clearTimeout(timeoutId);
-	}
-}
+import { PieceHeader } from "./piece-header";
+import { SelectingModeView } from "./selecting-mode-view";
+import { useCopyFeedback } from "./use-copy-feedback";
+import { useRetryCandidates } from "./use-retry-candidates";
 
 export function InsightPieceItem({
 	insightId,
@@ -84,20 +40,49 @@ export function InsightPieceItem({
 	onRetryStart: (pieceId: number) => void;
 	onRetryEnd: () => void;
 }) {
-	const [retryState, setRetryState] = useState<RetryState>({ status: "idle" });
-	const [selectedContent, setSelectedContent] = useState(() => piece.content);
-	const displayContent =
-		retryState.status === "idle" ? piece.content : selectedContent;
-	const requestIdRef = useRef(0);
+	const [isEditing, setIsEditing] = useState(false);
+	const [editContent, setEditContent] = useState(() => piece.content);
+	const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(
+		null,
+	);
+	const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(
+		null,
+	);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const displayContent = piece.content;
+	const canDelete = piece.createdType !== "INIT";
+	const { isCopied, copyText } = useCopyFeedback();
+	const { retryState, setRetryState, startRetry, cancelRetry, completeRetry } =
+		useRetryCandidates({
+			pieceId: piece.insightPieceId,
+			onRetryStart,
+			onRetryEnd,
+		});
 	const queryClient = useQueryClient();
+
+	const updateCachedPieceContent = useCallback(
+		(content: string) => {
+			queryClient.setQueryData<InsightPiece[]>(
+				insightKeys.pieces(insightId),
+				(currentPieces) =>
+					currentPieces?.map((currentPiece) =>
+						currentPiece.insightPieceId === piece.insightPieceId
+							? { ...currentPiece, content }
+							: currentPiece,
+					),
+			);
+		},
+		[insightId, piece.insightPieceId, queryClient],
+	);
+
 	const { mutate: updatePieceContent } = useMutation({
 		...insightPieceUpdateMutationOptions(piece.insightPieceId),
 		onSuccess: (_, { content }) => {
-			setSelectedContent(content);
+			updateCachedPieceContent(content);
 			queryClient.invalidateQueries({
 				queryKey: insightKeys.pieces(insightId),
 			});
-			finishRetry();
+			completeRetry();
 		},
 		onError: () => {
 			setRetryState({
@@ -106,47 +91,36 @@ export function InsightPieceItem({
 			});
 		},
 	});
-
-	useEffect(() => {
-		return () => {
-			requestIdRef.current += 1;
-		};
-	}, []);
-
-	const finishRetry = useCallback(() => {
-		requestIdRef.current += 1;
-		setRetryState({ status: "idle" });
-		onRetryEnd();
-	}, [onRetryEnd]);
-
-	const handleRetry = useCallback(async () => {
-		const requestId = requestIdRef.current + 1;
-		const retryContent =
-			retryState.status === "idle" ? piece.content : selectedContent;
-		requestIdRef.current = requestId;
-		onRetryStart(piece.insightPieceId);
-		setSelectedContent(retryContent);
-		setRetryState({ status: "loading" });
-
-		try {
-			const candidates = await generateRetryCandidates(retryContent);
-			if (requestIdRef.current !== requestId) return;
-			setRetryState({ status: "selecting", candidates });
-		} catch (error) {
-			if (requestIdRef.current !== requestId) return;
-			console.error("Failed to generate retry candidates:", error);
-			setRetryState({
-				status: "error",
-				message: "후보를 생성하지 못했어요. 잠시 후 다시 시도해주세요.",
+	const { mutate: saveEditedPiece, isPending: isSavingEdit } = useMutation({
+		...insightPieceUpdateMutationOptions(piece.insightPieceId),
+		onSuccess: (_, { content }) => {
+			updateCachedPieceContent(content);
+			queryClient.invalidateQueries({
+				queryKey: insightKeys.pieces(insightId),
 			});
-		}
-	}, [
-		onRetryStart,
-		piece.content,
-		piece.insightPieceId,
-		retryState.status,
-		selectedContent,
-	]);
+			setIsEditing(false);
+			setActionErrorMessage(null);
+		},
+		onError: () => {
+			setActionErrorMessage("인사이트를 수정하지 못했어요. 다시 시도해주세요.");
+		},
+	});
+	const { mutate: deletePiece, isPending: isDeleting } = useMutation({
+		...insightPieceDeletionMutationOptions(),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: insightKeys.pieces(insightId),
+			});
+			setIsDeleteDialogOpen(false);
+		},
+		onError: () => {
+			setDeleteErrorMessage("인사이트를 삭제하지 못했어요. 다시 시도해주세요.");
+		},
+	});
+
+	const handleRetry = useCallback(() => {
+		startRetry(piece.content);
+	}, [piece.content, startRetry]);
 
 	const handleSelect = useCallback(
 		(content: string) => {
@@ -155,6 +129,69 @@ export function InsightPieceItem({
 		[updatePieceContent],
 	);
 
+	const handleStartEdit = () => {
+		setEditContent(displayContent);
+		setActionErrorMessage(null);
+		setIsEditing(true);
+	};
+
+	const handleCancelEdit = () => {
+		setEditContent(displayContent);
+		setActionErrorMessage(null);
+		setIsEditing(false);
+	};
+
+	const handleSaveEdit = () => {
+		const nextContent = editContent.trim();
+		if (!nextContent || isSavingEdit) return;
+		saveEditedPiece({ content: nextContent });
+	};
+
+	const handleCopy = async () => {
+		try {
+			await copyText(displayContent);
+			setActionErrorMessage(null);
+		} catch {
+			setActionErrorMessage("텍스트를 복사하지 못했어요. 다시 시도해주세요.");
+		}
+	};
+
+	const handleDeleteDialogOpenChange = (open: boolean) => {
+		setIsDeleteDialogOpen(open);
+		if (!open) setDeleteErrorMessage(null);
+	};
+
+	const handleOpenDeleteDialog = () => {
+		if (!canDelete) return;
+		setActionErrorMessage(null);
+		setDeleteErrorMessage(null);
+		setIsDeleteDialogOpen(true);
+	};
+
+	const handleConfirmDelete = () => {
+		if (isDeleting || !canDelete) return;
+		setDeleteErrorMessage(null);
+		deletePiece(piece.insightPieceId);
+	};
+
+	if (isEditing) {
+		return (
+			<EditModeView
+				piece={piece}
+				index={index}
+				value={editContent}
+				errorMessage={actionErrorMessage}
+				isSaving={isSavingEdit}
+				onChange={(value) => {
+					setEditContent(value);
+					setActionErrorMessage(null);
+				}}
+				onCancel={handleCancelEdit}
+				onSave={handleSaveEdit}
+			/>
+		);
+	}
+
 	return (
 		<div className="flex flex-col gap-4">
 			<DefaultModeView
@@ -162,14 +199,62 @@ export function InsightPieceItem({
 				index={index}
 				currentContent={displayContent}
 				onRetry={handleRetry}
+				onEdit={handleStartEdit}
+				onCopy={handleCopy}
+				onDelete={handleOpenDeleteDialog}
+				isCopied={isCopied}
+				isDeleting={isDeleting}
+				canDelete={canDelete}
 			/>
+			<AlertDialog
+				open={isDeleteDialogOpen}
+				onOpenChange={handleDeleteDialogOpenChange}
+			>
+				<AlertDialogContent size="sm">
+					<AlertDialogHeader>
+						<AlertDialogMedia className="bg-dnd-status-negative/10 text-dnd-status-negative">
+							<Trash2 className="size-8" />
+						</AlertDialogMedia>
+						<AlertDialogTitle>인사이트를 삭제할까요?</AlertDialogTitle>
+						<AlertDialogDescription>
+							삭제한 인사이트는 다시 복구할 수 없어요.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					{deleteErrorMessage && (
+						<p
+							className="typo-body-2 text-center text-dnd-status-negative"
+							role="alert"
+						>
+							{deleteErrorMessage}
+						</p>
+					)}
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={isDeleting}>취소</AlertDialogCancel>
+						<AlertDialogAction
+							variant="destructive"
+							disabled={isDeleting}
+							onClick={(event) => {
+								event.preventDefault();
+								handleConfirmDelete();
+							}}
+						>
+							{isDeleting ? "삭제 중..." : "삭제"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+			{actionErrorMessage && (
+				<p className="px-2 typo-body-2 text-dnd-status-negative" role="alert">
+					{actionErrorMessage}
+				</p>
+			)}
 			{retryState.status === "loading" && (
-				<LoadingModeView onCancel={finishRetry} />
+				<LoadingModeView onCancel={cancelRetry} />
 			)}
 			{retryState.status === "selecting" && (
 				<SelectingModeView
 					candidates={retryState.candidates}
-					onCancel={finishRetry}
+					onCancel={cancelRetry}
 					onSelect={handleSelect}
 				/>
 			)}
@@ -177,9 +262,71 @@ export function InsightPieceItem({
 				<RetryErrorCard
 					message={retryState.message}
 					onRetry={handleRetry}
-					onCancel={finishRetry}
+					onCancel={cancelRetry}
 				/>
 			)}
+		</div>
+	);
+}
+
+function EditModeView({
+	piece,
+	index,
+	value,
+	errorMessage,
+	isSaving,
+	onChange,
+	onCancel,
+	onSave,
+}: {
+	piece: InsightPiece;
+	index: number;
+	value: string;
+	errorMessage: string | null;
+	isSaving: boolean;
+	onChange: (value: string) => void;
+	onCancel: () => void;
+	onSave: () => void;
+}) {
+	const canSave = value.trim().length > 0 && !isSaving;
+
+	return (
+		<div className="flex flex-col gap-4 rounded-3xl bg-white p-6">
+			<PieceHeader
+				index={index}
+				createdType={piece.createdType}
+				createdDate={piece.createdDate}
+			/>
+			<textarea
+				className="min-h-40 w-full resize-none rounded-2xl border border-dnd-line-normal bg-transparent px-4 py-3 typo-headline-2 text-dnd-label-strong placeholder-dnd-label-assistive focus:border-dnd-primary focus:outline-none disabled:text-dnd-label-disable"
+				value={value}
+				disabled={isSaving}
+				onChange={(event) => onChange(event.target.value)}
+				aria-label="인사이트 내용 수정"
+			/>
+			{errorMessage && (
+				<p className="typo-body-2 text-dnd-status-negative" role="alert">
+					{errorMessage}
+				</p>
+			)}
+			<div className="flex justify-end gap-2">
+				<button
+					type="button"
+					className="typo-body-1 rounded-xl bg-dnd-bg-alternative px-7 py-3 font-medium text-dnd-label-neutral transition-colors hover:bg-dnd-fill-normal disabled:text-dnd-label-disable"
+					onClick={onCancel}
+					disabled={isSaving}
+				>
+					취소
+				</button>
+				<button
+					type="button"
+					className="typo-body-1 rounded-xl bg-dnd-primary px-7 py-3 font-semibold text-white transition-colors hover:bg-dnd-primary-strong disabled:bg-dnd-interaction-disable disabled:text-dnd-label-disable"
+					onClick={onSave}
+					disabled={!canSave}
+				>
+					{isSaving ? "저장 중..." : "저장"}
+				</button>
+			</div>
 		</div>
 	);
 }
