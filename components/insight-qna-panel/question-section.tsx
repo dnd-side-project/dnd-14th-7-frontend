@@ -39,6 +39,7 @@ export function QuestionSection({ insightId, mode }: QuestionSectionProps) {
 				onSelectQuestion={setSelectedQuestionId}
 				insightId={insightId}
 				visibleStatuses={mode === "history" ? ["ARCHIVED"] : ["WAITING"]}
+				mode={mode}
 			/>
 		);
 	}

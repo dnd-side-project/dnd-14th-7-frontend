@@ -59,7 +59,7 @@ function QuestionHistoryGroup({
 	);
 }
 
-function QuestionHistoryItem({
+export function QuestionHistoryItem({
 	question,
 	children,
 }: {

@@ -97,28 +97,28 @@ export async function POST(request: Request) {
 		return NextResponse.json({ message: "Insight not found" }, { status: 404 });
 	}
 
-	const { data: pieces, error: piecesError } = await supabase
-		.from("insight_pieces")
-		.select("content")
-		.eq("insight_id", insightId)
-		.order("created_at", { ascending: true });
-
-	if (piecesError) throw piecesError;
-
-	const { data: existingQuestions, error: existingQuestionsError } =
-		await supabase
-			.from("questions")
+	try {
+		const { data: pieces, error: piecesError } = await supabase
+			.from("insight_pieces")
 			.select("content")
 			.eq("insight_id", insightId)
 			.order("created_at", { ascending: true });
 
-	if (existingQuestionsError) throw existingQuestionsError;
+		if (piecesError) throw piecesError;
 
-	try {
+		const { data: existingQuestions, error: existingQuestionsError } =
+			await supabase
+				.from("questions")
+				.select("content")
+				.eq("insight_id", insightId)
+				.order("created_at", { ascending: true });
+
+		if (existingQuestionsError) throw existingQuestionsError;
+
 		const aiText = await askOpenAI(
 			createPrompt({
-				title: insight.title,
-				initialThought: insight.initial_thought,
+				title: insight.title ?? "",
+				initialThought: insight.initial_thought ?? "",
 				insightPieces: (pieces ?? []).map((piece) => piece.content),
 				existingQuestions: (existingQuestions ?? []).map(
 					(question) => question.content,
