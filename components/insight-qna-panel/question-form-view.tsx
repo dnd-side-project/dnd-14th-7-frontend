@@ -1,10 +1,6 @@
 "use client";
 
-import {
-	useMutation,
-	useQueryClient,
-	useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,26 +8,31 @@ import {
 	answerQuestionMutationOptions,
 	type InsightQuestion,
 	insightKeys,
-	insightQuestionsQueryOptions,
 } from "@/lib/queries/insight";
 import { QuestionItem } from "./question-section";
 
 interface QuestionFormViewProps {
+	questions: InsightQuestion[];
 	selectedQuestionId: number;
 	onSelectQuestion: (id: number | null) => void;
 	insightId: number;
+	visibleStatuses?: InsightQuestion["status"][];
 }
 
 export function QuestionFormView({
+	questions,
 	selectedQuestionId,
 	onSelectQuestion,
 	insightId,
+	visibleStatuses,
 }: QuestionFormViewProps) {
-	const { data } = useSuspenseQuery(insightQuestionsQueryOptions(insightId));
+	const visibleQuestions = visibleStatuses
+		? questions.filter((question) => visibleStatuses.includes(question.status))
+		: questions;
 
 	return (
 		<div className="flex flex-col gap-2 pb-8 h-max">
-			{data.questions.map((question) =>
+			{visibleQuestions.map((question) =>
 				selectedQuestionId === question.questionId ? (
 					<QuestionForm
 						key={question.questionId}
