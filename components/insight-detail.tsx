@@ -169,7 +169,10 @@ function InsightTitleRoot({
 	const [editValue, setEditValue] = useState(data.title);
 	const [savedTitle, setSavedTitle] = useState(data.title);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const savedTitleRef = useRef(data.title);
+	const pendingTitleRef = useRef<string | null>(null);
 	const titleSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const titleSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
 
 	const clearTitleSaveTimer = useCallback(() => {
 		if (!titleSaveTimerRef.current) return;
@@ -177,18 +180,46 @@ function InsightTitleRoot({
 		titleSaveTimerRef.current = null;
 	}, []);
 
-	const { mutate: updateTitle } = useMutation({
+	const { mutateAsync: updateTitle } = useMutation({
 		...updateInsightTitleMutationOptions(data.insightId),
 		onSuccess: (_, variables) => {
+			savedTitleRef.current = variables.title;
 			setSavedTitle(variables.title);
 			queryClient.invalidateQueries({
 				queryKey: insightKeys.detail(data.insightId),
 			});
 		},
 		onError: () => {
-			setEditValue(savedTitle);
+			setEditValue(savedTitleRef.current);
 		},
 	});
+
+	const enqueueTitleSave = useCallback(
+		(title: string) => {
+			const trimmed = title.trim();
+			if (
+				!trimmed ||
+				trimmed === savedTitleRef.current ||
+				trimmed === pendingTitleRef.current
+			) {
+				return;
+			}
+
+			pendingTitleRef.current = trimmed;
+			titleSaveQueueRef.current = titleSaveQueueRef.current
+				.catch(() => undefined)
+				.then(async () => {
+					if (trimmed === savedTitleRef.current) return;
+					await updateTitle({ title: trimmed });
+				})
+				.finally(() => {
+					if (pendingTitleRef.current === trimmed) {
+						pendingTitleRef.current = null;
+					}
+				});
+		},
+		[updateTitle],
+	);
 
 	useEffect(() => {
 		const nextTitle = editValue.trim();
@@ -199,12 +230,12 @@ function InsightTitleRoot({
 
 		clearTitleSaveTimer();
 		titleSaveTimerRef.current = setTimeout(() => {
-			updateTitle({ title: nextTitle });
+			enqueueTitleSave(nextTitle);
 			titleSaveTimerRef.current = null;
 		}, 600);
 
 		return clearTitleSaveTimer;
-	}, [clearTitleSaveTimer, editValue, savedTitle, updateTitle]);
+	}, [clearTitleSaveTimer, editValue, enqueueTitleSave, savedTitle]);
 
 	const handleChange = (value: string) => {
 		setEditValue(value);
@@ -221,11 +252,13 @@ function InsightTitleRoot({
 
 		if (trimmed !== savedTitle) {
 			setEditValue(trimmed);
-			updateTitle({ title: trimmed });
+			enqueueTitleSave(trimmed);
 		}
 	};
 
 	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+		if (e.nativeEvent.isComposing) return;
+
 		if (e.key === "Enter") {
 			e.preventDefault();
 			e.currentTarget.blur();
