@@ -29,6 +29,14 @@ export function AnswerCardsSection({ insightId }: AnswerCardsSectionProps) {
 	const { data } = useSuspenseQuery(insightQuestionsQueryOptions(insightId));
 	const answerCards = data.answerCards;
 
+	if (answerCards.length === 0) {
+		return (
+			<div className="flex min-h-40 items-center justify-center rounded-3xl bg-white px-6 text-center typo-body-2 text-dnd-label-alternative">
+				제안된 질문에 답변하고, 답변 카드를 만들어보세요.
+			</div>
+		);
+	}
+
 	return (
 		<div className="flex flex-col gap-6 h-max">
 			{answerCards.map((card) => (
