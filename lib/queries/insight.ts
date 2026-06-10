@@ -405,15 +405,27 @@ const createInsight = async (data: {
 const createInsightPiece = async (
 	insightId: number,
 	data: { content: string },
-): Promise<void> => {
+): Promise<InsightPiece> => {
 	const supabase = createClient();
-	const { error } = await supabase.from("insight_pieces").insert({
-		insight_id: insightId,
-		content: data.content,
-		created_type: "SELF",
-	});
+	const { data: piece, error } = await supabase
+		.from("insight_pieces")
+		.insert({
+			insight_id: insightId,
+			content: data.content,
+			created_type: "SELF",
+		})
+		.select("id, content, created_type, created_at")
+		.single();
 
 	if (error) throw error;
+	if (!piece) throw new Error("Failed to create insight piece");
+
+	return {
+		insightPieceId: piece.id,
+		content: piece.content,
+		createdType: piece.created_type,
+		createdDate: piece.created_at,
+	};
 };
 
 const updateInsightPieceContent = async (
