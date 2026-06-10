@@ -27,7 +27,7 @@ export function TopNavigation() {
 			) : isAuthenticated ? (
 				<div className="flex items-center gap-3">
 					<span className="typo-body-2 text-dnd-label-alternative">
-						{user?.nickname}님
+                        {user.nickname}님
 					</span>
 					<Button
 						variant="solid"
