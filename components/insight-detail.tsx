@@ -8,6 +8,7 @@ import {
 	type KeyboardEvent,
 	type ReactNode,
 	type RefObject,
+	useCallback,
 	useContext,
 	useEffect,
 	useRef,
@@ -168,6 +169,13 @@ function InsightTitleRoot({
 	const [editValue, setEditValue] = useState(data.title);
 	const [savedTitle, setSavedTitle] = useState(data.title);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const titleSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	const clearTitleSaveTimer = useCallback(() => {
+		if (!titleSaveTimerRef.current) return;
+		clearTimeout(titleSaveTimerRef.current);
+		titleSaveTimerRef.current = null;
+	}, []);
 
 	const { mutate: updateTitle } = useMutation({
 		...updateInsightTitleMutationOptions(data.insightId),
@@ -179,40 +187,35 @@ function InsightTitleRoot({
 		},
 		onError: () => {
 			setEditValue(savedTitle);
-			queryClient.setQueryData<GetInsightResponse>(
-				insightKeys.detail(data.insightId),
-				(oldData) => (oldData ? { ...oldData, title: savedTitle } : oldData),
-			);
 		},
 	});
 
 	useEffect(() => {
 		const nextTitle = editValue.trim();
-		if (!nextTitle || nextTitle === savedTitle) return;
+		if (!nextTitle || nextTitle === savedTitle) {
+			clearTitleSaveTimer();
+			return;
+		}
 
-		const timeoutId = window.setTimeout(() => {
+		clearTitleSaveTimer();
+		titleSaveTimerRef.current = setTimeout(() => {
 			updateTitle({ title: nextTitle });
+			titleSaveTimerRef.current = null;
 		}, 600);
 
-		return () => window.clearTimeout(timeoutId);
-	}, [editValue, savedTitle, updateTitle]);
+		return clearTitleSaveTimer;
+	}, [clearTitleSaveTimer, editValue, savedTitle, updateTitle]);
 
 	const handleChange = (value: string) => {
 		setEditValue(value);
-		queryClient.setQueryData<GetInsightResponse>(
-			insightKeys.detail(data.insightId),
-			(oldData) => (oldData ? { ...oldData, title: value } : oldData),
-		);
 	};
 
 	const handleBlur = () => {
 		const trimmed = editValue.trim();
+		clearTitleSaveTimer();
+
 		if (!trimmed) {
 			setEditValue(savedTitle);
-			queryClient.setQueryData<GetInsightResponse>(
-				insightKeys.detail(data.insightId),
-				(oldData) => (oldData ? { ...oldData, title: savedTitle } : oldData),
-			);
 			return;
 		}
 
@@ -227,11 +230,8 @@ function InsightTitleRoot({
 			e.preventDefault();
 			e.currentTarget.blur();
 		} else if (e.key === "Escape") {
+			clearTitleSaveTimer();
 			setEditValue(savedTitle);
-			queryClient.setQueryData<GetInsightResponse>(
-				insightKeys.detail(data.insightId),
-				(oldData) => (oldData ? { ...oldData, title: savedTitle } : oldData),
-			);
 			e.currentTarget.blur();
 		}
 	};
