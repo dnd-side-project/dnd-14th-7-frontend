@@ -136,14 +136,11 @@ function InsightDetailContent({ insightId }: { insightId: number }) {
 }
 
 interface InsightTitleContextValue {
-	isEditing: boolean;
 	editValue: string;
-	setEditValue: (v: string) => void;
-	handleSubmit: () => void;
+	handleChange: (value: string) => void;
+	handleBlur: () => void;
 	handleKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
-	handleTitleClick: () => void;
 	inputRef: RefObject<HTMLInputElement | null>;
-	title: string;
 }
 
 const InsightTitleContext = createContext<InsightTitleContextValue | null>(
@@ -168,63 +165,85 @@ function InsightTitleRoot({
 	children: ReactNode;
 }) {
 	const queryClient = useQueryClient();
-	const [isEditing, setIsEditing] = useState(false);
 	const [editValue, setEditValue] = useState(data.title);
+	const [savedTitle, setSavedTitle] = useState(data.title);
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	const { mutate: updateTitle } = useMutation({
 		...updateInsightTitleMutationOptions(data.insightId),
-		onSuccess: () => {
+		onSuccess: (_, variables) => {
+			setSavedTitle(variables.title);
 			queryClient.invalidateQueries({
 				queryKey: insightKeys.detail(data.insightId),
 			});
 		},
 		onError: () => {
-			setEditValue(data.title);
+			setEditValue(savedTitle);
+			queryClient.setQueryData<GetInsightResponse>(
+				insightKeys.detail(data.insightId),
+				(oldData) => (oldData ? { ...oldData, title: savedTitle } : oldData),
+			);
 		},
 	});
 
-	const handleSubmit = () => {
+	useEffect(() => {
+		const nextTitle = editValue.trim();
+		if (!nextTitle || nextTitle === savedTitle) return;
+
+		const timeoutId = window.setTimeout(() => {
+			updateTitle({ title: nextTitle });
+		}, 600);
+
+		return () => window.clearTimeout(timeoutId);
+	}, [editValue, savedTitle, updateTitle]);
+
+	const handleChange = (value: string) => {
+		setEditValue(value);
+		queryClient.setQueryData<GetInsightResponse>(
+			insightKeys.detail(data.insightId),
+			(oldData) => (oldData ? { ...oldData, title: value } : oldData),
+		);
+	};
+
+	const handleBlur = () => {
 		const trimmed = editValue.trim();
-		if (!trimmed || trimmed === data.title) {
-			setEditValue(data.title);
-			setIsEditing(false);
+		if (!trimmed) {
+			setEditValue(savedTitle);
+			queryClient.setQueryData<GetInsightResponse>(
+				insightKeys.detail(data.insightId),
+				(oldData) => (oldData ? { ...oldData, title: savedTitle } : oldData),
+			);
 			return;
 		}
-		updateTitle({ title: trimmed });
-		setIsEditing(false);
+
+		if (trimmed !== savedTitle) {
+			setEditValue(trimmed);
+			updateTitle({ title: trimmed });
+		}
 	};
 
 	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === "Enter") {
 			e.preventDefault();
-			handleSubmit();
+			e.currentTarget.blur();
 		} else if (e.key === "Escape") {
-			setEditValue(data.title);
-			setIsEditing(false);
+			setEditValue(savedTitle);
+			queryClient.setQueryData<GetInsightResponse>(
+				insightKeys.detail(data.insightId),
+				(oldData) => (oldData ? { ...oldData, title: savedTitle } : oldData),
+			);
+			e.currentTarget.blur();
 		}
-	};
-
-	const handleTitleClick = () => {
-		setIsEditing(true);
-		setEditValue(data.title);
-		requestAnimationFrame(() => {
-			inputRef.current?.focus();
-			inputRef.current?.select();
-		});
 	};
 
 	return (
 		<InsightTitleContext.Provider
 			value={{
-				isEditing,
 				editValue,
-				setEditValue,
-				handleSubmit,
+				handleChange,
+				handleBlur,
 				handleKeyDown,
-				handleTitleClick,
 				inputRef,
-				title: data.title || "제목 없는 인사이트",
 			}}
 		>
 			{children}
