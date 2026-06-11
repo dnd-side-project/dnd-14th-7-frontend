@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { SIGNUP_CREDIT_GRANT } from "@/lib/credits";
 import { signInWithGoogle } from "@/lib/queries/user";
 
 export interface LoginModalProps {
@@ -22,12 +23,18 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
 				<div className="flex flex-col items-center gap-8">
 					<Image src="/logo.svg" alt="Aha!ve" width={254} height={80} />
-					<div className="flex flex-col items-center gap-1">
-						<p className="typo-heading-1 font-medium text-dnd-label-neutral text-center">
-							로그인하고 아하이브에서
-						</p>
-						<p className="typo-heading-1 font-medium text-dnd-label-neutral text-center">
-							나만의 인사이트를 정리해보세요!
+					<div className="flex flex-col items-center gap-3">
+						<div className="flex flex-col items-center gap-1">
+							<p className="typo-heading-1 font-medium text-dnd-label-neutral text-center">
+								로그인하고 아하이브에서
+							</p>
+							<p className="typo-heading-1 font-medium text-dnd-label-neutral text-center">
+								나만의 인사이트를 정리해보세요!
+							</p>
+						</div>
+						<p className="rounded-full bg-dnd-bg-mint px-4 py-2 typo-body-2 font-semibold text-dnd-primary">
+							가입하면 AI 생성에 사용할 수 있는 {SIGNUP_CREDIT_GRANT} 크레딧을
+							드려요
 						</p>
 					</div>
 				</div>

@@ -14,7 +14,7 @@ import { InsufficientCreditsDialog } from "@/components/credit/insufficient-cred
 import { LoginModal } from "@/components/login-modal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { AI_CREDIT_COSTS } from "@/lib/credits";
+import { AI_CREDIT_COSTS, SIGNUP_CREDIT_GRANT } from "@/lib/credits";
 import {
 	insightCreationMutationOptions,
 	insightKeys,
@@ -147,7 +147,7 @@ function GuestInsightInput({ titleClassName }: { titleClassName?: string }) {
 				}}
 				trailingContent={
 					<Button variant="solid" size="dnd-large" disabled>
-						인사이트 생성
+						가입하고 {SIGNUP_CREDIT_GRANT} 크레딧 받기
 					</Button>
 				}
 			/>
