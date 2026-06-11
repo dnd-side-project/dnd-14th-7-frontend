@@ -81,6 +81,7 @@ export async function POST(request: Request) {
 
 	let creditReservation: Awaited<ReturnType<typeof consumeAiCredits>> | null =
 		null;
+	let createdInsightId: number | null = null;
 
 	try {
 		creditReservation = await consumeAiCredits(supabase, {
@@ -112,6 +113,7 @@ export async function POST(request: Request) {
 			.single();
 
 		if (error) throw error;
+		createdInsightId = insight.id;
 
 		const { error: pieceError } = await supabase.from("insight_pieces").insert({
 			insight_id: insight.id,
@@ -171,10 +173,23 @@ export async function POST(request: Request) {
 			estimatedCost: estimateOpenAICost(aiResponse.usage),
 			relatedEntityType: "insight",
 			relatedEntityId: String(insight.id),
+		}).catch((usageError) => {
+			console.error("Failed to record insight creation AI usage:", usageError);
 		});
 
 		return NextResponse.json({ insightId: insight.id });
 	} catch (error) {
+		if (createdInsightId !== null) {
+			const { error: cleanupError } = await supabase
+				.from("insights")
+				.delete()
+				.eq("id", createdInsightId);
+
+			if (cleanupError) {
+				console.error("Failed to clean up orphaned insight:", cleanupError);
+			}
+		}
+
 		if (creditReservation) {
 			await refundAiCredits(
 				supabase,

@@ -185,6 +185,8 @@ export async function POST(request: Request) {
 			estimatedCost: estimateOpenAICost(aiResponse.usage),
 			relatedEntityType: "insight",
 			relatedEntityId: String(insightId),
+		}).catch((usageError) => {
+			console.error("Failed to record question refresh AI usage:", usageError);
 		});
 
 		return NextResponse.json({ questions: insertedQuestions ?? [] });

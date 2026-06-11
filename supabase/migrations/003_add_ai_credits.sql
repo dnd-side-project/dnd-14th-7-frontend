@@ -16,14 +16,25 @@ language plpgsql
 as $$
 begin
   if auth.uid() is not null
-    and current_setting('app.credit_mutation', true) is distinct from 'on'
-    and new.credit is distinct from old.credit then
-    raise exception 'profiles.credit cannot be changed by client requests';
+    and current_setting('app.credit_mutation', true) is distinct from 'on' then
+    if new.credit is distinct from old.credit then
+      raise exception 'profiles.credit cannot be changed by client requests';
+    end if;
+
+    if new.plan_type is distinct from old.plan_type then
+      raise exception 'profiles.plan_type cannot be changed by client requests';
+    end if;
   end if;
 
   return new;
 end;
 $$;
+
+drop trigger if exists prevent_client_credit_update_trigger on public.profiles;
+create trigger prevent_client_credit_update_trigger
+before update on public.profiles
+for each row
+execute function public.prevent_client_credit_update();
 
 alter table public.profiles
 drop constraint if exists profiles_plan_type_check;
@@ -202,16 +213,17 @@ begin
     raise exception 'Unauthenticated';
   end if;
 
-  if exists (select 1 from public.credit_transactions where idempotency_key = v_refund_key) then
-    return;
-  end if;
-
   select * into v_transaction
   from public.credit_transactions
   where idempotency_key = p_idempotency_key
-    and user_id = v_user_id;
+    and user_id = v_user_id
+  for update;
 
   if not found or v_transaction.amount >= 0 then
+    return;
+  end if;
+
+  if exists (select 1 from public.credit_transactions where idempotency_key = v_refund_key) then
     return;
   end if;
 

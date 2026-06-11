@@ -108,6 +108,8 @@ export async function POST(request: Request) {
 			completionTokens: aiResponse.usage.completionTokens,
 			totalTokens: aiResponse.usage.totalTokens,
 			estimatedCost: estimateOpenAICost(aiResponse.usage),
+		}).catch((usageError) => {
+			console.error("Failed to record candidate retry AI usage:", usageError);
 		});
 
 		return NextResponse.json({ candidates });
