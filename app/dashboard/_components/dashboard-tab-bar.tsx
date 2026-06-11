@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
 import Image from "next/image";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
@@ -9,6 +8,7 @@ import { insightDetailQueryOptions } from "@/lib/queries/insight";
 import type { Tab } from "@/lib/tabs/tab-utils";
 import { deserializeTab } from "@/lib/tabs/tab-utils";
 import { cn } from "@/lib/utils";
+import { DashboardSearchDialog } from "./dashboard-search-dialog";
 
 export function DashboardTabBar() {
 	const { state, dispatch } = useDashboardTabs();
@@ -58,12 +58,7 @@ export function DashboardTabBar() {
 				})}
 			</div>
 
-			<button
-				type="button"
-				className="flex h-full shrink-0 items-center justify-center px-4 text-dnd-label-neutral hover:text-dnd-label-normal"
-			>
-				<Search className="size-5" />
-			</button>
+			<DashboardSearchDialog />
 		</div>
 	);
 }
