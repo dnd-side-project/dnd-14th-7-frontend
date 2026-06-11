@@ -16,18 +16,33 @@ function openLoginModal() {
 
 export function TopNavigation() {
 	const router = useRouter();
-	const { data: user, isLoading } = useQuery(userQueryOptions());
-	const isAuthenticated = Boolean(user);
+	const {
+		data: user,
+		isLoading,
+		isError,
+		error,
+	} = useQuery(userQueryOptions());
+	const isUnauthenticated =
+		error instanceof Error && error.message === "Unauthenticated";
+	const hasAuthError = isError && !isUnauthenticated;
 
 	return (
 		<nav className="flex items-center justify-between px-[240px] py-[24px] h-[112px]">
 			<Image src="/logo.svg" alt="Aha!ve" width={120} height={40} />
 			{isLoading ? (
 				<div className="h-12 w-25 animate-pulse rounded-xl bg-dnd-fill-normal" />
-			) : isAuthenticated ? (
+			) : hasAuthError ? (
+				<Button
+					variant="solid"
+					size="dnd-large"
+					onClick={() => router.refresh()}
+				>
+					다시 시도
+				</Button>
+			) : user ? (
 				<div className="flex items-center gap-3">
 					<span className="typo-body-2 text-dnd-label-alternative">
-                        {user.nickname}님
+						{user.nickname}님
 					</span>
 					<Button
 						variant="solid"

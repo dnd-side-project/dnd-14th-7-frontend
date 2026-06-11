@@ -24,6 +24,9 @@ import { tagsQueryOptions } from "@/lib/queries/user";
 import { serializeTab } from "@/lib/tabs/tab-utils";
 import { cn } from "@/lib/utils";
 
+const INSIGHTS_SEARCH_FETCH_SIZE = 50;
+const MAX_RESULTS_PER_SECTION = 8;
+
 function getInsightTitle(insight: InsightSummary) {
 	return insight.title || "제목 없는 인사이트";
 }
@@ -80,20 +83,31 @@ export function DashboardSearchDialog() {
 	const [activeResultIndex, setActiveResultIndex] = useState(0);
 	const resultListRef = useRef<HTMLDivElement>(null);
 	const searchInputId = useId();
+	const searchDialogTitleId = useId();
 	const searchResultListId = useId();
 	const normalizedSearchValue = normalizeSearchText(searchValue);
-	const { data: insightsData, isLoading: isInsightsLoading } = useQuery({
-		...insightsQueryOptions({ page: 0, size: 50 }),
+	const {
+		data: insightsData,
+		isLoading: isInsightsLoading,
+		isError: isInsightsError,
+	} = useQuery({
+		...insightsQueryOptions({ page: 0, size: INSIGHTS_SEARCH_FETCH_SIZE }),
 		enabled: open,
 	});
-	const { data: tags = [], isLoading: isTagsLoading } = useQuery({
+	const {
+		data: tags = [],
+		isLoading: isTagsLoading,
+		isError: isTagsError,
+	} = useQuery({
 		...tagsQueryOptions(),
 		enabled: open,
 	});
 	const insights = insightsData?.content ?? [];
 
 	const filteredInsights = useMemo(() => {
-		if (!normalizedSearchValue) return insights.slice(0, 8);
+		if (!normalizedSearchValue) {
+			return insights.slice(0, MAX_RESULTS_PER_SECTION);
+		}
 
 		return insights
 			.filter((insight) => {
@@ -104,17 +118,17 @@ export function DashboardSearchDialog() {
 					content.includes(normalizedSearchValue)
 				);
 			})
-			.slice(0, 8);
+			.slice(0, MAX_RESULTS_PER_SECTION);
 	}, [insights, normalizedSearchValue]);
 
 	const filteredTags = useMemo(() => {
-		if (!normalizedSearchValue) return tags.slice(0, 8);
+		if (!normalizedSearchValue) return tags.slice(0, MAX_RESULTS_PER_SECTION);
 
 		return tags
 			.filter((tag) =>
 				tag.tagName.toLowerCase().includes(normalizedSearchValue),
 			)
-			.slice(0, 8);
+			.slice(0, MAX_RESULTS_PER_SECTION);
 	}, [normalizedSearchValue, tags]);
 
 	const closeSearch = () => {
@@ -149,7 +163,8 @@ export function DashboardSearchDialog() {
 		[filteredInsights, filteredTags],
 	);
 	const isLoading = isInsightsLoading || isTagsLoading;
-	const isEmpty = !isLoading && searchResults.length === 0;
+	const isError = isInsightsError || isTagsError;
+	const isEmpty = !isLoading && !isError && searchResults.length === 0;
 	const activeResult = searchResults[activeResultIndex];
 	const activeResultId = activeResult
 		? getSearchResultId(searchResultListId, activeResult)
@@ -249,13 +264,16 @@ export function DashboardSearchDialog() {
 				showCloseButton={false}
 				className="top-24 max-w-2xl translate-y-0 gap-0 overflow-hidden rounded-2xl bg-white p-0 ring-0 shadow-dnd-heavy sm:max-w-2xl"
 			>
-				<DialogTitle className="sr-only">검색</DialogTitle>
+				<DialogTitle id={searchDialogTitleId} className="sr-only">
+					검색
+				</DialogTitle>
 				<div className="flex items-center gap-3 border-b border-dnd-line-normal px-5 py-4">
 					<Search className="size-5 shrink-0 text-dnd-label-alternative" />
 					<input
 						id={searchInputId}
 						type="text"
 						role="combobox"
+						aria-labelledby={searchDialogTitleId}
 						aria-expanded={open}
 						aria-controls={searchResultListId}
 						aria-activedescendant={activeResultId}
@@ -286,6 +304,10 @@ export function DashboardSearchDialog() {
 					{isLoading ? (
 						<output className="block px-3 py-8 text-center typo-body-2 text-dnd-label-alternative">
 							검색 결과를 불러오는 중이에요.
+						</output>
+					) : isError ? (
+						<output className="block px-3 py-8 text-center typo-body-2 text-dnd-status-negative">
+							검색 결과를 불러오는 중 오류가 발생했어요.
 						</output>
 					) : isEmpty ? (
 						<output className="block px-3 py-8 text-center typo-body-2 text-dnd-label-alternative">
