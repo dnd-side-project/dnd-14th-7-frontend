@@ -1,5 +1,16 @@
 import { NextResponse } from "next/server";
-import { askOpenAI, parseOpenAIJson } from "@/lib/ai/openai";
+import {
+	consumeAiCredits,
+	InsufficientCreditsError,
+	recordAiUsage,
+	refundAiCredits,
+} from "@/lib/ai/credits";
+import {
+	askOpenAIWithUsage,
+	estimateOpenAICost,
+	parseOpenAIJson,
+} from "@/lib/ai/openai";
+import { AI_CREDIT_COSTS } from "@/lib/credits";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -97,7 +108,17 @@ export async function POST(request: Request) {
 		return NextResponse.json({ message: "Insight not found" }, { status: 404 });
 	}
 
+	let creditReservation: Awaited<ReturnType<typeof consumeAiCredits>> | null =
+		null;
+
 	try {
+		creditReservation = await consumeAiCredits(supabase, {
+			feature: "QUESTION_REFRESH",
+			cost: AI_CREDIT_COSTS.QUESTION_REFRESH,
+			relatedEntityType: "insight",
+			relatedEntityId: String(insightId),
+		});
+
 		const { data: pieces, error: piecesError } = await supabase
 			.from("insight_pieces")
 			.select("content")
@@ -115,7 +136,7 @@ export async function POST(request: Request) {
 
 		if (existingQuestionsError) throw existingQuestionsError;
 
-		const aiText = await askOpenAI(
+		const aiResponse = await askOpenAIWithUsage(
 			createPrompt({
 				title: insight.title ?? "",
 				initialThought: insight.initial_thought ?? "",
@@ -125,12 +146,12 @@ export async function POST(request: Request) {
 				),
 			}),
 		);
-		const parsed = parseOpenAIJson<QuestionGenerationResponse>(aiText);
+		const parsed = parseOpenAIJson<QuestionGenerationResponse>(aiResponse.text);
 		const questions = normalizeQuestions(parsed?.questions);
 
 		if (questions.length !== 3) {
 			throw new Error(
-				`Expected exactly 3 questions, received ${questions.length}: ${aiText}`,
+				`Expected exactly 3 questions, received ${questions.length}: ${aiResponse.text}`,
 			);
 		}
 
@@ -154,8 +175,45 @@ export async function POST(request: Request) {
 
 		if (insertError) throw insertError;
 
+		await recordAiUsage(supabase, {
+			userId: user.id,
+			feature: "QUESTION_REFRESH",
+			model: aiResponse.model,
+			promptTokens: aiResponse.usage.promptTokens,
+			completionTokens: aiResponse.usage.completionTokens,
+			totalTokens: aiResponse.usage.totalTokens,
+			estimatedCost: estimateOpenAICost(aiResponse.usage),
+			relatedEntityType: "insight",
+			relatedEntityId: String(insightId),
+		}).catch((usageError) => {
+			console.error("Failed to record question refresh AI usage:", usageError);
+		});
+
 		return NextResponse.json({ questions: insertedQuestions ?? [] });
 	} catch (error) {
+		if (creditReservation) {
+			await refundAiCredits(
+				supabase,
+				creditReservation.idempotencyKey,
+				"AI question refresh failed",
+			).catch((refundError) => {
+				console.error(
+					"Failed to refund question refresh credits:",
+					refundError,
+				);
+			});
+		}
+
+		if (error instanceof InsufficientCreditsError) {
+			return NextResponse.json(
+				{
+					message: "Insufficient credits",
+					requiredCredits: error.requiredCredits,
+				},
+				{ status: 402 },
+			);
+		}
+
 		console.error("Failed to generate insight questions with OpenAI:", error);
 		return NextResponse.json(
 			{ message: "Failed to generate insight questions" },

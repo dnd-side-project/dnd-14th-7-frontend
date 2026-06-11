@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { VisuallyHidden } from "radix-ui";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { signInWithGoogle } from "@/lib/queries/user";
 
@@ -19,9 +18,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 	return (
 		<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
 			<DialogContent className="w-[700px] sm:max-w-[700px] rounded-[32px] bg-dnd-bg-normal p-12 flex flex-col items-center gap-12 ring-0">
-				<VisuallyHidden.Root>
-					<DialogTitle>로그인</DialogTitle>
-				</VisuallyHidden.Root>
+				<DialogTitle className="sr-only">로그인</DialogTitle>
 
 				<div className="flex flex-col items-center gap-8">
 					<Image src="/logo.svg" alt="Aha!ve" width={254} height={80} />

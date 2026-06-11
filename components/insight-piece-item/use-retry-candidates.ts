@@ -1,4 +1,6 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { userKeys } from "@/lib/queries/user";
 import type { RetryCandidate } from "./selecting-mode-view";
 
 type RetryState =
@@ -30,6 +32,7 @@ async function generateRetryCandidates(
 	});
 
 	if (!response.ok) {
+		if (response.status === 402) throw new Error("Insufficient credits");
 		throw new Error("Failed to generate retry candidates");
 	}
 
@@ -50,13 +53,16 @@ interface UseRetryCandidatesParams {
 	pieceId: number;
 	onRetryStart: (pieceId: number) => void;
 	onRetryEnd: () => void;
+	onInsufficientCredits?: () => void;
 }
 
 export function useRetryCandidates({
 	pieceId,
 	onRetryStart,
 	onRetryEnd,
+	onInsufficientCredits,
 }: UseRetryCandidatesParams) {
+	const queryClient = useQueryClient();
 	const [retryState, setRetryState] = useState<RetryState>({ status: "idle" });
 	const abortControllerRef = useRef<AbortController | null>(null);
 	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -108,10 +114,22 @@ export function useRetryCandidates({
 				);
 				if (controller.signal.aborted) return;
 				clearRetryRequest();
+				queryClient.invalidateQueries({ queryKey: userKeys.profile() });
 				setRetryState({ status: "selecting", candidates });
 			} catch (error) {
 				if (controller.signal.aborted && !didTimeout) return;
 				clearRetryRequest();
+
+				if (
+					error instanceof Error &&
+					error.message === "Insufficient credits"
+				) {
+					setRetryState({ status: "idle" });
+					onRetryEnd();
+					onInsufficientCredits?.();
+					return;
+				}
+
 				console.error("Failed to generate retry candidates:", error);
 				setRetryState({
 					status: "error",
@@ -121,7 +139,15 @@ export function useRetryCandidates({
 				});
 			}
 		},
-		[abortRetryRequest, clearRetryRequest, onRetryStart, pieceId],
+		[
+			abortRetryRequest,
+			clearRetryRequest,
+			onInsufficientCredits,
+			onRetryEnd,
+			onRetryStart,
+			pieceId,
+			queryClient,
+		],
 	);
 
 	useEffect(() => {

@@ -2,7 +2,6 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
-import { VisuallyHidden } from "radix-ui";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
 	type Position,
@@ -56,9 +55,7 @@ export function PositionSelectModal({
 	return (
 		<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
 			<DialogContent className="w-[1152px] sm:max-w-[1152px] rounded-[32px] bg-[#f2faf9] p-12 flex flex-col items-center gap-12 ring-0">
-				<VisuallyHidden.Root>
-					<DialogTitle>직군 선택</DialogTitle>
-				</VisuallyHidden.Root>
+				<DialogTitle className="sr-only">직군 선택</DialogTitle>
 
 				<div className="flex flex-col items-center gap-12 w-full">
 					<PositionSelectHeader />

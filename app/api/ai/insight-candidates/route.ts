@@ -1,5 +1,16 @@
 import { NextResponse } from "next/server";
-import { askOpenAI, parseOpenAIJson } from "@/lib/ai/openai";
+import {
+	consumeAiCredits,
+	InsufficientCreditsError,
+	recordAiUsage,
+	refundAiCredits,
+} from "@/lib/ai/credits";
+import {
+	askOpenAIWithUsage,
+	estimateOpenAICost,
+	parseOpenAIJson,
+} from "@/lib/ai/openai";
+import { AI_CREDIT_COSTS } from "@/lib/credits";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -70,19 +81,59 @@ export async function POST(request: Request) {
 		);
 	}
 
+	let creditReservation: Awaited<ReturnType<typeof consumeAiCredits>> | null =
+		null;
+
 	try {
-		const aiText = await askOpenAI(createPrompt(content));
-		const parsed = parseOpenAIJson<InsightCandidatesResponse>(aiText);
+		creditReservation = await consumeAiCredits(supabase, {
+			feature: "INSIGHT_CANDIDATE_RETRY",
+			cost: AI_CREDIT_COSTS.INSIGHT_CANDIDATE_RETRY,
+		});
+
+		const aiResponse = await askOpenAIWithUsage(createPrompt(content));
+		const parsed = parseOpenAIJson<InsightCandidatesResponse>(aiResponse.text);
 		const candidates = normalizeCandidates(parsed?.insightCandidates);
 
 		if (candidates.length !== 3) {
 			throw new Error(
-				`Expected exactly 3 candidates, received ${candidates.length}: ${aiText}`,
+				`Expected exactly 3 candidates, received ${candidates.length}: ${aiResponse.text}`,
 			);
 		}
 
+		await recordAiUsage(supabase, {
+			userId: user.id,
+			feature: "INSIGHT_CANDIDATE_RETRY",
+			model: aiResponse.model,
+			promptTokens: aiResponse.usage.promptTokens,
+			completionTokens: aiResponse.usage.completionTokens,
+			totalTokens: aiResponse.usage.totalTokens,
+			estimatedCost: estimateOpenAICost(aiResponse.usage),
+		}).catch((usageError) => {
+			console.error("Failed to record candidate retry AI usage:", usageError);
+		});
+
 		return NextResponse.json({ candidates });
 	} catch (error) {
+		if (creditReservation) {
+			await refundAiCredits(
+				supabase,
+				creditReservation.idempotencyKey,
+				"AI insight candidate retry failed",
+			).catch((refundError) => {
+				console.error("Failed to refund candidate retry credits:", refundError);
+			});
+		}
+
+		if (error instanceof InsufficientCreditsError) {
+			return NextResponse.json(
+				{
+					message: "Insufficient credits",
+					requiredCredits: error.requiredCredits,
+				},
+				{ status: 402 },
+			);
+		}
+
 		console.error("Failed to generate insight candidates with OpenAI:", error);
 		return NextResponse.json(
 			{ message: "Failed to generate insight candidates" },

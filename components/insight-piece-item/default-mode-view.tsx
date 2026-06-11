@@ -6,6 +6,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AI_CREDIT_COSTS } from "@/lib/credits";
 import type { InsightPiece } from "@/lib/queries/insight";
 import { PieceHeader } from "./piece-header";
 
@@ -70,7 +71,8 @@ export function DefaultModeView({
 											재시도
 										</span>
 										<span className="typo-label-2 text-dnd-label-alternative leading-tight whitespace-pre-wrap break-keep">
-											3개의 인사이트 후보를 추가로 받아볼 수 있어요
+											3개의 인사이트 후보를 추가로 받아볼 수 있어요 ·{" "}
+											{AI_CREDIT_COSTS.INSIGHT_CANDIDATE_RETRY} 크레딧
 										</span>
 									</div>
 								</DropdownMenuItem>

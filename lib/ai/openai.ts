@@ -8,14 +8,38 @@ interface OpenAIMessageResponse {
 			content?: string | null;
 		};
 	}>;
+	usage?: {
+		prompt_tokens?: number;
+		completion_tokens?: number;
+		total_tokens?: number;
+	};
 }
 
-export async function askOpenAI(prompt: string): Promise<string> {
+export interface OpenAIUsage {
+	promptTokens: number;
+	completionTokens: number;
+	totalTokens: number;
+}
+
+export interface OpenAITextResponse {
+	text: string;
+	model: string;
+	usage: OpenAIUsage;
+}
+
+export function estimateOpenAICost(usage: OpenAIUsage) {
+	return (usage.promptTokens * 0.15 + usage.completionTokens * 0.6) / 1_000_000;
+}
+
+export async function askOpenAIWithUsage(
+	prompt: string,
+): Promise<OpenAITextResponse> {
 	const apiKey = process.env.OPENAI_API_KEY;
 	if (!apiKey) {
 		throw new Error("Missing OPENAI_API_KEY");
 	}
 
+	const model = process.env.OPENAI_MODEL ?? DEFAULT_MODEL;
 	const controller = new AbortController();
 	const timeoutId = setTimeout(
 		() => controller.abort(),
@@ -31,7 +55,7 @@ export async function askOpenAI(prompt: string): Promise<string> {
 				authorization: `Bearer ${apiKey}`,
 			},
 			body: JSON.stringify({
-				model: process.env.OPENAI_MODEL ?? DEFAULT_MODEL,
+				model,
 				temperature: 0.7,
 				response_format: { type: "json_object" },
 				messages: [
@@ -59,10 +83,23 @@ export async function askOpenAI(prompt: string): Promise<string> {
 			throw new Error("OpenAI API returned empty content");
 		}
 
-		return text.replaceAll("```json", "").replaceAll("```", "").trim();
+		return {
+			text: text.replaceAll("```json", "").replaceAll("```", "").trim(),
+			model,
+			usage: {
+				promptTokens: data.usage?.prompt_tokens ?? 0,
+				completionTokens: data.usage?.completion_tokens ?? 0,
+				totalTokens: data.usage?.total_tokens ?? 0,
+			},
+		};
 	} finally {
 		clearTimeout(timeoutId);
 	}
+}
+
+export async function askOpenAI(prompt: string): Promise<string> {
+	const { text } = await askOpenAIWithUsage(prompt);
+	return text;
 }
 
 export function parseOpenAIJson<T>(text: string): T {

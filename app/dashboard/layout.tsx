@@ -27,7 +27,7 @@ export default async function DashboardLayout({
 		// Prefetch user profile
 		const { data: profile } = await supabase
 			.from("profiles")
-			.select("nickname, email, credit, position")
+			.select("nickname, email, credit, plan_type, position")
 			.eq("id", authUser.id)
 			.maybeSingle();
 
@@ -36,6 +36,7 @@ export default async function DashboardLayout({
 				nickname: profile.nickname,
 				email: profile.email,
 				credit: profile.credit,
+				planType: profile.plan_type,
 				position: profile.position as User["position"],
 			});
 		}

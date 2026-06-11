@@ -1,5 +1,16 @@
 import { NextResponse } from "next/server";
-import { askOpenAI, parseOpenAIJson } from "@/lib/ai/openai";
+import {
+	consumeAiCredits,
+	InsufficientCreditsError,
+	recordAiUsage,
+	refundAiCredits,
+} from "@/lib/ai/credits";
+import {
+	askOpenAIWithUsage,
+	estimateOpenAICost,
+	parseOpenAIJson,
+} from "@/lib/ai/openai";
+import { AI_CREDIT_COSTS } from "@/lib/credits";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -68,22 +79,140 @@ export async function POST(request: Request) {
 		return NextResponse.json({ message: "memo is required" }, { status: 400 });
 	}
 
+	let creditReservation: Awaited<ReturnType<typeof consumeAiCredits>> | null =
+		null;
+	let createdInsightId: number | null = null;
+
 	try {
-		const aiText = await askOpenAI(createPrompt(memo));
-		const parsed = parseOpenAIJson<InsightGenerationResponse>(aiText);
+		creditReservation = await consumeAiCredits(supabase, {
+			feature: "INSIGHT_CREATE",
+			cost: AI_CREDIT_COSTS.INSIGHT_CREATE,
+		});
+
+		const aiResponse = await askOpenAIWithUsage(createPrompt(memo));
+		const parsed = parseOpenAIJson<InsightGenerationResponse>(aiResponse.text);
 		const title =
 			typeof parsed?.title === "string" && parsed.title.trim()
 				? parsed.title.trim()
 				: "제목 없는 인사이트";
-		const insight =
+		const insightContent =
 			typeof parsed?.insight === "string" && parsed.insight.trim()
 				? parsed.insight.trim()
 				: memo;
 		const tags = normalizeStrings(parsed?.tags, 3);
 		const questions = normalizeStrings(parsed?.questions, 3);
 
-		return NextResponse.json({ title, insight, tags, questions });
+		const { data: insight, error } = await supabase
+			.from("insights")
+			.insert({
+				user_id: user.id,
+				initial_thought: memo,
+				title,
+			})
+			.select("id")
+			.single();
+
+		if (error) throw error;
+		createdInsightId = insight.id;
+
+		const { error: pieceError } = await supabase.from("insight_pieces").insert({
+			insight_id: insight.id,
+			content: insightContent,
+			created_type: "INIT",
+		});
+
+		if (pieceError) throw pieceError;
+
+		const tagNames = [...new Set(tags.map((tag) => tag.trim()))].filter(
+			Boolean,
+		);
+
+		if (tagNames.length > 0) {
+			const { data: createdTags, error: tagError } = await supabase
+				.from("tags")
+				.upsert(
+					tagNames.map((name) => ({ user_id: user.id, name })),
+					{ onConflict: "user_id,name" },
+				)
+				.select("id");
+
+			if (tagError) throw tagError;
+
+			if (createdTags && createdTags.length > 0) {
+				const { error: insightTagError } = await supabase
+					.from("insight_tags")
+					.insert(
+						createdTags.map((tag) => ({
+							insight_id: insight.id,
+							tag_id: tag.id,
+						})),
+					);
+
+				if (insightTagError) throw insightTagError;
+			}
+		}
+
+		if (questions.length > 0) {
+			const { error: questionError } = await supabase.from("questions").insert(
+				questions.map((content) => ({
+					insight_id: insight.id,
+					content,
+				})),
+			);
+
+			if (questionError) throw questionError;
+		}
+
+		await recordAiUsage(supabase, {
+			userId: user.id,
+			feature: "INSIGHT_CREATE",
+			model: aiResponse.model,
+			promptTokens: aiResponse.usage.promptTokens,
+			completionTokens: aiResponse.usage.completionTokens,
+			totalTokens: aiResponse.usage.totalTokens,
+			estimatedCost: estimateOpenAICost(aiResponse.usage),
+			relatedEntityType: "insight",
+			relatedEntityId: String(insight.id),
+		}).catch((usageError) => {
+			console.error("Failed to record insight creation AI usage:", usageError);
+		});
+
+		return NextResponse.json({ insightId: insight.id });
 	} catch (error) {
+		if (createdInsightId !== null) {
+			const { error: cleanupError } = await supabase
+				.from("insights")
+				.delete()
+				.eq("id", createdInsightId);
+
+			if (cleanupError) {
+				console.error("Failed to clean up orphaned insight:", cleanupError);
+			}
+		}
+
+		if (creditReservation) {
+			await refundAiCredits(
+				supabase,
+				creditReservation.idempotencyKey,
+				"AI insight creation failed",
+			).catch((refundError) => {
+				console.error(
+					"Failed to refund insight creation credits:",
+					refundError,
+				);
+			});
+		}
+
+		if (error instanceof InsufficientCreditsError) {
+			return NextResponse.json(
+				{
+					message: "Insufficient credits",
+					requiredCredits: error.requiredCredits,
+				},
+				{ status: 402 },
+			);
+		}
+
 		console.error("Failed to generate insight with OpenAI:", error);
 		return NextResponse.json(
 			{ message: "Failed to generate insight" },

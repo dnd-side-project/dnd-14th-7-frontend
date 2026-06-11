@@ -4,6 +4,7 @@ import {
 	queryOptions,
 } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import type { PlanType } from "@/lib/supabase/types";
 
 // Supabase는 count 집계 결과를 타입 추론하지 못하므로 명시적으로 선언
 type InsightTagCount = { count: number };
@@ -14,6 +15,7 @@ export interface User {
 	nickname: string;
 	email: string;
 	credit: number;
+	planType: PlanType;
 	position: Position | "NONE";
 }
 
@@ -40,7 +42,7 @@ export const getUser = async (): Promise<User> => {
 
 	const { data, error } = await supabase
 		.from("profiles")
-		.select("nickname, email, credit, position")
+		.select("nickname, email, credit, plan_type, position")
 		.eq("id", user.id)
 		.maybeSingle();
 
@@ -51,6 +53,7 @@ export const getUser = async (): Promise<User> => {
 		nickname: data.nickname,
 		email: data.email,
 		credit: data.credit,
+		planType: data.plan_type,
 		position: data.position,
 	};
 };
