@@ -276,138 +276,22 @@ interface CreateInsightResponse {
 	insightId: number;
 }
 
-interface GeneratedInsightDraft {
-	title: string;
-	insight: string;
-	tags: string[];
-	questions: string[];
-}
-
-function normalizeGeneratedInsightDraft(
-	value: unknown,
-	memo: string,
-): GeneratedInsightDraft {
-	const draft =
-		typeof value === "object" && value !== null
-			? (value as Record<string, unknown>)
-			: {};
-
-	const title =
-		typeof draft.title === "string" && draft.title.trim()
-			? draft.title.trim()
-			: "제목 없는 인사이트";
-	const insight =
-		typeof draft.insight === "string" && draft.insight.trim()
-			? draft.insight.trim()
-			: memo;
-	const tags = Array.isArray(draft.tags)
-		? draft.tags
-				.filter((tag): tag is string => typeof tag === "string")
-				.map((tag) => tag.trim())
-				.filter(Boolean)
-		: [];
-	const questions = Array.isArray(draft.questions)
-		? draft.questions
-				.filter((question): question is string => typeof question === "string")
-				.map((question) => question.trim())
-				.filter(Boolean)
-		: [];
-
-	return { title, insight, tags, questions };
-}
-
-async function generateInsightDraft(
-	memo: string,
-): Promise<GeneratedInsightDraft> {
-	const response = await fetch("/api/ai/insight", {
-		method: "POST",
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify({ memo }),
-	});
-
-	if (!response.ok) {
-		throw new Error("Failed to generate insight with AI");
-	}
-
-	const draft = (await response.json()) as unknown;
-	return normalizeGeneratedInsightDraft(draft, memo);
-}
-
 const createInsight = async (data: {
 	memo: string;
 }): Promise<CreateInsightResponse> => {
-	const supabase = createClient();
-	const {
-		data: { user },
-		error: authError,
-	} = await supabase.auth.getUser();
-
-	if (authError || !user) throw new Error("Unauthenticated");
-
-	const generated = await generateInsightDraft(data.memo);
-
-	const { data: insight, error } = await supabase
-		.from("insights")
-		.insert({
-			user_id: user.id,
-			initial_thought: data.memo,
-			title: generated.title,
-		})
-		.select("id")
-		.single();
-
-	if (error) throw error;
-
-	const { error: pieceError } = await supabase.from("insight_pieces").insert({
-		insight_id: insight.id,
-		content: generated.insight,
-		created_type: "INIT",
+	const response = await fetch("/api/ai/insight", {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify({ memo: data.memo }),
 	});
 
-	if (pieceError) throw pieceError;
-
-	const tagNames = [...new Set(generated.tags.map((tag) => tag.trim()))].filter(
-		Boolean,
-	);
-
-	if (tagNames.length > 0) {
-		const { data: tags, error: tagError } = await supabase
-			.from("tags")
-			.upsert(
-				tagNames.map((name) => ({ user_id: user.id, name })),
-				{ onConflict: "user_id,name" },
-			)
-			.select("id");
-
-		if (tagError) throw tagError;
-
-		if (tags && tags.length > 0) {
-			const { error: insightTagError } = await supabase
-				.from("insight_tags")
-				.insert(
-					tags.map((tag) => ({ insight_id: insight.id, tag_id: tag.id })),
-				);
-
-			if (insightTagError) throw insightTagError;
-		}
+	if (!response.ok) {
+		if (response.status === 402) throw new Error("Insufficient credits");
+		throw new Error("Failed to create insight with AI");
 	}
 
-	const questions = generated.questions
-		.map((question) => question.trim())
-		.filter(Boolean);
-
-	if (questions.length > 0) {
-		const { error: questionError } = await supabase.from("questions").insert(
-			questions.map((content) => ({
-				insight_id: insight.id,
-				content,
-			})),
-		);
-
-		if (questionError) throw questionError;
-	}
-
-	return { insightId: insight.id };
+	const result = (await response.json()) as CreateInsightResponse;
+	return { insightId: result.insightId };
 };
 
 const createInsightPiece = async (
@@ -684,6 +568,7 @@ const generateInsightQuestions = async (
 	});
 
 	if (!response.ok) {
+		if (response.status === 402) throw new Error("Insufficient credits");
 		throw new Error("Failed to generate insight questions");
 	}
 
