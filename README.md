@@ -2,6 +2,8 @@
 
 > 흩어진 생각을 실행 가능한 인사이트로 바꾸는 AI 기반 인사이트 관리 서비스
 
+[English](./README.en.md)
+
 ![Aha!ve 메인 화면](./public/demo/main.png)
 
 ## 소개
