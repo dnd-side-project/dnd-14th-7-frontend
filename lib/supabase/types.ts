@@ -12,6 +12,7 @@ export type Json =
 export type Position = "DEV" | "DESIGN" | "PROMOTER" | "OTHER" | "NONE";
 export type CreatedType = "INIT" | "SELF" | "ANSWER";
 export type QuestionStatus = "WAITING" | "COMPLETED" | "ARCHIVED";
+export type PlanType = "free" | "pro" | "unlimited";
 
 export interface Database {
 	public: {
@@ -22,6 +23,7 @@ export interface Database {
 					nickname: string;
 					email: string;
 					credit: number;
+					plan_type: PlanType;
 					position: Position;
 					created_at: string;
 					updated_at: string;
@@ -31,6 +33,7 @@ export interface Database {
 					nickname: string;
 					email: string;
 					credit?: number;
+					plan_type?: PlanType;
 					position?: Position;
 					created_at?: string;
 					updated_at?: string;
@@ -40,6 +43,7 @@ export interface Database {
 					nickname?: string;
 					email?: string;
 					credit?: number;
+					plan_type?: PlanType;
 					position?: Position;
 					updated_at?: string;
 				};
@@ -227,6 +231,66 @@ export interface Database {
 					},
 				];
 			};
+			credit_transactions: {
+				Row: {
+					id: string;
+					user_id: string;
+					amount: number;
+					balance_after: number;
+					type: string;
+					feature: string | null;
+					related_entity_type: string | null;
+					related_entity_id: string | null;
+					reason: string | null;
+					idempotency_key: string;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					user_id: string;
+					amount: number;
+					balance_after: number;
+					type: string;
+					feature?: string | null;
+					related_entity_type?: string | null;
+					related_entity_id?: string | null;
+					reason?: string | null;
+					idempotency_key: string;
+					created_at?: string;
+				};
+				Update: never;
+				Relationships: [];
+			};
+			ai_usage_logs: {
+				Row: {
+					id: string;
+					user_id: string;
+					feature: string;
+					model: string;
+					prompt_tokens: number;
+					completion_tokens: number;
+					total_tokens: number;
+					estimated_cost: number;
+					related_entity_type: string | null;
+					related_entity_id: string | null;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					user_id: string;
+					feature: string;
+					model: string;
+					prompt_tokens?: number;
+					completion_tokens?: number;
+					total_tokens?: number;
+					estimated_cost?: number;
+					related_entity_type?: string | null;
+					related_entity_id?: string | null;
+					created_at?: string;
+				};
+				Update: never;
+				Relationships: [];
+			};
 			answers: {
 				Row: {
 					id: number;
@@ -260,7 +324,37 @@ export interface Database {
 			[_ in never]: never;
 		};
 		Functions: {
-			[_ in never]: never;
+			consume_credits: {
+				Args: {
+					p_amount: number;
+					p_feature: string;
+					p_idempotency_key: string;
+					p_related_entity_type?: string | null;
+					p_related_entity_id?: string | null;
+				};
+				Returns: { success: boolean; balance_after: number | null }[];
+			};
+			refund_credits: {
+				Args: {
+					p_idempotency_key: string;
+					p_reason?: string | null;
+				};
+				Returns: undefined;
+			};
+			record_ai_usage: {
+				Args: {
+					p_user_id: string;
+					p_feature: string;
+					p_model: string;
+					p_prompt_tokens: number;
+					p_completion_tokens: number;
+					p_total_tokens: number;
+					p_estimated_cost: number;
+					p_related_entity_type?: string | null;
+					p_related_entity_id?: string | null;
+				};
+				Returns: undefined;
+			};
 		};
 		Enums: {
 			position: Position;
