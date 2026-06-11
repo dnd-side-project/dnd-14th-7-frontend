@@ -98,11 +98,14 @@ export interface GetInsightQuestionsResponse {
 
 type InsightsSort = "LATEST" | "VIEWS";
 
+type InsightsStatus = "active" | "trashed";
+
 interface InsightsParams {
 	page?: number;
 	size?: number;
 	sort?: InsightsSort;
 	tag?: number;
+	status?: InsightsStatus;
 }
 
 // ── Query Keys ──
@@ -128,6 +131,7 @@ const getInsights = async (
 		size: rawSize = 20,
 		sort = "LATEST",
 		tag,
+		status = "active",
 	} = params;
 	const page = Math.max(0, Number(rawPage) || 0);
 	const size = Math.max(1, Number(rawSize) || 20);
@@ -137,10 +141,8 @@ const getInsights = async (
 			? "insight_tags!inner(tag_id, tags(id, name))"
 			: "insight_tags(tag_id, tags(id, name))";
 
-	let query = supabase
-		.from("insights")
-		.select(
-			`
+	let query = supabase.from("insights").select(
+		`
       id,
       title,
       initial_thought,
@@ -148,15 +150,21 @@ const getInsights = async (
       trashed_at,
       ${insightTagsSelect}
     `,
-			{ count: "exact" },
-		)
-		.is("trashed_at", null);
+		{ count: "exact" },
+	);
+
+	query =
+		status === "trashed"
+			? query.not("trashed_at", "is", null)
+			: query.is("trashed_at", null);
 
 	if (tag !== undefined) {
 		query = query.eq("insight_tags.tag_id", tag);
 	}
 
-	if (sort === "VIEWS") {
+	if (status === "trashed") {
+		query = query.order("trashed_at", { ascending: false });
+	} else if (sort === "VIEWS") {
 		query = query.order("views", { ascending: false });
 	} else {
 		query = query.order("created_at", { ascending: false });
@@ -528,6 +536,36 @@ const updateInsightTitle = async (
 	if (error) throw error;
 };
 
+const moveInsightToTrash = async (insightId: number): Promise<void> => {
+	const supabase = createClient();
+	const { error } = await supabase
+		.from("insights")
+		.update({ trashed_at: new Date().toISOString() })
+		.eq("id", insightId);
+
+	if (error) throw error;
+};
+
+export const restoreInsightById = async (insightId: number): Promise<void> => {
+	const supabase = createClient();
+	const { error } = await supabase
+		.from("insights")
+		.update({ trashed_at: null })
+		.eq("id", insightId);
+
+	if (error) throw error;
+};
+
+const permanentlyDeleteInsight = async (insightId: number): Promise<void> => {
+	const supabase = createClient();
+	const { error } = await supabase
+		.from("insights")
+		.delete()
+		.eq("id", insightId);
+
+	if (error) throw error;
+};
+
 interface UpdateInsightMemoResponse {
 	memo: string;
 	updatedDate: string;
@@ -773,6 +811,21 @@ export const updateInsightTitleMutationOptions = (insightId: number) =>
 	mutationOptions({
 		mutationFn: (data: { title: string }) =>
 			updateInsightTitle(insightId, data),
+	});
+
+export const moveInsightToTrashMutationOptions = () =>
+	mutationOptions({
+		mutationFn: (insightId: number) => moveInsightToTrash(insightId),
+	});
+
+export const restoreInsightMutationOptions = () =>
+	mutationOptions({
+		mutationFn: (insightId: number) => restoreInsightById(insightId),
+	});
+
+export const permanentlyDeleteInsightMutationOptions = () =>
+	mutationOptions({
+		mutationFn: (insightId: number) => permanentlyDeleteInsight(insightId),
 	});
 
 export const updateInsightMemoMutationOptions = (insightId: number) =>
