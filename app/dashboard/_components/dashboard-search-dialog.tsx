@@ -83,7 +83,6 @@ export function DashboardSearchDialog() {
 	const [activeResultIndex, setActiveResultIndex] = useState(0);
 	const resultListRef = useRef<HTMLDivElement>(null);
 	const searchInputId = useId();
-	const searchDialogTitleId = useId();
 	const searchResultListId = useId();
 	const normalizedSearchValue = normalizeSearchText(searchValue);
 	const {
@@ -105,9 +104,7 @@ export function DashboardSearchDialog() {
 	const insights = insightsData?.content ?? [];
 
 	const filteredInsights = useMemo(() => {
-		if (!normalizedSearchValue) {
-			return insights.slice(0, MAX_RESULTS_PER_SECTION);
-		}
+		if (!normalizedSearchValue) return [];
 
 		return insights
 			.filter((insight) => {
@@ -122,7 +119,7 @@ export function DashboardSearchDialog() {
 	}, [insights, normalizedSearchValue]);
 
 	const filteredTags = useMemo(() => {
-		if (!normalizedSearchValue) return tags.slice(0, MAX_RESULTS_PER_SECTION);
+		if (!normalizedSearchValue) return [];
 
 		return tags
 			.filter((tag) =>
@@ -164,7 +161,12 @@ export function DashboardSearchDialog() {
 	);
 	const isLoading = isInsightsLoading || isTagsLoading;
 	const isError = isInsightsError || isTagsError;
-	const isEmpty = !isLoading && !isError && searchResults.length === 0;
+	const isWaitingForSearchTerm = !normalizedSearchValue;
+	const isEmpty =
+		!isWaitingForSearchTerm &&
+		!isLoading &&
+		!isError &&
+		searchResults.length === 0;
 	const activeResult = searchResults[activeResultIndex];
 	const activeResultId = activeResult
 		? getSearchResultId(searchResultListId, activeResult)
@@ -262,18 +264,17 @@ export function DashboardSearchDialog() {
 			</DialogTrigger>
 			<DialogContent
 				showCloseButton={false}
+				aria-describedby={undefined}
 				className="top-24 max-w-2xl translate-y-0 gap-0 overflow-hidden rounded-2xl bg-white p-0 ring-0 shadow-dnd-heavy sm:max-w-2xl"
 			>
-				<DialogTitle id={searchDialogTitleId} className="sr-only">
-					검색
-				</DialogTitle>
+				<DialogTitle className="sr-only">검색</DialogTitle>
 				<div className="flex items-center gap-3 border-b border-dnd-line-normal px-5 py-4">
 					<Search className="size-5 shrink-0 text-dnd-label-alternative" />
 					<input
 						id={searchInputId}
 						type="text"
 						role="combobox"
-						aria-labelledby={searchDialogTitleId}
+						aria-label="검색어"
 						aria-expanded={open}
 						aria-controls={searchResultListId}
 						aria-activedescendant={activeResultId}
@@ -301,7 +302,11 @@ export function DashboardSearchDialog() {
 					aria-labelledby={searchInputId}
 					className="max-h-120 overflow-y-auto p-3"
 				>
-					{isLoading ? (
+					{isWaitingForSearchTerm ? (
+						<output className="block px-3 py-8 text-center typo-body-2 text-dnd-label-alternative">
+							검색어를 입력하면 인사이트와 태그를 찾아드릴게요.
+						</output>
+					) : isLoading ? (
 						<output className="block px-3 py-8 text-center typo-body-2 text-dnd-label-alternative">
 							검색 결과를 불러오는 중이에요.
 						</output>
