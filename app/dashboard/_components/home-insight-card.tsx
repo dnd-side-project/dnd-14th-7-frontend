@@ -8,6 +8,15 @@ import {
 
 import { cn } from "@/lib/utils";
 
+interface HomeInsightCardAction {
+	label: string;
+	iconSrc: string;
+	iconAlt: string;
+	onSelect: () => void;
+	disabled?: boolean;
+	tone?: "default" | "danger";
+}
+
 export interface HomeInsightCardProps {
 	id: number;
 	title: string;
@@ -16,6 +25,7 @@ export interface HomeInsightCardProps {
 	tags: { id: number; name: string; colorClass?: string }[];
 	className?: string;
 	onOpen?: () => void;
+	actions?: HomeInsightCardAction[];
 }
 
 export function HomeInsightCard({
@@ -26,7 +36,10 @@ export function HomeInsightCard({
 	tags,
 	className,
 	onOpen,
+	actions = [],
 }: HomeInsightCardProps) {
+	const hasActions = actions.length > 0;
+
 	return (
 		<div
 			className={cn(
@@ -47,33 +60,52 @@ export function HomeInsightCard({
 					<h3 className="typo-headline-1 font-semibold text-dnd-label-strong line-clamp-1">
 						{title}
 					</h3>
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<button
-								type="button"
-								className="relative z-20 text-dnd-label-alternative p-1 hover:bg-dnd-bg-alternative rounded-full transition-colors"
-								aria-label="메뉴"
+					{hasActions && (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<button
+									type="button"
+									className="relative z-20 text-dnd-label-alternative p-1 hover:bg-dnd-bg-alternative rounded-full transition-colors"
+									aria-label="메뉴"
+								>
+									<Image
+										src="/kebab-icon.svg"
+										alt="menu"
+										width={17}
+										height={17}
+									/>
+								</button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent
+								align="end"
+								className="p-0 border-dnd-line-alternative shadow-dnd-normal rounded-[12px] bg-white min-w-[200px]"
 							>
-								<Image
-									src="/kebab-icon.svg"
-									alt="menu"
-									width={17}
-									height={17}
-								/>
-							</button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent
-							align="end"
-							className="p-0 border-dnd-line-alternative shadow-dnd-normal rounded-[12px] bg-white min-w-[200px]"
-						>
-							<DropdownMenuItem className="flex items-center gap-[12px] px-[12px] py-[8px] cursor-pointer rounded-[12px] focus:bg-dnd-bg-alternative hover:bg-dnd-bg-alternative">
-								<Image src="/trash.svg" alt="trash" width={18} height={21} />
-								<span className="typo-body-1 font-medium text-dnd-label-strong text-[16px]">
-									휴지통으로 이동
-								</span>
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+								{actions.map((action) => (
+									<DropdownMenuItem
+										key={action.label}
+										className={cn(
+											"flex items-center gap-[12px] px-[12px] py-[8px] cursor-pointer rounded-[12px] focus:bg-dnd-bg-alternative hover:bg-dnd-bg-alternative data-disabled:opacity-50",
+											action.tone === "danger"
+												? "text-dnd-status-negative focus:text-dnd-status-negative"
+												: "text-dnd-label-strong",
+										)}
+										onSelect={action.onSelect}
+										disabled={action.disabled}
+									>
+										<Image
+											src={action.iconSrc}
+											alt={action.iconAlt}
+											width={18}
+											height={21}
+										/>
+										<span className="typo-body-1 font-medium text-[16px]">
+											{action.label}
+										</span>
+									</DropdownMenuItem>
+								))}
+							</DropdownMenuContent>
+						</DropdownMenu>
+					)}
 				</div>
 				<span className="typo-caption-1 text-dnd-label-alternative">
 					{date}
