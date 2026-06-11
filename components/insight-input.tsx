@@ -3,16 +3,18 @@
 import {
 	QueryErrorResetBoundary,
 	useMutation,
+	useQuery,
 	useQueryClient,
-	useSuspenseQuery,
 } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { overlay } from "overlay-kit";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { InsufficientCreditsDialog } from "@/components/credit/insufficient-credits-dialog";
 import { LoginModal } from "@/components/login-modal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { AI_CREDIT_COSTS } from "@/lib/credits";
 import {
 	insightCreationMutationOptions,
 	insightKeys,
@@ -73,13 +75,7 @@ function InsightInputContent(props: InsightInputProps) {
 						<GuestInsightInput titleClassName={props.titleClassName} />
 					)}
 				>
-					<Suspense
-						fallback={
-							<InsightInputSkeleton titleClassName={props.titleClassName} />
-						}
-					>
-						<AuthenticatedInsightInputWithUser {...props} />
-					</Suspense>
+					<AuthenticatedInsightInputWithUser {...props} />
 				</ErrorBoundary>
 			)}
 		</QueryErrorResetBoundary>
@@ -90,7 +86,15 @@ function AuthenticatedInsightInputWithUser({
 	onSuccess,
 	titleClassName,
 }: InsightInputProps) {
-	const { data: user } = useSuspenseQuery(userQueryOptions());
+	const { data: user, isError, isLoading } = useQuery(userQueryOptions());
+
+	if (isLoading) {
+		return <InsightInputSkeleton titleClassName={titleClassName} />;
+	}
+
+	if (isError || !user) {
+		return <GuestInsightInput titleClassName={titleClassName} />;
+	}
 
 	return (
 		<AuthenticatedInsightInput
@@ -163,6 +167,9 @@ function AuthenticatedInsightInput({
 	titleClassName,
 }: AuthenticatedInsightInputProps) {
 	const [value, setValue] = useState("");
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [isInsufficientCreditsDialogOpen, setIsInsufficientCreditsDialogOpen] =
+		useState(false);
 	const queryClient = useQueryClient();
 	const content = getPositionContent(user.position);
 	const { mutate: createInsight, isPending } = useMutation(
@@ -171,18 +178,30 @@ function AuthenticatedInsightInput({
 
 	const handleSubmit = () => {
 		if (!value.trim()) return;
+		setErrorMessage(null);
 
 		createInsight(
 			{ memo: value },
 			{
 				onSuccess: (data) => {
 					setValue("");
+					setErrorMessage(null);
 					queryClient.invalidateQueries({ queryKey: insightKeys.all });
+					queryClient.invalidateQueries({ queryKey: userKeys.profile() });
 					queryClient.invalidateQueries({ queryKey: userKeys.tags() });
 					onSuccess?.(data.insightId);
 				},
 				onError: (error) => {
+					const isInsufficientCredits =
+						error instanceof Error && error.message === "Insufficient credits";
+
+					if (isInsufficientCredits) {
+						setIsInsufficientCreditsDialogOpen(true);
+						return;
+					}
+
 					console.error("Failed to create insight:", error);
+					setErrorMessage("인사이트를 생성하지 못했어요. 다시 시도해주세요.");
 				},
 			},
 		);
@@ -213,9 +232,22 @@ function AuthenticatedInsightInput({
 						disabled={value.length === 0}
 						onClick={handleSubmit}
 					>
-						{isPending ? "생성 중..." : "인사이트 생성"}
+						{isPending
+							? "생성 중..."
+							: `인사이트 생성 · ${AI_CREDIT_COSTS.INSIGHT_CREATE} 크레딧`}
 					</Button>
 				}
+			/>
+			{errorMessage && (
+				<p className="typo-body-2 text-dnd-status-negative" role="alert">
+					{errorMessage}
+				</p>
+			)}
+			<InsufficientCreditsDialog
+				open={isInsufficientCreditsDialogOpen}
+				onOpenChange={setIsInsufficientCreditsDialogOpen}
+				featureLabel="인사이트 생성"
+				requiredCredits={AI_CREDIT_COSTS.INSIGHT_CREATE}
 			/>
 		</section>
 	);

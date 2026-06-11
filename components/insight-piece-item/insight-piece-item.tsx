@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { useCallback, useState } from "react";
+import { InsufficientCreditsDialog } from "@/components/credit/insufficient-credits-dialog";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -14,6 +15,7 @@ import {
 	AlertDialogMedia,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AI_CREDIT_COSTS } from "@/lib/credits";
 import {
 	type InsightPiece,
 	insightKeys,
@@ -49,6 +51,8 @@ export function InsightPieceItem({
 		null,
 	);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [isInsufficientCreditsDialogOpen, setIsInsufficientCreditsDialogOpen] =
+		useState(false);
 	const displayContent = piece.content;
 	const canDelete = piece.createdType !== "INIT";
 	const { isCopied, copyText } = useCopyFeedback();
@@ -57,6 +61,7 @@ export function InsightPieceItem({
 			pieceId: piece.insightPieceId,
 			onRetryStart,
 			onRetryEnd,
+			onInsufficientCredits: () => setIsInsufficientCreditsDialogOpen(true),
 		});
 	const queryClient = useQueryClient();
 
@@ -205,6 +210,12 @@ export function InsightPieceItem({
 				isCopied={isCopied}
 				isDeleting={isDeleting}
 				canDelete={canDelete}
+			/>
+			<InsufficientCreditsDialog
+				open={isInsufficientCreditsDialogOpen}
+				onOpenChange={setIsInsufficientCreditsDialogOpen}
+				featureLabel="인사이트 후보 다시 받기"
+				requiredCredits={AI_CREDIT_COSTS.INSIGHT_CANDIDATE_RETRY}
 			/>
 			<AlertDialog
 				open={isDeleteDialogOpen}
