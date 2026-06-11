@@ -83,7 +83,6 @@ export function DashboardSearchDialog() {
 	const [activeResultIndex, setActiveResultIndex] = useState(0);
 	const resultListRef = useRef<HTMLDivElement>(null);
 	const searchInputId = useId();
-	const searchDialogTitleId = useId();
 	const searchResultListId = useId();
 	const normalizedSearchValue = normalizeSearchText(searchValue);
 	const {
@@ -264,16 +263,14 @@ export function DashboardSearchDialog() {
 				showCloseButton={false}
 				className="top-24 max-w-2xl translate-y-0 gap-0 overflow-hidden rounded-2xl bg-white p-0 ring-0 shadow-dnd-heavy sm:max-w-2xl"
 			>
-				<DialogTitle id={searchDialogTitleId} className="sr-only">
-					검색
-				</DialogTitle>
+				<DialogTitle className="sr-only">검색</DialogTitle>
 				<div className="flex items-center gap-3 border-b border-dnd-line-normal px-5 py-4">
 					<Search className="size-5 shrink-0 text-dnd-label-alternative" />
 					<input
 						id={searchInputId}
 						type="text"
 						role="combobox"
-						aria-labelledby={searchDialogTitleId}
+						aria-label="검색어"
 						aria-expanded={open}
 						aria-controls={searchResultListId}
 						aria-activedescendant={activeResultId}
