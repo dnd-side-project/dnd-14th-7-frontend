@@ -329,12 +329,14 @@ function InsightHeader({ data }: { data: GetInsightResponse }) {
 	const createdDate = formatDate(data.createdDate);
 	const updatedDate = formatDate(data.updatedDate);
 	const restoreMovedInsight = async (insightId: number) => {
-		await restoreInsightById(insightId);
-		await queryClient.invalidateQueries({ queryKey: insightKeys.all });
-		await queryClient.refetchQueries({
-			queryKey: insightKeys.all,
-			type: "active",
-		});
+		try {
+			await restoreInsightById(insightId);
+			await queryClient.invalidateQueries({ queryKey: insightKeys.all });
+		} catch {
+			showToast({
+				message: "인사이트를 복원하지 못했어요. 다시 시도해주세요.",
+			});
+		}
 	};
 	const { mutate: moveToTrash, isPending: isMovingToTrash } = useMutation({
 		...moveInsightToTrashMutationOptions(),

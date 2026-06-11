@@ -101,14 +101,20 @@ function HomePage() {
 	const insights = insightsData?.content ?? [];
 	const tagPreviewMap = buildTagPreviewMap(insights);
 	const restoreMovedInsight = async (insightId: number) => {
-		await restoreInsightById(insightId);
-		await queryClient.invalidateQueries({ queryKey: insightKeys.all });
-		await queryClient.refetchQueries({
-			queryKey: insightKeys.all,
-			type: "active",
-		});
+		try {
+			await restoreInsightById(insightId);
+			await queryClient.invalidateQueries({ queryKey: insightKeys.all });
+		} catch {
+			showToast({
+				message: "인사이트를 복원하지 못했어요. 다시 시도해주세요.",
+			});
+		}
 	};
-	const { mutate: moveToTrash, isPending: isMovingToTrash } = useMutation({
+	const {
+		mutate: moveToTrash,
+		isPending: isMovingToTrash,
+		variables: movingId,
+	} = useMutation({
 		...moveInsightToTrashMutationOptions(),
 		onSuccess: (_, insightId) => {
 			queryClient.invalidateQueries({ queryKey: insightKeys.all });
@@ -195,12 +201,14 @@ function HomePage() {
 											onOpen={() => openInsight(insight.insightId)}
 											actions={[
 												{
-													label: isMovingToTrash
-														? "이동 중..."
-														: "휴지통으로 이동",
+													label:
+														isMovingToTrash && movingId === insight.insightId
+															? "이동 중..."
+															: "휴지통으로 이동",
 													iconSrc: "/trash.svg",
 													iconAlt: "trash",
-													disabled: isMovingToTrash,
+													disabled:
+														isMovingToTrash && movingId === insight.insightId,
 													onSelect: () => handleMoveToTrash(insight.insightId),
 												},
 											]}
@@ -305,6 +313,7 @@ function NewInsightPage() {
 
 function TrashPage() {
 	const queryClient = useQueryClient();
+	const { showToast } = useToast();
 	const [deleteTarget, setDeleteTarget] = useState<InsightSummary | null>(null);
 	const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(
 		null,
@@ -315,10 +324,19 @@ function TrashPage() {
 		isLoading,
 	} = useQuery(insightsQueryOptions({ page: 0, size: 50, status: "trashed" }));
 	const trashedInsights = trashedInsightsData?.content ?? [];
-	const { mutate: restoreInsight, isPending: isRestoring } = useMutation({
+	const {
+		mutate: restoreInsight,
+		isPending: isRestoring,
+		variables: restoringId,
+	} = useMutation({
 		...restoreInsightMutationOptions(),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: insightKeys.all });
+		},
+		onError: () => {
+			showToast({
+				message: "인사이트를 복구하지 못했어요. 다시 시도해주세요.",
+			});
 		},
 	});
 	const { mutate: permanentlyDeleteInsight, isPending: isDeleting } =
@@ -381,10 +399,13 @@ function TrashPage() {
 							}))}
 							actions={[
 								{
-									label: isRestoring ? "복구 중..." : "복구",
+									label:
+										isRestoring && restoringId === insight.insightId
+											? "복구 중..."
+											: "복구",
 									iconSrc: "/re-try.svg",
 									iconAlt: "restore",
-									disabled: isRestoring,
+									disabled: isRestoring && restoringId === insight.insightId,
 									onSelect: () => restoreInsight(insight.insightId),
 								},
 								{
@@ -412,7 +433,11 @@ function TrashPage() {
 						<AlertDialogMedia className="bg-dnd-status-negative/10 text-dnd-status-negative">
 							<Trash2 className="size-8" />
 						</AlertDialogMedia>
-						<AlertDialogTitle>인사이트를 영구 삭제할까요?</AlertDialogTitle>
+						<AlertDialogTitle>
+							{deleteTarget
+								? `“${getInsightTitle(deleteTarget)}” 인사이트를 영구 삭제할까요?`
+								: "인사이트를 영구 삭제할까요?"}
+						</AlertDialogTitle>
 						<AlertDialogDescription>
 							영구 삭제한 인사이트는 다시 복구할 수 없어요.
 						</AlertDialogDescription>
