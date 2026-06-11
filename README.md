@@ -77,3 +77,11 @@ hooks/           커스텀 훅
 lib/             Supabase, Query, AI, 유틸 로직
 public/          정적 이미지 및 데모 이미지
 ```
+
+## 기여
+
+현재 이 프로젝트는 외부 기여를 받고 있지 않습니다. 자세한 내용은 [CONTRIBUTING.md](./CONTRIBUTING.md)를 참고해주세요.
+
+## 라이선스
+
+Copyright (c) 2026 Ahaive. All rights reserved. 자세한 내용은 [LICENSE](./LICENSE)를 참고해주세요.
