@@ -104,9 +104,7 @@ export function DashboardSearchDialog() {
 	const insights = insightsData?.content ?? [];
 
 	const filteredInsights = useMemo(() => {
-		if (!normalizedSearchValue) {
-			return insights.slice(0, MAX_RESULTS_PER_SECTION);
-		}
+		if (!normalizedSearchValue) return [];
 
 		return insights
 			.filter((insight) => {
@@ -121,7 +119,7 @@ export function DashboardSearchDialog() {
 	}, [insights, normalizedSearchValue]);
 
 	const filteredTags = useMemo(() => {
-		if (!normalizedSearchValue) return tags.slice(0, MAX_RESULTS_PER_SECTION);
+		if (!normalizedSearchValue) return [];
 
 		return tags
 			.filter((tag) =>
@@ -163,7 +161,12 @@ export function DashboardSearchDialog() {
 	);
 	const isLoading = isInsightsLoading || isTagsLoading;
 	const isError = isInsightsError || isTagsError;
-	const isEmpty = !isLoading && !isError && searchResults.length === 0;
+	const isWaitingForSearchTerm = !normalizedSearchValue;
+	const isEmpty =
+		!isWaitingForSearchTerm &&
+		!isLoading &&
+		!isError &&
+		searchResults.length === 0;
 	const activeResult = searchResults[activeResultIndex];
 	const activeResultId = activeResult
 		? getSearchResultId(searchResultListId, activeResult)
@@ -298,7 +301,11 @@ export function DashboardSearchDialog() {
 					aria-labelledby={searchInputId}
 					className="max-h-120 overflow-y-auto p-3"
 				>
-					{isLoading ? (
+					{isWaitingForSearchTerm ? (
+						<output className="block px-3 py-8 text-center typo-body-2 text-dnd-label-alternative">
+							검색어를 입력하면 인사이트와 태그를 찾아드릴게요.
+						</output>
+					) : isLoading ? (
 						<output className="block px-3 py-8 text-center typo-body-2 text-dnd-label-alternative">
 							검색 결과를 불러오는 중이에요.
 						</output>
