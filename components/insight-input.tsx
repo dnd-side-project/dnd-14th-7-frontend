@@ -14,7 +14,7 @@ import { InsufficientCreditsDialog } from "@/components/credit/insufficient-cred
 import { LoginModal } from "@/components/login-modal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { AI_CREDIT_COSTS } from "@/lib/credits";
+import { AI_CREDIT_COSTS, SIGNUP_CREDIT_GRANT } from "@/lib/credits";
 import {
 	insightCreationMutationOptions,
 	insightKeys,
@@ -123,6 +123,11 @@ function InsightInputSkeleton({ titleClassName }: { titleClassName?: string }) {
 
 function GuestInsightInput({ titleClassName }: { titleClassName?: string }) {
 	const content = getPositionContent(undefined);
+	const openLoginModal = () => {
+		overlay.open(({ isOpen, close }) => (
+			<LoginModal isOpen={isOpen} onClose={close} />
+		));
+	};
 
 	return (
 		<section className="flex w-full max-w-240 flex-col items-start gap-8">
@@ -140,14 +145,10 @@ function GuestInsightInput({ titleClassName }: { titleClassName?: string }) {
 				maxLength={200}
 				resize="none"
 				value=""
-				onFocus={() => {
-					overlay.open(({ isOpen, close }) => (
-						<LoginModal isOpen={isOpen} onClose={close} />
-					));
-				}}
+				onFocus={openLoginModal}
 				trailingContent={
-					<Button variant="solid" size="dnd-large" disabled>
-						인사이트 생성
+					<Button variant="solid" size="dnd-large" onClick={openLoginModal}>
+						가입하고 {SIGNUP_CREDIT_GRANT} 크레딧 받기
 					</Button>
 				}
 			/>
