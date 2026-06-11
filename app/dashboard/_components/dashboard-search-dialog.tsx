@@ -264,6 +264,7 @@ export function DashboardSearchDialog() {
 			</DialogTrigger>
 			<DialogContent
 				showCloseButton={false}
+				aria-describedby={undefined}
 				className="top-24 max-w-2xl translate-y-0 gap-0 overflow-hidden rounded-2xl bg-white p-0 ring-0 shadow-dnd-heavy sm:max-w-2xl"
 			>
 				<DialogTitle className="sr-only">검색</DialogTitle>
