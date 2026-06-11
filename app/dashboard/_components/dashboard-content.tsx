@@ -1,13 +1,33 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { InsightDetailSection } from "@/components/insight-detail";
 import { InsightInput } from "@/components/insight-input";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogMedia,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/components/ui/toast";
 import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import type { InsightSummary } from "@/lib/queries/insight";
-import { insightsQueryOptions } from "@/lib/queries/insight";
+import {
+	insightKeys,
+	insightsQueryOptions,
+	moveInsightToTrashMutationOptions,
+	permanentlyDeleteInsightMutationOptions,
+	restoreInsightById,
+	restoreInsightMutationOptions,
+} from "@/lib/queries/insight";
 import { tagsQueryOptions } from "@/lib/queries/user";
 import { deserializeTab } from "@/lib/tabs/tab-utils";
 import { formatDate } from "@/lib/utils/date";
@@ -64,6 +84,8 @@ function buildTagPreviewMap(insights: InsightSummary[]) {
 
 function HomePage() {
 	const { dispatch } = useDashboardTabs();
+	const queryClient = useQueryClient();
+	const { showToast } = useToast();
 	const [isLatest, setIsLatest] = useState(true);
 	const sort = isLatest ? "LATEST" : "VIEWS";
 	const {
@@ -78,6 +100,35 @@ function HomePage() {
 	} = useQuery(tagsQueryOptions());
 	const insights = insightsData?.content ?? [];
 	const tagPreviewMap = buildTagPreviewMap(insights);
+	const restoreMovedInsight = async (insightId: number) => {
+		try {
+			await restoreInsightById(insightId);
+			await queryClient.invalidateQueries({ queryKey: insightKeys.all });
+		} catch {
+			showToast({
+				message: "인사이트를 복원하지 못했어요. 다시 시도해주세요.",
+			});
+		}
+	};
+	const {
+		mutate: moveToTrash,
+		isPending: isMovingToTrash,
+		variables: movingId,
+	} = useMutation({
+		...moveInsightToTrashMutationOptions(),
+		onSuccess: (_, insightId) => {
+			queryClient.invalidateQueries({ queryKey: insightKeys.all });
+			showToast({
+				message: "휴지통으로 이동되었어요.",
+				action: {
+					label: "복원하기",
+					onClick: () => {
+						restoreMovedInsight(insightId);
+					},
+				},
+			});
+		},
+	});
 
 	const openInsight = (id: number) => {
 		dispatch(
@@ -91,6 +142,10 @@ function HomePage() {
 			{ type: "add", tab: `tag:${id}:${name}` },
 			{ type: "activate", tab: `tag:${id}:${name}` },
 		);
+	};
+
+	const handleMoveToTrash = (insightId: number) => {
+		moveToTrash(insightId);
 	};
 
 	return (
@@ -144,6 +199,19 @@ function HomePage() {
 												name: tag.tagName,
 											}))}
 											onOpen={() => openInsight(insight.insightId)}
+											actions={[
+												{
+													label:
+														isMovingToTrash && movingId === insight.insightId
+															? "이동 중..."
+															: "휴지통으로 이동",
+													iconSrc: "/trash.svg",
+													iconAlt: "trash",
+													disabled:
+														isMovingToTrash && movingId === insight.insightId,
+													onSelect: () => handleMoveToTrash(insight.insightId),
+												},
+											]}
 										/>
 									))
 								: [
@@ -243,6 +311,164 @@ function NewInsightPage() {
 	);
 }
 
+function TrashPage() {
+	const queryClient = useQueryClient();
+	const { showToast } = useToast();
+	const [deleteTarget, setDeleteTarget] = useState<InsightSummary | null>(null);
+	const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(
+		null,
+	);
+	const {
+		data: trashedInsightsData,
+		isError,
+		isLoading,
+	} = useQuery(insightsQueryOptions({ page: 0, size: 50, status: "trashed" }));
+	const trashedInsights = trashedInsightsData?.content ?? [];
+	const {
+		mutate: restoreInsight,
+		isPending: isRestoring,
+		variables: restoringId,
+	} = useMutation({
+		...restoreInsightMutationOptions(),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: insightKeys.all });
+		},
+		onError: () => {
+			showToast({
+				message: "인사이트를 복구하지 못했어요. 다시 시도해주세요.",
+			});
+		},
+	});
+	const { mutate: permanentlyDeleteInsight, isPending: isDeleting } =
+		useMutation({
+			...permanentlyDeleteInsightMutationOptions(),
+			onSuccess: () => {
+				queryClient.invalidateQueries({ queryKey: insightKeys.all });
+				setDeleteTarget(null);
+				setDeleteErrorMessage(null);
+			},
+			onError: () => {
+				setDeleteErrorMessage(
+					"인사이트를 영구 삭제하지 못했어요. 다시 시도해주세요.",
+				);
+			},
+		});
+
+	const handleDeleteDialogOpenChange = (open: boolean) => {
+		if (open) return;
+		setDeleteTarget(null);
+		setDeleteErrorMessage(null);
+	};
+
+	const handlePermanentDelete = () => {
+		if (!deleteTarget || isDeleting) return;
+		setDeleteErrorMessage(null);
+		permanentlyDeleteInsight(deleteTarget.insightId);
+	};
+
+	return (
+		<div className="flex flex-col gap-8 w-full pb-25 pt-15 max-w-300 mx-auto px-10">
+			<div className="flex items-center gap-3">
+				<Trash2 className="size-7 text-dnd-label-neutral" />
+				<div className="flex flex-col gap-1">
+					<h1 className="typo-heading-2 font-bold text-dnd-label-strong">
+						휴지통
+					</h1>
+					<p className="typo-body-2 text-dnd-label-alternative">
+						휴지통으로 이동한 인사이트를 복구하거나 영구 삭제할 수 있어요.
+					</p>
+				</div>
+			</div>
+
+			<div className="flex flex-wrap gap-6">
+				{isLoading ? (
+					INSIGHT_SKELETON_KEYS.map((key) => <HomeCardSkeleton key={key} />)
+				) : isError ? (
+					<EmptyHomeCard message="휴지통을 불러오지 못했어요." />
+				) : trashedInsights.length > 0 ? (
+					trashedInsights.map((insight) => (
+						<HomeInsightCard
+							key={`trashed-insight-${insight.insightId}`}
+							id={insight.insightId}
+							title={getInsightTitle(insight)}
+							content={insight.confirmedContent}
+							date={`삭제일 ${formatInsightDate(insight.trashedDate)}`}
+							tags={insight.tags.map((tag) => ({
+								id: tag.tagId,
+								name: tag.tagName,
+							}))}
+							actions={[
+								{
+									label:
+										isRestoring && restoringId === insight.insightId
+											? "복구 중..."
+											: "복구",
+									iconSrc: "/re-try.svg",
+									iconAlt: "restore",
+									disabled: isRestoring && restoringId === insight.insightId,
+									onSelect: () => restoreInsight(insight.insightId),
+								},
+								{
+									label: "영구 삭제",
+									iconSrc: "/delete.svg",
+									iconAlt: "delete",
+									tone: "danger",
+									disabled: isDeleting,
+									onSelect: () => setDeleteTarget(insight),
+								},
+							]}
+						/>
+					))
+				) : (
+					<EmptyHomeCard message="휴지통이 비어 있어요." />
+				)}
+			</div>
+
+			<AlertDialog
+				open={deleteTarget !== null}
+				onOpenChange={handleDeleteDialogOpenChange}
+			>
+				<AlertDialogContent size="sm">
+					<AlertDialogHeader>
+						<AlertDialogMedia className="bg-dnd-status-negative/10 text-dnd-status-negative">
+							<Trash2 className="size-8" />
+						</AlertDialogMedia>
+						<AlertDialogTitle>
+							{deleteTarget
+								? `“${getInsightTitle(deleteTarget)}” 인사이트를 영구 삭제할까요?`
+								: "인사이트를 영구 삭제할까요?"}
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							영구 삭제한 인사이트는 다시 복구할 수 없어요.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					{deleteErrorMessage && (
+						<p
+							className="typo-body-2 text-center text-dnd-status-negative"
+							role="alert"
+						>
+							{deleteErrorMessage}
+						</p>
+					)}
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={isDeleting}>취소</AlertDialogCancel>
+						<AlertDialogAction
+							variant="destructive"
+							disabled={isDeleting}
+							onClick={(event) => {
+								event.preventDefault();
+								handlePermanentDelete();
+							}}
+						>
+							{isDeleting ? "삭제 중..." : "영구 삭제"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</div>
+	);
+}
+
 export function DashboardContent() {
 	const { state } = useDashboardTabs();
 	const currentTabObj = deserializeTab(state.currentTab);
@@ -255,7 +481,7 @@ export function DashboardContent() {
 		case "insight":
 			return <InsightDetailSection insightId={Number(currentTabObj.id)} />;
 		case "trash":
-			return <div className="p-4">휴지통 화면 (준비중)</div>;
+			return <TrashPage />;
 		case "mypage":
 			return <MyPage />;
 		case "tag":

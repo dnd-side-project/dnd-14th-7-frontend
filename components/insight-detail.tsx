@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Trash2 } from "lucide-react";
 import Image from "next/image";
 import {
 	createContext,
@@ -14,12 +14,22 @@ import {
 	useRef,
 	useState,
 } from "react";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/components/ui/toast";
+import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 import type { GetInsightResponse, InsightPiece } from "@/lib/queries/insight";
 import {
 	insightDetailQueryOptions,
 	insightKeys,
 	insightPieceCreationMutationOptions,
 	insightPiecesQueryOptions,
+	moveInsightToTrashMutationOptions,
+	restoreInsightById,
 	updateInsightTitleMutationOptions,
 } from "@/lib/queries/insight";
 import { formatDate } from "@/lib/utils/date";
@@ -313,11 +323,45 @@ const InsightTitle = Object.assign(InsightTitleRoot, {
 });
 
 function InsightHeader({ data }: { data: GetInsightResponse }) {
+	const queryClient = useQueryClient();
+	const { dispatch } = useDashboardTabs();
+	const { showToast } = useToast();
 	const createdDate = formatDate(data.createdDate);
 	const updatedDate = formatDate(data.updatedDate);
+	const restoreMovedInsight = async (insightId: number) => {
+		try {
+			await restoreInsightById(insightId);
+			await queryClient.invalidateQueries({ queryKey: insightKeys.all });
+		} catch {
+			showToast({
+				message: "인사이트를 복원하지 못했어요. 다시 시도해주세요.",
+			});
+		}
+	};
+	const { mutate: moveToTrash, isPending: isMovingToTrash } = useMutation({
+		...moveInsightToTrashMutationOptions(),
+		onSuccess: (_, insightId) => {
+			queryClient.invalidateQueries({ queryKey: insightKeys.all });
+			showToast({
+				message: "휴지통으로 이동되었어요.",
+				action: {
+					label: "복원하기",
+					onClick: () => {
+						restoreMovedInsight(insightId);
+					},
+				},
+			});
+			dispatch({ type: "remove", tab: `insight:${data.insightId}` });
+		},
+	});
 
 	const createdDateStr = `${createdDate.year}.${createdDate.month}.${createdDate.day} ${createdDate.weekday} ${createdDate.ampm} ${createdDate.formattedHours}:${createdDate.minutes}`;
 	const modifiedDateStr = `${updatedDate.year}.${updatedDate.month}.${updatedDate.day} ${updatedDate.weekday} (수정)`;
+
+	const handleMoveToTrash = () => {
+		if (isMovingToTrash) return;
+		moveToTrash(data.insightId);
+	};
 
 	const getTagStyle = (tagId: number) => {
 		const colors = [
@@ -360,9 +404,30 @@ function InsightHeader({ data }: { data: GetInsightResponse }) {
 					</div>
 				</div>
 			</div>
-			<button type="button" className="p-2 text-dnd-label-alternative">
-				<MoreVertical size={24} />
-			</button>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<button
+						type="button"
+						className="p-2 text-dnd-label-alternative hover:text-dnd-label-normal"
+						aria-label="인사이트 메뉴"
+					>
+						<MoreVertical size={24} />
+					</button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent
+					align="end"
+					className="w-44 rounded-2xl border-none bg-white p-2 shadow-lg"
+				>
+					<DropdownMenuItem
+						className="flex h-12 cursor-pointer items-center gap-3 rounded-lg px-3 typo-body-1 font-normal text-dnd-label-neutral hover:text-dnd-status-negative focus:bg-dnd-bg-alternative focus:text-dnd-status-negative data-disabled:opacity-50"
+						onSelect={handleMoveToTrash}
+						disabled={isMovingToTrash}
+					>
+						<Trash2 className="size-5" />
+						{isMovingToTrash ? "이동 중..." : "휴지통으로 이동"}
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
 		</div>
 	);
 }
