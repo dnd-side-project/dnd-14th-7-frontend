@@ -29,6 +29,10 @@ export async function POST(request: Request) {
 		return NextResponse.json({ message: "Invalid JSON body" }, { status: 400 });
 	}
 
+	if (!body || typeof body !== "object" || Array.isArray(body)) {
+		return NextResponse.json({ message: "Invalid JSON body" }, { status: 400 });
+	}
+
 	if (typeof body.eventName !== "string" || !body.eventName.trim()) {
 		return NextResponse.json(
 			{ message: "eventName is required" },

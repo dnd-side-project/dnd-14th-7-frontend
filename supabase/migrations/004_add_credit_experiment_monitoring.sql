@@ -16,6 +16,9 @@ on public.experiment_events(user_id, created_at desc);
 create index if not exists idx_experiment_events_name_created_at
 on public.experiment_events(event_name, created_at desc);
 
+create index if not exists idx_experiment_events_key_name_created_at
+on public.experiment_events(experiment_key, event_name, created_at desc);
+
 alter table public.experiment_events enable row level security;
 
 drop policy if exists experiment_events_select_own on public.experiment_events;

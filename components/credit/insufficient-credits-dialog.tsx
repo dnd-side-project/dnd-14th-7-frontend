@@ -36,6 +36,8 @@ export function InsufficientCreditsDialog({
 	useEffect(() => {
 		if (!open) return;
 
+		setIsRequested(false);
+
 		trackExperimentEvent({
 			eventName: "credit_insufficient_viewed",
 			experimentKey: CREDIT_SHORTAGE_EXPERIMENT_KEY,

@@ -10,6 +10,27 @@ alter table public.profiles
 add constraint profiles_role_check
 check (role in ('user', 'admin'));
 
+create or replace function public.prevent_client_role_update()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is not null and new.role is distinct from old.role then
+    raise exception 'profiles.role cannot be changed by client requests';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists prevent_client_role_update_trigger on public.profiles;
+create trigger prevent_client_role_update_trigger
+before update on public.profiles
+for each row
+execute function public.prevent_client_role_update();
+
 create or replace function public.get_credit_experiment_dashboard()
 returns jsonb
 language plpgsql
@@ -56,89 +77,110 @@ begin
       coalesce(sum(estimated_cost), 0)::numeric as estimated_cost
     from public.ai_usage_logs
   ),
+  daily_events as (
+    select
+      date_trunc('day', created_at)::date as day,
+      count(*) filter (where event_name = 'credit_insufficient_viewed')::integer as shortage_views,
+      count(*) filter (where event_name = 'pro_waitlist_clicked')::integer as pro_clicks
+    from public.experiment_events
+    where experiment_key = 'credit_shortage_pro'
+      and created_at >= date_trunc('day', now()) - interval '13 days'
+    group by 1
+  ),
+  daily_credits as (
+    select
+      date_trunc('day', created_at)::date as day,
+      count(*)::integer as insufficient_events
+    from public.credit_transactions
+    where type = 'INSUFFICIENT_CREDITS'
+      and created_at >= date_trunc('day', now()) - interval '13 days'
+    group by 1
+  ),
+  daily_usage as (
+    select
+      date_trunc('day', created_at)::date as day,
+      count(*)::integer as ai_calls
+    from public.ai_usage_logs
+    where created_at >= date_trunc('day', now()) - interval '13 days'
+    group by 1
+  ),
   daily as (
     select
       day::date,
-      coalesce(count(e.id) filter (where e.event_name = 'credit_insufficient_viewed'), 0)::integer as shortage_views,
-      coalesce(count(e.id) filter (where e.event_name = 'pro_waitlist_clicked'), 0)::integer as pro_clicks,
-      coalesce((
-        select count(*)::integer
-        from public.credit_transactions ct
-        where ct.type = 'INSUFFICIENT_CREDITS'
-          and ct.created_at >= day
-          and ct.created_at < day + interval '1 day'
-      ), 0) as insufficient_events,
-      coalesce((
-        select count(*)::integer
-        from public.ai_usage_logs aul
-        where aul.created_at >= day
-          and aul.created_at < day + interval '1 day'
-      ), 0) as ai_calls
+      coalesce(de.shortage_views, 0) as shortage_views,
+      coalesce(de.pro_clicks, 0) as pro_clicks,
+      coalesce(dc.insufficient_events, 0) as insufficient_events,
+      coalesce(du.ai_calls, 0) as ai_calls
     from generate_series(
       date_trunc('day', now()) - interval '13 days',
       date_trunc('day', now()),
       interval '1 day'
     ) day
-    left join public.experiment_events e
-      on e.experiment_key = 'credit_shortage_pro'
-      and e.created_at >= day
-      and e.created_at < day + interval '1 day'
-    group by day
+    left join daily_events de on de.day = day::date
+    left join daily_credits dc on dc.day = day::date
+    left join daily_usage du on du.day = day::date
     order by day
   ),
-  features as (
-    select feature
-    from public.ai_usage_logs
-    union
-    select feature
-    from public.credit_transactions
-    where feature is not null
-    union
-    select metadata->>'feature' as feature
+  feature_shortage as (
+    select
+      metadata->>'feature' as feature,
+      count(*)::integer as shortage_views
     from public.experiment_events
     where experiment_key = 'credit_shortage_pro'
+      and event_name = 'credit_insufficient_viewed'
       and metadata ? 'feature'
+    group by 1
+  ),
+  feature_clicks as (
+    select
+      metadata->>'feature' as feature,
+      count(*)::integer as pro_clicks
+    from public.experiment_events
+    where experiment_key = 'credit_shortage_pro'
+      and event_name = 'pro_waitlist_clicked'
+      and metadata ? 'feature'
+    group by 1
+  ),
+  feature_credits as (
+    select
+      feature,
+      count(*) filter (where type = 'INSUFFICIENT_CREDITS')::integer as insufficient_events,
+      coalesce(sum(abs(amount)) filter (where amount < 0), 0)::integer as spent_credits
+    from public.credit_transactions
+    where feature is not null
+    group by 1
+  ),
+  feature_usage as (
+    select
+      feature,
+      count(*)::integer as ai_calls,
+      coalesce(sum(estimated_cost), 0)::numeric as estimated_cost
+    from public.ai_usage_logs
+    group by 1
+  ),
+  features as (
+    select feature from feature_usage
+    union
+    select feature from feature_credits
+    union
+    select feature from feature_shortage
+    union
+    select feature from feature_clicks
   ),
   feature_stats as (
     select
       f.feature,
-      coalesce((
-        select count(*)::integer
-        from public.experiment_events e
-        where e.experiment_key = 'credit_shortage_pro'
-          and e.event_name = 'credit_insufficient_viewed'
-          and e.metadata->>'feature' = f.feature
-      ), 0) as shortage_views,
-      coalesce((
-        select count(*)::integer
-        from public.experiment_events e
-        where e.experiment_key = 'credit_shortage_pro'
-          and e.event_name = 'pro_waitlist_clicked'
-          and e.metadata->>'feature' = f.feature
-      ), 0) as pro_clicks,
-      coalesce((
-        select count(*)::integer
-        from public.credit_transactions ct
-        where ct.type = 'INSUFFICIENT_CREDITS'
-          and ct.feature = f.feature
-      ), 0) as insufficient_events,
-      coalesce((
-        select count(*)::integer
-        from public.ai_usage_logs aul
-        where aul.feature = f.feature
-      ), 0) as ai_calls,
-      coalesce((
-        select sum(aul.estimated_cost)::numeric
-        from public.ai_usage_logs aul
-        where aul.feature = f.feature
-      ), 0) as estimated_cost,
-      coalesce((
-        select sum(abs(ct.amount))::integer
-        from public.credit_transactions ct
-        where ct.amount < 0
-          and ct.feature = f.feature
-      ), 0) as spent_credits
+      coalesce(fs.shortage_views, 0) as shortage_views,
+      coalesce(fc.pro_clicks, 0) as pro_clicks,
+      coalesce(fcr.insufficient_events, 0) as insufficient_events,
+      coalesce(fu.ai_calls, 0) as ai_calls,
+      coalesce(fu.estimated_cost, 0) as estimated_cost,
+      coalesce(fcr.spent_credits, 0) as spent_credits
     from features f
+    left join feature_shortage fs on fs.feature = f.feature
+    left join feature_clicks fc on fc.feature = f.feature
+    left join feature_credits fcr on fcr.feature = f.feature
+    left join feature_usage fu on fu.feature = f.feature
     where f.feature is not null
   )
   select jsonb_build_object(
