@@ -192,6 +192,7 @@ function RefreshQuestionsButton({ insightId }: { insightId: number }) {
 			<InsufficientCreditsDialog
 				open={isInsufficientCreditsDialogOpen}
 				onOpenChange={setIsInsufficientCreditsDialogOpen}
+				feature="QUESTION_REFRESH"
 				featureLabel="새로운 질문 받기"
 				requiredCredits={AI_CREDIT_COSTS.QUESTION_REFRESH}
 			/>

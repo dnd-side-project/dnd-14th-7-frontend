@@ -247,6 +247,7 @@ function AuthenticatedInsightInput({
 			<InsufficientCreditsDialog
 				open={isInsufficientCreditsDialogOpen}
 				onOpenChange={setIsInsufficientCreditsDialogOpen}
+				feature="INSIGHT_CREATE"
 				featureLabel="인사이트 생성"
 				requiredCredits={AI_CREDIT_COSTS.INSIGHT_CREATE}
 			/>
