@@ -106,7 +106,7 @@ begin
   ),
   daily as (
     select
-      day::date,
+      series.day::date as day,
       coalesce(de.shortage_views, 0) as shortage_views,
       coalesce(de.pro_clicks, 0) as pro_clicks,
       coalesce(dc.insufficient_events, 0) as insufficient_events,
@@ -115,11 +115,11 @@ begin
       date_trunc('day', now()) - interval '13 days',
       date_trunc('day', now()),
       interval '1 day'
-    ) day
-    left join daily_events de on de.day = day::date
-    left join daily_credits dc on dc.day = day::date
-    left join daily_usage du on du.day = day::date
-    order by day
+    ) as series(day)
+    left join daily_events de on de.day = series.day::date
+    left join daily_credits dc on dc.day = series.day::date
+    left join daily_usage du on du.day = series.day::date
+    order by series.day
   ),
   feature_shortage as (
     select

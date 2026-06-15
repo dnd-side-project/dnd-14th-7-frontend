@@ -48,6 +48,8 @@ export default async function AdminExperimentDashboardPage() {
 	const { data, error } = await supabase.rpc("get_credit_experiment_dashboard");
 
 	if (error) {
+		console.error("Failed to load credit experiment dashboard:", error);
+
 		if (isAccessDeniedError(error)) {
 			return <AdminAccessDenied />;
 		}
