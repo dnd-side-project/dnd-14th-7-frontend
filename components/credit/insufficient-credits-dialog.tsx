@@ -37,7 +37,7 @@ export function InsufficientCreditsDialog({
 		if (!open) return;
 
 		setIsRequested(false);
-
+		// Each dialog open is an exposure, so repeated shortages intentionally create repeated view events.
 		trackExperimentEvent({
 			eventName: "credit_insufficient_viewed",
 			experimentKey: CREDIT_SHORTAGE_EXPERIMENT_KEY,

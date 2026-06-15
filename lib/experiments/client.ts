@@ -1,10 +1,10 @@
-import type { Json } from "@/lib/supabase/types";
+import type { ExperimentMetadata } from "@/lib/experiments";
 
 interface TrackExperimentEventInput {
 	eventName: string;
 	experimentKey?: string;
 	variant?: string;
-	metadata?: Json;
+	metadata?: ExperimentMetadata;
 }
 
 export async function trackExperimentEvent(input: TrackExperimentEventInput) {

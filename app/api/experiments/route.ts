@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import type { ExperimentMetadata } from "@/lib/experiments";
 import { recordExperimentEvent } from "@/lib/experiments";
 import { createClient } from "@/lib/supabase/server";
-import type { Json } from "@/lib/supabase/types";
 
 export const runtime = "nodejs";
 
@@ -51,6 +51,6 @@ export async function POST(request: Request) {
 	return NextResponse.json({ ok: true });
 }
 
-function isJsonObject(value: unknown): value is Json {
+function isJsonObject(value: unknown): value is ExperimentMetadata {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 }

@@ -48,18 +48,11 @@ export default async function AdminExperimentDashboardPage() {
 	const { data, error } = await supabase.rpc("get_credit_experiment_dashboard");
 
 	if (error) {
-		return (
-			<main className="min-h-screen bg-dnd-bg-alternative px-6 py-10">
-				<section className="mx-auto flex max-w-3xl flex-col gap-4 rounded-3xl bg-white p-8 shadow-dnd-light">
-					<h1 className="typo-title-2 font-bold text-dnd-label-normal">
-						접근할 수 없어요
-					</h1>
-					<p className="typo-body-1 text-dnd-label-alternative">
-						관리자 권한이 있는 계정만 실험 대시보드를 볼 수 있어요.
-					</p>
-				</section>
-			</main>
-		);
+		if (isAccessDeniedError(error)) {
+			return <AdminAccessDenied />;
+		}
+
+		return <AdminDashboardLoadError />;
 	}
 
 	const dashboard = parseDashboardData(data);
@@ -195,6 +188,42 @@ export default async function AdminExperimentDashboardPage() {
 			</div>
 		</main>
 	);
+}
+
+function AdminAccessDenied() {
+	return (
+		<main className="min-h-screen bg-dnd-bg-alternative px-6 py-10">
+			<section className="mx-auto flex max-w-3xl flex-col gap-4 rounded-3xl bg-white p-8 shadow-dnd-light">
+				<h1 className="typo-title-2 font-bold text-dnd-label-normal">
+					접근할 수 없어요
+				</h1>
+				<p className="typo-body-1 text-dnd-label-alternative">
+					관리자 권한이 있는 계정만 실험 대시보드를 볼 수 있어요.
+				</p>
+			</section>
+		</main>
+	);
+}
+
+function AdminDashboardLoadError() {
+	return (
+		<main className="min-h-screen bg-dnd-bg-alternative px-6 py-10">
+			<section className="mx-auto flex max-w-3xl flex-col gap-4 rounded-3xl bg-white p-8 shadow-dnd-light">
+				<h1 className="typo-title-2 font-bold text-dnd-label-normal">
+					대시보드를 불러오지 못했어요
+				</h1>
+				<p className="typo-body-1 text-dnd-label-alternative">
+					잠시 후 다시 시도해주세요. 문제가 계속되면 데이터베이스 상태를
+					확인해주세요.
+				</p>
+			</section>
+		</main>
+	);
+}
+
+function isAccessDeniedError(error: { message?: string; code?: string }) {
+	const message = error.message?.toLowerCase() ?? "";
+	return message.includes("forbidden") || message.includes("unauthenticated");
 }
 
 function MetricCard({

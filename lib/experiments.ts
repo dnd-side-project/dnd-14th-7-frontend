@@ -2,12 +2,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/lib/supabase/types";
 
 type ServerSupabaseClient = SupabaseClient<Database>;
+export type ExperimentMetadata = Record<string, Json>;
 
 interface RecordExperimentEventInput {
 	eventName: string;
 	experimentKey?: string;
 	variant?: string;
-	metadata?: Json;
+	metadata?: ExperimentMetadata;
 }
 
 export async function recordExperimentEvent(
