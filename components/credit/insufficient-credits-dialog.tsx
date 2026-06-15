@@ -1,7 +1,7 @@
 "use client";
 
 import { Bell } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -11,10 +11,15 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { trackExperimentEvent } from "@/lib/experiments/client";
+
+const CREDIT_SHORTAGE_EXPERIMENT_KEY = "credit_shortage_pro";
+const CREDIT_SHORTAGE_VARIANT = "pro_beta_2900";
 
 interface InsufficientCreditsDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
+	feature: string;
 	featureLabel: string;
 	requiredCredits: number;
 }
@@ -22,10 +27,29 @@ interface InsufficientCreditsDialogProps {
 export function InsufficientCreditsDialog({
 	open,
 	onOpenChange,
+	feature,
 	featureLabel,
 	requiredCredits,
 }: InsufficientCreditsDialogProps) {
 	const [isRequested, setIsRequested] = useState(false);
+
+	useEffect(() => {
+		if (!open) return;
+
+		setIsRequested(false);
+		// Each dialog open is an exposure, so repeated shortages intentionally create repeated view events.
+		trackExperimentEvent({
+			eventName: "credit_insufficient_viewed",
+			experimentKey: CREDIT_SHORTAGE_EXPERIMENT_KEY,
+			variant: CREDIT_SHORTAGE_VARIANT,
+			metadata: {
+				feature,
+				requiredCredits,
+			},
+		}).catch((error) => {
+			console.error("Failed to track credit shortage view:", error);
+		});
+	}, [feature, open, requiredCredits]);
 
 	const handleOpenChange = (nextOpen: boolean) => {
 		if (!nextOpen) setIsRequested(false);
@@ -34,6 +58,17 @@ export function InsufficientCreditsDialog({
 
 	const handleProWaitlistClick = () => {
 		setIsRequested(true);
+		trackExperimentEvent({
+			eventName: "pro_waitlist_clicked",
+			experimentKey: CREDIT_SHORTAGE_EXPERIMENT_KEY,
+			variant: CREDIT_SHORTAGE_VARIANT,
+			metadata: {
+				feature,
+				requiredCredits,
+			},
+		}).catch((error) => {
+			console.error("Failed to track Pro waitlist click:", error);
+		});
 		onOpenChange(false);
 	};
 

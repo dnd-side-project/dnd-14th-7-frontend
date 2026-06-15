@@ -13,6 +13,7 @@ export type Position = "DEV" | "DESIGN" | "PROMOTER" | "OTHER" | "NONE";
 export type CreatedType = "INIT" | "SELF" | "ANSWER";
 export type QuestionStatus = "WAITING" | "COMPLETED" | "ARCHIVED";
 export type PlanType = "free" | "pro" | "unlimited";
+export type UserRole = "user" | "admin";
 
 export interface Database {
 	public: {
@@ -24,6 +25,7 @@ export interface Database {
 					email: string;
 					credit: number;
 					plan_type: PlanType;
+					role: UserRole;
 					position: Position;
 					created_at: string;
 					updated_at: string;
@@ -34,6 +36,7 @@ export interface Database {
 					email: string;
 					credit?: number;
 					plan_type?: PlanType;
+					role?: UserRole;
 					position?: Position;
 					created_at?: string;
 					updated_at?: string;
@@ -44,6 +47,7 @@ export interface Database {
 					email?: string;
 					credit?: number;
 					plan_type?: PlanType;
+					role?: UserRole;
 					position?: Position;
 					updated_at?: string;
 				};
@@ -261,6 +265,28 @@ export interface Database {
 				Update: never;
 				Relationships: [];
 			};
+			experiment_events: {
+				Row: {
+					id: string;
+					user_id: string | null;
+					event_name: string;
+					experiment_key: string | null;
+					variant: string | null;
+					metadata: Json;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					user_id?: string | null;
+					event_name: string;
+					experiment_key?: string | null;
+					variant?: string | null;
+					metadata?: Json;
+					created_at?: string;
+				};
+				Update: never;
+				Relationships: [];
+			};
 			ai_usage_logs: {
 				Row: {
 					id: string;
@@ -340,6 +366,19 @@ export interface Database {
 					p_reason?: string | null;
 				};
 				Returns: undefined;
+			};
+			record_experiment_event: {
+				Args: {
+					p_event_name: string;
+					p_experiment_key?: string | null;
+					p_variant?: string | null;
+					p_metadata?: Json;
+				};
+				Returns: undefined;
+			};
+			get_credit_experiment_dashboard: {
+				Args: Record<PropertyKey, never>;
+				Returns: Json;
 			};
 			record_ai_usage: {
 				Args: {

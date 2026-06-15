@@ -214,6 +214,7 @@ export function InsightPieceItem({
 			<InsufficientCreditsDialog
 				open={isInsufficientCreditsDialogOpen}
 				onOpenChange={setIsInsufficientCreditsDialogOpen}
+				feature="INSIGHT_CANDIDATE_RETRY"
 				featureLabel="인사이트 후보 다시 받기"
 				requiredCredits={AI_CREDIT_COSTS.INSIGHT_CANDIDATE_RETRY}
 			/>
