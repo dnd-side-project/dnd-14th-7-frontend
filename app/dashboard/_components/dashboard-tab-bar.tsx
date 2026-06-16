@@ -12,16 +12,16 @@ import { DashboardSearchDialog } from "./dashboard-search-dialog";
 
 export function DashboardTabBar() {
 	const { state, dispatch } = useDashboardTabs();
-	const { open, toggleSidebar } = useSidebar();
+	const { isMobile, open, toggleSidebar } = useSidebar();
 	const currentTabKey = state.currentTab || "home";
 
 	return (
 		<div
-			className={`fixed top-0 right-0 z-10 flex h-14 items-center border-b border-[#e1e2e4] bg-dnd-bg-mint transition-[left] duration-300 ${
-				open ? "left-[var(--sidebar-width)]" : "left-0"
+			className={`fixed top-0 right-0 z-10 flex h-14 min-w-0 items-center border-b border-[#e1e2e4] bg-dnd-bg-mint transition-[left] duration-300 ${
+				!isMobile && open ? "left-[var(--sidebar-width)]" : "left-0"
 			}`}
 		>
-			{!open && (
+			{(isMobile || !open) && (
 				<button
 					type="button"
 					onClick={toggleSidebar}
@@ -58,7 +58,9 @@ export function DashboardTabBar() {
 				})}
 			</div>
 
-			<DashboardSearchDialog />
+			<div className="shrink-0">
+				<DashboardSearchDialog />
+			</div>
 		</div>
 	);
 }
@@ -78,7 +80,7 @@ function TabItem({ tabKey, tab, isActive, onNavigate, onClose }: TabItemProps) {
 			tabIndex={0}
 			aria-selected={isActive}
 			className={cn(
-				"group flex h-14 w-56 shrink-0 cursor-pointer items-center gap-2 border-r border-[#e1e2e4] px-4 transition-colors",
+				"group flex h-14 w-40 shrink-0 cursor-pointer items-center gap-2 border-r border-[#e1e2e4] px-3 transition-colors sm:w-56 sm:px-4",
 				isActive ? "bg-white" : "bg-dnd-bg-mint",
 			)}
 			onClick={() => onNavigate(tabKey)}

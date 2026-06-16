@@ -11,12 +11,13 @@ import { useDashboardTabs } from "@/hooks/use-dashboard-tabs";
 
 export function Sidebar() {
 	const { dispatch } = useDashboardTabs();
-	const { open, toggleSidebar } = useSidebar();
+	const { isMobile, open, openMobile, toggleSidebar } = useSidebar();
+	const isVisible = isMobile ? openMobile : open;
 
 	return (
 		<div
-			className={`fixed left-0 top-0 z-20 flex h-full w-[var(--sidebar-width)] flex-col gap-[32px] overflow-hidden bg-dnd-bg-alternative p-[24px] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.08),0px_1px_2px_0px_rgba(0,0,0,0.12)] transition-transform duration-200 ease-linear ${
-				open ? "translate-x-0" : "-translate-x-full"
+			className={`fixed left-0 top-0 z-20 flex h-full w-[min(var(--sidebar-width),calc(100vw-2rem))] flex-col gap-[32px] overflow-hidden bg-dnd-bg-alternative p-[24px] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.08),0px_1px_2px_0px_rgba(0,0,0,0.12)] transition-transform duration-200 ease-linear ${
+				isVisible ? "translate-x-0" : "-translate-x-full"
 			}`}
 		>
 			<div className="flex w-full items-center justify-between">

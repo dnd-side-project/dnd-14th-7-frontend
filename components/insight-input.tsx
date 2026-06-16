@@ -107,7 +107,7 @@ function AuthenticatedInsightInputWithUser({
 
 function InsightInputSkeleton({ titleClassName }: { titleClassName?: string }) {
 	return (
-		<section className="flex w-full max-w-240 flex-col items-start gap-8">
+		<section className="flex w-full max-w-240 flex-col items-start gap-6 sm:gap-8">
 			<div
 				className={cn(
 					"h-8 w-2/3 animate-pulse rounded-md bg-dnd-fill-normal",
@@ -130,7 +130,7 @@ function GuestInsightInput({ titleClassName }: { titleClassName?: string }) {
 	};
 
 	return (
-		<section className="flex w-full max-w-240 flex-col items-start gap-8">
+		<section className="flex w-full max-w-240 flex-col items-start gap-6 sm:gap-8">
 			<h1
 				className={cn(
 					"typo-title-2 font-medium text-dnd-label-strong",
@@ -209,7 +209,7 @@ function AuthenticatedInsightInput({
 	};
 
 	return (
-		<section className="flex w-full max-w-240 flex-col items-start gap-8">
+		<section className="flex w-full max-w-240 flex-col items-start gap-6 sm:gap-8">
 			<h1
 				className={cn(
 					"typo-title-2 font-medium text-dnd-label-strong",
