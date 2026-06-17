@@ -63,8 +63,8 @@ function InsightDetailError() {
 
 function InsightDetailSkeleton() {
 	return (
-		<div className="flex min-w-0 flex-col gap-8 px-6 xl:flex-row xl:justify-center xl:gap-12 xl:px-10 2xl:gap-20 2xl:pl-20 2xl:pr-6">
-			<div className="flex w-full min-w-0 max-w-190 flex-col gap-6 pt-20 pb-20">
+		<div className="flex min-w-0 flex-col gap-6 px-4 sm:px-6 xl:flex-row xl:justify-center xl:gap-12 xl:px-10 2xl:gap-20 2xl:pl-20 2xl:pr-6">
+			<div className="flex w-full min-w-0 max-w-190 flex-col gap-6 py-8 sm:py-12 xl:py-20">
 				<div className="flex justify-between items-start">
 					<div className="flex flex-col gap-6 w-full">
 						<div className="h-10 w-2/3 animate-pulse rounded-md bg-dnd-fill-strong" />
@@ -131,8 +131,8 @@ function InsightDetailContent({ insightId }: { insightId: number }) {
 	const piecesData = piecesQuery.data;
 
 	return (
-		<div className="flex min-w-0 flex-col gap-8 px-6 xl:flex-row xl:justify-center xl:gap-12 xl:px-10 2xl:gap-20 2xl:pl-20 2xl:pr-6">
-			<div className="flex w-full min-w-0 max-w-190 flex-col gap-6 pt-20 pb-20">
+		<div className="flex min-w-0 flex-col gap-6 px-4 sm:px-6 xl:flex-row xl:justify-center xl:gap-12 xl:px-10 2xl:gap-20 2xl:pl-20 2xl:pr-6">
+			<div className="flex w-full min-w-0 max-w-190 flex-col gap-6 py-8 sm:py-12 xl:py-20">
 				<InsightHeader data={data} />
 				<InitialThoughtBox initialThought={data.initialThought} />
 				<MainInsightBox insightId={insightId} insightPieces={piecesData} />
@@ -434,7 +434,7 @@ function InsightHeader({ data }: { data: GetInsightResponse }) {
 
 function InitialThoughtBox({ initialThought }: { initialThought: string }) {
 	return (
-		<div className="bg-dnd-bg-alternative rounded-3xl px-6 py-5 flex items-center gap-4">
+		<div className="flex items-start gap-3 rounded-3xl bg-dnd-bg-alternative px-4 py-4 sm:items-center sm:gap-4 sm:px-6 sm:py-5">
 			<span className="bg-dnd-fill-normal text-dnd-label-alternative rounded-lg px-2 py-1 typo-caption-1 font-medium shrink-0">
 				첫 생각
 			</span>
@@ -503,7 +503,7 @@ function MainInsightBox({
 
 	return (
 		<div className="flex flex-col gap-3">
-			<div className="flex items-center justify-between py-4 px-5 gap-2">
+			<div className="flex items-center justify-between gap-2 px-4 py-4 sm:px-5">
 				<span className="typo-headline-2 font-bold text-dnd-label-neutral">
 					인사이트{" "}
 					<span className="text-dnd-primary">{insightPieces.length}</span>

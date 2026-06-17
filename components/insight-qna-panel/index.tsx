@@ -19,7 +19,7 @@ export function InsightQnAPanel({ insightId }: InsightQnAPanelProps) {
 	const [questionMode, setQuestionMode] = useState<QuestionMode>("current");
 
 	return (
-		<div className="flex h-125 w-full flex-col overflow-hidden rounded-4xl border border-[var(--dnd-line-normal)] bg-[var(--dnd-bg-question)] shadow-sm xl:sticky xl:top-20 xl:h-[calc(100vh-100px)] xl:w-109 xl:shrink-0">
+		<div className="flex h-[min(520px,calc(100svh-120px))] min-h-96 w-full flex-col overflow-hidden rounded-3xl border border-[var(--dnd-line-normal)] bg-[var(--dnd-bg-question)] shadow-sm sm:rounded-4xl xl:sticky xl:top-20 xl:h-[calc(100vh-100px)] xl:w-109 xl:shrink-0">
 			<QuestionSectionHeader
 				mode={questionMode}
 				onExpand={() => setMode("questions")}
@@ -34,7 +34,7 @@ export function InsightQnAPanel({ insightId }: InsightQnAPanelProps) {
 				className={cn(
 					"relative no-scrollbar transition-all duration-300 ease-in-out",
 					mode === "questions"
-						? "flex-1 min-h-0 overflow-y-auto p-6 opacity-100"
+						? "flex-1 min-h-0 overflow-y-auto p-4 opacity-100 sm:p-6"
 						: "flex-none h-0 overflow-hidden px-6 py-0 opacity-0 pointer-events-none",
 				)}
 			>
@@ -64,7 +64,7 @@ export function InsightQnAPanel({ insightId }: InsightQnAPanelProps) {
 					className={cn(
 						"transition-all duration-300 ease-in-out bg-[var(--dnd-bg-alternative)]",
 						mode === "answers"
-							? "flex-1 overflow-y-auto p-8 opacity-100"
+							? "flex-1 overflow-y-auto p-4 opacity-100 sm:p-8"
 							: "flex-none overflow-hidden h-0 p-0 opacity-0 pointer-events-none",
 					)}
 				>
@@ -89,7 +89,7 @@ function QuestionSectionHeader({
 	const isHistoryMode = mode === "history";
 
 	return (
-		<div className="flex items-center justify-between rounded-t-4xl bg-[var(--dnd-bg-question)] px-8 py-4">
+		<div className="flex items-center justify-between rounded-t-3xl bg-[var(--dnd-bg-question)] px-4 py-4 sm:rounded-t-4xl sm:px-8">
 			<button type="button" className="text-left" onClick={onExpand}>
 				<h2 className="typo-headline-1 font-medium text-[var(--dnd-label-normal)]">
 					{isHistoryMode ? "질문 히스토리" : "제안된 질문"}
@@ -137,7 +137,7 @@ function AnswerCardsSectionHeader({
 		<button
 			type="button"
 			className={cn(
-				"flex w-full cursor-pointer items-center justify-between rounded-t-4xl border-b border-[var(--dnd-line-normal)] px-8 py-4",
+				"flex w-full cursor-pointer items-center justify-between rounded-t-3xl border-b border-[var(--dnd-line-normal)] px-4 py-4 sm:rounded-t-4xl sm:px-8",
 				mode === "questions" ? "bg-white" : "bg-[var(--dnd-bg-alternative)]",
 			)}
 			onClick={onToggle}
@@ -153,20 +153,20 @@ function AnswerCardsSectionHeader({
 
 export function InsightQnAPanelSkeleton() {
 	return (
-		<div className="flex h-125 w-full flex-col overflow-hidden rounded-4xl border border-[var(--dnd-line-normal)] bg-[var(--dnd-bg-question)] shadow-sm xl:sticky xl:top-20 xl:h-[calc(100vh-100px)] xl:w-109 xl:shrink-0">
+		<div className="flex h-[min(520px,calc(100svh-120px))] min-h-96 w-full flex-col overflow-hidden rounded-3xl border border-[var(--dnd-line-normal)] bg-[var(--dnd-bg-question)] shadow-sm sm:rounded-4xl xl:sticky xl:top-20 xl:h-[calc(100vh-100px)] xl:w-109 xl:shrink-0">
 			<div className="flex-1 flex flex-col">
-				<div className="flex items-center justify-between rounded-t-4xl px-8 py-4">
+				<div className="flex items-center justify-between rounded-t-3xl px-4 py-4 sm:rounded-t-4xl sm:px-8">
 					<div className="h-6 w-24 animate-pulse rounded-md bg-[var(--dnd-fill-strong)]" />
 					<div className="h-6 w-6 animate-pulse rounded-full bg-[var(--dnd-fill-normal)]" />
 				</div>
-				<div className="p-6 flex-1 flex flex-col gap-2">
+				<div className="flex flex-1 flex-col gap-2 p-4 sm:p-6">
 					<div className="h-10 w-full animate-pulse rounded-full bg-white" />
 					<div className="h-10 w-3/4 animate-pulse rounded-full bg-white" />
 					<div className="h-10 w-5/6 animate-pulse rounded-full bg-white" />
 					<div className="mt-4 h-10 w-35 animate-pulse rounded-lg border border-[var(--dnd-line-strong)] bg-white" />
 				</div>
 			</div>
-			<div className="flex h-15 items-center justify-between rounded-t-4xl border-b border-[var(--dnd-line-normal)] bg-white px-8 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+			<div className="flex h-15 items-center justify-between rounded-t-3xl border-b border-[var(--dnd-line-normal)] bg-white px-4 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] sm:rounded-t-4xl sm:px-8">
 				<div className="h-6 w-20 animate-pulse rounded-md bg-[var(--dnd-fill-strong)]" />
 				<div className="h-6 w-6 animate-pulse rounded-md bg-[var(--dnd-fill-normal)]" />
 			</div>

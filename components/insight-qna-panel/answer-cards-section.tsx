@@ -59,13 +59,13 @@ function AnswerCardItem({
 	return (
 		<div
 			className={cn(
-				"rounded-[32px] p-[24px] flex flex-col gap-[16px] border border-[#ebebeb] group",
+				"group flex flex-col gap-4 rounded-[24px] border border-[#ebebeb] p-4 sm:rounded-[32px] sm:p-6",
 				card.isConverted
 					? "bg-[var(--dnd-bg-mint2)]"
 					: "bg-[var(--dnd-bg-normal)]",
 			)}
 		>
-			<div className="flex gap-[16px] items-center">
+			<div className="flex items-start gap-3 sm:items-center sm:gap-4">
 				<div className="p-[12px] bg-white rounded-[12px] flex items-center justify-center shrink-0">
 					<Image
 						src="/question-icon.svg"
@@ -81,7 +81,7 @@ function AnswerCardItem({
 
 			<div
 				className={cn(
-					"rounded-[16px] p-[16px] flex flex-col gap-[24px]",
+					"flex flex-col gap-4 rounded-[16px] p-4 sm:gap-6",
 					card.isConverted ? "bg-white" : "bg-[var(--dnd-fill-alternative)]",
 				)}
 			>
@@ -153,7 +153,7 @@ function AnswerCardMenu({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
 				align="end"
-				className="w-[200px] rounded-[16px] p-[8px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.3),0px_2px_6px_2px_rgba(0,0,0,0.15)]"
+				className="w-50 rounded-[16px] p-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.3),0px_2px_6px_2px_rgba(0,0,0,0.15)]"
 			>
 				<DropdownMenuItem
 					className="px-[12px] h-[48px] rounded-lg typo-body-1 font-normal text-[var(--dnd-label-neutral)]"

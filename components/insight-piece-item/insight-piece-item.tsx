@@ -303,7 +303,7 @@ function EditModeView({
 	const canSave = value.trim().length > 0 && !isSaving;
 
 	return (
-		<div className="flex flex-col gap-4 rounded-3xl bg-white p-6">
+		<div className="flex flex-col gap-4 rounded-3xl bg-white p-4 sm:p-6">
 			<PieceHeader
 				index={index}
 				createdType={piece.createdType}
@@ -321,7 +321,7 @@ function EditModeView({
 					{errorMessage}
 				</p>
 			)}
-			<div className="flex justify-end gap-2">
+			<div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
 				<button
 					type="button"
 					className="typo-body-1 rounded-xl bg-dnd-bg-alternative px-7 py-3 font-medium text-dnd-label-neutral transition-colors hover:bg-dnd-fill-normal disabled:text-dnd-label-disable"
@@ -353,9 +353,9 @@ function RetryErrorCard({
 	onCancel: () => void;
 }) {
 	return (
-		<div className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-dnd-heavy">
+		<div className="flex flex-col gap-4 rounded-3xl bg-white p-4 shadow-dnd-heavy sm:p-6">
 			<p className="typo-body-1 text-dnd-status-negative">{message}</p>
-			<div className="flex justify-end gap-2">
+			<div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
 				<button
 					type="button"
 					className="typo-body-1 rounded-xl bg-dnd-bg-alternative px-7 py-3 font-medium text-dnd-label-neutral transition-colors hover:bg-dnd-fill-normal"

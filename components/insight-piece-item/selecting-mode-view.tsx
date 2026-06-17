@@ -27,7 +27,7 @@ export function SelectingModeView({
 	);
 
 	return (
-		<div className="flex flex-col gap-6 rounded-3xl bg-white p-6 shadow-dnd-heavy">
+		<div className="flex flex-col gap-5 rounded-3xl bg-white p-4 shadow-dnd-heavy sm:gap-6 sm:p-6">
 			<div className="flex flex-col gap-2">
 				<h3 className="typo-heading-1 font-semibold text-dnd-label-normal">
 					새로운 인사이트 후보
@@ -77,17 +77,17 @@ export function SelectingModeView({
 				})}
 			</div>
 
-			<div className="flex justify-end gap-2">
+			<div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
 				<button
 					type="button"
-					className="typo-body-1 rounded-xl bg-dnd-bg-alternative px-7 py-3 font-medium text-dnd-label-neutral transition-colors hover:bg-dnd-fill-normal"
+					className="rounded-xl bg-dnd-bg-alternative px-7 py-3 typo-body-1 font-medium text-dnd-label-neutral transition-colors hover:bg-dnd-fill-normal"
 					onClick={onCancel}
 				>
 					취소
 				</button>
 				<button
 					type="button"
-					className="typo-body-1 rounded-xl bg-dnd-primary px-7 py-3 font-semibold text-white transition-colors hover:bg-dnd-primary-strong disabled:cursor-not-allowed disabled:bg-dnd-interaction-disable disabled:text-dnd-label-assistive"
+					className="rounded-xl bg-dnd-primary px-7 py-3 typo-body-1 font-semibold text-white transition-colors hover:bg-dnd-primary-strong disabled:cursor-not-allowed disabled:bg-dnd-interaction-disable disabled:text-dnd-label-assistive"
 					onClick={() => {
 						if (selectedCandidate) {
 							onSelect(selectedCandidate.content);

@@ -141,13 +141,13 @@ export function LinkSection({ insightId }: LinkSectionProps) {
 				>
 					링크
 				</label>
-				<div className="flex gap-3">
+				<div className="flex flex-col gap-3 sm:flex-row">
 					<input
 						type="text"
 						id={`link-title-${insightId}`}
 						name="link-title"
 						aria-label="링크 제목"
-						className="flex-1 bg-transparent border border-dnd-line-normal rounded-xl px-4 py-3 placeholder-dnd-label-assistive typo-body-2 focus:outline-none focus:border-dnd-primary transition-colors disabled:text-dnd-label-disable"
+						className="min-w-0 flex-1 rounded-xl border border-dnd-line-normal bg-transparent px-4 py-3 typo-body-2 placeholder-dnd-label-assistive transition-colors focus:border-dnd-primary focus:outline-none disabled:text-dnd-label-disable"
 						placeholder="링크 제목"
 						value={title}
 						disabled={isCreating}
@@ -161,7 +161,7 @@ export function LinkSection({ insightId }: LinkSectionProps) {
 						id={`link-url-${insightId}`}
 						name="link-url"
 						aria-label="링크 URL"
-						className="flex-2 bg-transparent border border-dnd-line-normal rounded-xl px-4 py-3 placeholder-dnd-label-assistive typo-body-2 focus:outline-none focus:border-dnd-primary transition-colors disabled:text-dnd-label-disable"
+						className="min-w-0 flex-2 rounded-xl border border-dnd-line-normal bg-transparent px-4 py-3 typo-body-2 placeholder-dnd-label-assistive transition-colors focus:border-dnd-primary focus:outline-none disabled:text-dnd-label-disable"
 						placeholder="https://"
 						value={url}
 						disabled={isCreating}
@@ -172,7 +172,7 @@ export function LinkSection({ insightId }: LinkSectionProps) {
 					/>
 					<button
 						type="submit"
-						className="bg-dnd-bg-alternative text-dnd-label-assistant px-6 rounded-xl typo-body-2 font-medium hover:bg-dnd-fill-normal transition-colors disabled:bg-dnd-interaction-disable disabled:text-dnd-label-disable"
+						className="rounded-xl bg-dnd-bg-alternative px-6 py-3 typo-body-2 font-medium text-dnd-label-assistant transition-colors hover:bg-dnd-fill-normal disabled:bg-dnd-interaction-disable disabled:text-dnd-label-disable sm:py-0"
 						disabled={isCreating || !canSubmit}
 					>
 						{isCreating ? "추가 중..." : "추가하기"}
@@ -211,7 +211,7 @@ export function LinkSection({ insightId }: LinkSectionProps) {
 						return (
 							<li
 								key={link.linkId}
-								className="flex items-center justify-between gap-3 rounded-xl border border-dnd-line-normal px-4 py-3"
+								className="flex items-center justify-between gap-2 rounded-xl border border-dnd-line-normal px-3 py-3 sm:gap-3 sm:px-4"
 							>
 								<a
 									href={safeLinkUrl}
