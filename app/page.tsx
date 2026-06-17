@@ -24,7 +24,7 @@ export default function Page() {
 	return (
 		<div className="min-h-screen bg-[linear-gradient(180deg,rgba(242,250,249,0.15)_3.5%,rgb(242,250,249)_35.4%),white]">
 			<TopNavigation />
-			<main className="flex flex-col items-center gap-[40px] px-[240px] pt-[60px] pb-[120px]">
+			<main className="flex flex-col items-center gap-10 px-4 pb-20 pt-8 sm:px-8 sm:pt-12 lg:px-[120px] xl:px-[240px] xl:pb-[120px] xl:pt-[60px]">
 				<InsightInput onSuccess={handleSuccess} />
 				<div className="flex flex-col items-center gap-16 w-full pt-[20px]">
 					<Image

@@ -3,12 +3,12 @@
 import { useSidebar } from "@/components/ui/sidebar";
 
 export function DashboardMain({ children }: { children: React.ReactNode }) {
-	const { open } = useSidebar();
+	const { isMobile, open } = useSidebar();
 
 	return (
 		<div
 			className={`flex min-w-0 flex-1 flex-col transition-[margin-left] duration-200 ease-linear ${
-				open ? "ml-[var(--sidebar-width)]" : "ml-0"
+				!isMobile && open ? "ml-[var(--sidebar-width)]" : "ml-0"
 			}`}
 		>
 			{children}

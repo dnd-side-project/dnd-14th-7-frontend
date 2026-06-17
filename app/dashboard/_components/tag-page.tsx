@@ -21,7 +21,7 @@ interface TagPageProps {
 
 export function TagPage({ tagId, tagName }: TagPageProps) {
 	return (
-		<div className="flex w-full flex-col items-center px-10 pb-25 pt-15">
+		<div className="flex w-full flex-col items-center px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12 lg:px-10 lg:pb-25 lg:pt-15">
 			<div className="w-full max-w-295 mx-auto flex flex-col gap-6">
 				<TagPageHeader tagName={tagName} />
 				<QueryErrorResetBoundary>
@@ -106,7 +106,7 @@ function TagInsightGrid({ tagId }: { tagId: number }) {
 	}
 
 	return (
-		<div className="grid grid-cols-4 gap-6">
+		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4">
 			{data.content.map((insight) => (
 				<div key={insight.insightId} className="relative">
 					<InsightCard insight={insight} />
@@ -178,7 +178,7 @@ const TAG_PAGE_SKELETON_KEYS = [
 
 function TagPageSkeleton() {
 	return (
-		<div className="grid animate-pulse grid-cols-4 gap-6">
+		<div className="grid animate-pulse grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4">
 			{TAG_PAGE_SKELETON_KEYS.map((key) => (
 				<div
 					key={key}

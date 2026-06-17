@@ -31,8 +31,8 @@ export function TopNavigation() {
 
 		if (user) {
 			return (
-				<div className="flex items-center gap-3">
-					<span className="typo-body-2 text-dnd-label-alternative">
+				<div className="flex min-w-0 items-center gap-2 sm:gap-3">
+					<span className="hidden max-w-32 truncate typo-body-2 text-dnd-label-alternative sm:block">
 						{user.nickname}님
 					</span>
 					<Button
@@ -74,8 +74,14 @@ export function TopNavigation() {
 	};
 
 	return (
-		<nav className="flex items-center justify-between px-[240px] py-[24px] h-[112px]">
-			<Image src="/logo.svg" alt="Aha!ve" width={120} height={40} />
+		<nav className="flex h-20 items-center justify-between px-4 py-4 sm:px-8 lg:h-28 lg:px-[120px] xl:px-[240px]">
+			<Image
+				src="/logo.svg"
+				alt="Aha!ve"
+				width={120}
+				height={40}
+				className="h-auto w-28 sm:w-30"
+			/>
 			{renderAuthAction()}
 		</nav>
 	);

@@ -2,7 +2,7 @@
 
 > An AI-powered insight management service that turns scattered thoughts into actionable insights.
 
-![Aha!ve main screen](./public/demo/main.png)
+![Aha!ve main screen](./public/demo/main.en.png)
 
 ## Overview
 

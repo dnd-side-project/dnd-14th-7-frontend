@@ -99,8 +99,8 @@ function MyPageContent() {
 	};
 
 	return (
-		<div className="flex w-full justify-center px-20 pt-20">
-			<section className="flex w-full max-w-180 flex-col gap-6 rounded-4xl bg-white p-8 shadow-dnd-normal">
+		<div className="flex w-full justify-center px-4 pt-8 sm:px-8 sm:pt-12 lg:px-20 lg:pt-20">
+			<section className="flex w-full max-w-180 flex-col gap-6 rounded-3xl bg-white p-5 shadow-dnd-normal sm:rounded-4xl sm:p-8">
 				<div className="flex items-center justify-between gap-4">
 					<div className="flex min-w-0 items-center gap-4">
 						<UserAvatar nickname={user.nickname} seed={user.email} size="lg" />
@@ -222,8 +222,8 @@ function ProfileEditForm({
 
 function MyPageSkeleton() {
 	return (
-		<div className="flex w-full justify-center px-20 pt-20">
-			<section className="flex w-full max-w-180 animate-pulse flex-col gap-6 rounded-4xl bg-white p-8 shadow-dnd-normal">
+		<div className="flex w-full justify-center px-4 pt-8 sm:px-8 sm:pt-12 lg:px-20 lg:pt-20">
+			<section className="flex w-full max-w-180 animate-pulse flex-col gap-6 rounded-3xl bg-white p-5 shadow-dnd-normal sm:rounded-4xl sm:p-8">
 				<div className="flex items-center gap-4">
 					<div className="size-14 rounded-full bg-dnd-fill-strong" />
 					<div className="flex flex-1 flex-col gap-2">

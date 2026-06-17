@@ -149,7 +149,7 @@ function HomePage() {
 	};
 
 	return (
-		<div className="flex flex-col items-center gap-20 w-full pb-25 pt-15 max-w-300 mx-auto px-10">
+		<div className="mx-auto flex w-full max-w-300 flex-col items-center gap-12 px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12 lg:gap-20 lg:px-10 lg:pb-25 lg:pt-15">
 			<div className="flex flex-col items-center gap-6">
 				<Image
 					src="/ahaive.svg"
@@ -170,7 +170,7 @@ function HomePage() {
 				}
 			/>
 
-			<div className="flex flex-col gap-20 w-full mt-10">
+			<div className="mt-6 flex w-full flex-col gap-12 sm:mt-10 lg:gap-20">
 				<HomeInsightList
 					header={
 						<HomeToggleHeader isLatest={isLatest} onToggle={setIsLatest} />
@@ -297,7 +297,7 @@ function NewInsightPage() {
 	const { dispatch } = useDashboardTabs();
 
 	return (
-		<div className="flex min-h-screen flex-col items-center justify-center gap-10 px-60">
+		<div className="flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-16 sm:px-8 lg:gap-10 lg:px-20 xl:px-60">
 			<InsightInput
 				onSuccess={(id) =>
 					dispatch({
@@ -367,7 +367,7 @@ function TrashPage() {
 	};
 
 	return (
-		<div className="flex flex-col gap-8 w-full pb-25 pt-15 max-w-300 mx-auto px-10">
+		<div className="mx-auto flex w-full max-w-300 flex-col gap-8 px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12 lg:px-10 lg:pb-25 lg:pt-15">
 			<div className="flex items-center gap-3">
 				<Trash2 className="size-7 text-dnd-label-neutral" />
 				<div className="flex flex-col gap-1">
@@ -380,11 +380,13 @@ function TrashPage() {
 				</div>
 			</div>
 
-			<div className="flex flex-wrap gap-6">
+			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">
 				{isLoading ? (
 					INSIGHT_SKELETON_KEYS.map((key) => <HomeCardSkeleton key={key} />)
 				) : isError ? (
-					<EmptyHomeCard message="휴지통을 불러오지 못했어요." />
+					<div className="col-span-full flex w-full justify-center">
+						<EmptyHomeCard message="휴지통을 불러오지 못했어요." />
+					</div>
 				) : trashedInsights.length > 0 ? (
 					trashedInsights.map((insight) => (
 						<HomeInsightCard
@@ -420,7 +422,9 @@ function TrashPage() {
 						/>
 					))
 				) : (
-					<EmptyHomeCard message="휴지통이 비어 있어요." />
+					<div className="col-span-full flex w-full justify-center">
+						<EmptyHomeCard message="휴지통이 비어 있어요." />
+					</div>
 				)}
 			</div>
 

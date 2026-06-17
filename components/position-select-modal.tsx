@@ -54,13 +54,13 @@ export function PositionSelectModal({
 }: PositionSelectModalProps) {
 	return (
 		<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-			<DialogContent className="w-[1152px] sm:max-w-[1152px] rounded-[32px] bg-[#f2faf9] p-12 flex flex-col items-center gap-12 ring-0">
+			<DialogContent className="flex max-h-[calc(100svh-2rem)] w-[calc(100vw-2rem)] max-w-[1152px] flex-col items-center gap-8 overflow-y-auto rounded-[28px] bg-[#f2faf9] p-6 ring-0 sm:gap-10 sm:rounded-[32px] sm:p-8 lg:gap-12 lg:p-12">
 				<DialogTitle className="sr-only">직군 선택</DialogTitle>
 
-				<div className="flex flex-col items-center gap-12 w-full">
+				<div className="flex w-full flex-col items-center gap-8 sm:gap-10 lg:gap-12">
 					<PositionSelectHeader />
 
-					<div className="flex gap-6 items-center justify-center">
+					<div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
 						{POSITIONS.map((pos) => (
 							<PositionCard key={pos.value} position={pos} onClose={onClose} />
 						))}
@@ -78,11 +78,11 @@ export function PositionSelectModal({
 
 function PositionSelectHeader() {
 	return (
-		<div className="flex flex-col items-center gap-4 text-center">
-			<p className="typo-title-1 font-bold text-dnd-label-normal">
+		<div className="flex flex-col items-center gap-3 text-center sm:gap-4">
+			<p className="typo-heading-1 font-bold text-dnd-label-normal sm:typo-title-1">
 				어떤 생각을 기록해볼까요?
 			</p>
-			<p className="typo-heading-2 text-dnd-label-neutral">
+			<p className="typo-body-1 text-dnd-label-neutral sm:typo-heading-2">
 				선택한 분야에 맞는 인사이트 예시를 보여드릴게요.
 			</p>
 		</div>
@@ -112,9 +112,9 @@ function PositionCard({ position, onClose }: PositionCardProps) {
 				updatePosition(value);
 				onClose();
 			}}
-			className="flex flex-col gap-5 items-center bg-white px-10 py-8 rounded-[32px] hover:ring-2 hover:ring-dnd-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dnd-primary transition-all"
+			className="flex w-full flex-col items-center gap-4 rounded-[24px] bg-white px-6 py-6 transition-all hover:ring-2 hover:ring-dnd-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dnd-primary sm:gap-5 sm:rounded-[32px] sm:px-8 lg:px-10"
 		>
-			<div className="flex flex-col gap-2 items-center text-center w-[160px]">
+			<div className="flex w-full flex-col items-center gap-2 text-center sm:w-[160px]">
 				<p className="typo-heading-1 font-semibold text-dnd-label-neutral">
 					{label}
 				</p>
@@ -127,7 +127,7 @@ function PositionCard({ position, onClose }: PositionCardProps) {
 				alt={label}
 				width={120}
 				height={120}
-				className="object-cover"
+				className="size-24 object-cover sm:size-30"
 			/>
 		</button>
 	);
