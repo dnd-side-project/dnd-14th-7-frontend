@@ -32,7 +32,7 @@ export function TopNavigation() {
 		if (user) {
 			return (
 				<div className="flex min-w-0 items-center gap-2 sm:gap-3">
-					<span className="hidden truncate typo-body-2 text-dnd-label-alternative sm:block">
+					<span className="hidden max-w-32 truncate typo-body-2 text-dnd-label-alternative sm:block">
 						{user.nickname}님
 					</span>
 					<Button

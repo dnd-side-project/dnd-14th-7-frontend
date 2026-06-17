@@ -384,7 +384,9 @@ function TrashPage() {
 				{isLoading ? (
 					INSIGHT_SKELETON_KEYS.map((key) => <HomeCardSkeleton key={key} />)
 				) : isError ? (
-					<EmptyHomeCard message="휴지통을 불러오지 못했어요." />
+					<div className="col-span-full flex w-full justify-center">
+						<EmptyHomeCard message="휴지통을 불러오지 못했어요." />
+					</div>
 				) : trashedInsights.length > 0 ? (
 					trashedInsights.map((insight) => (
 						<HomeInsightCard
@@ -420,7 +422,9 @@ function TrashPage() {
 						/>
 					))
 				) : (
-					<EmptyHomeCard message="휴지통이 비어 있어요." />
+					<div className="col-span-full flex w-full justify-center">
+						<EmptyHomeCard message="휴지통이 비어 있어요." />
+					</div>
 				)}
 			</div>
 
