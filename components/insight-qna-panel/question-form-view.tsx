@@ -90,12 +90,12 @@ function QuestionForm({ question, insightId, onCancel }: QuestionFormProps) {
 	});
 
 	return (
-		<div className="bg-[var(--dnd-bg-mint2)] rounded-[32px] p-[24px] flex flex-col gap-[16px] border border-[#ebebeb]">
+		<div className="flex flex-col gap-4 rounded-[24px] border border-[#ebebeb] bg-[var(--dnd-bg-mint2)] p-4 sm:rounded-[32px] sm:p-6">
 			{/* 질문 헤더 - 클릭 시 폼 닫기 */}
 			<button
 				type="button"
 				onClick={onCancel}
-				className="flex gap-[16px] items-center text-left cursor-pointer"
+				className="flex cursor-pointer items-start gap-3 text-left sm:items-center sm:gap-4"
 			>
 				<div className="p-[12px] bg-white rounded-[12px]">
 					<Image
@@ -128,7 +128,7 @@ function QuestionForm({ question, insightId, onCancel }: QuestionFormProps) {
 							})
 						}
 						disabled={isPending || !answerText.trim()}
-						className="px-7 py-3 rounded-[12px] bg-dnd-primary text-white typo-headline-2 font-semibold hover:opacity-90 transition-opacity disabled:opacity-40"
+						className="rounded-[12px] bg-dnd-primary px-5 py-3 typo-headline-2 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 sm:px-7"
 					>
 						{isPending ? "제출 중..." : "완료"}
 					</button>

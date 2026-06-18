@@ -36,7 +36,7 @@ export function DefaultModeView({
 	canDelete,
 }: DefaultModeViewProps) {
 	return (
-		<div className="bg-white rounded-3xl p-6 flex flex-col gap-6 group">
+		<div className="bg-white rounded-3xl p-6 flex flex-col gap-6">
 			<PieceHeader
 				index={index}
 				createdType={piece.createdType}
@@ -44,7 +44,7 @@ export function DefaultModeView({
 			>
 				<DropdownMenu>
 					<DropdownMenuTrigger
-						className="text-dnd-label-assistive opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer p-0 select-none outline-none"
+						className="cursor-pointer select-none p-0 text-dnd-label-assistive outline-none"
 						aria-label="인사이트 메뉴"
 					>
 						<Image src="/kebab-icon.svg" alt="더보기" width={24} height={24} />
