@@ -78,7 +78,7 @@ export default async function AdminExperimentDashboardPage() {
 						크레딧 실험 대시보드
 					</h1>
 					<p className="typo-body-1 text-dnd-label-alternative">
-						크레딧 부족 모달 노출, Pro 알림 CTA 클릭률, AI 사용량을 확인해요.
+						크레딧 부족 모달 노출, Pro 알림 신청 클릭률, AI 사용량을 확인해요.
 					</p>
 				</header>
 
@@ -88,9 +88,9 @@ export default async function AdminExperimentDashboardPage() {
 						value={formatNumber(dashboard.summary.shortageViews)}
 					/>
 					<MetricCard
-						label="Pro CTA 클릭"
+						label="Pro 알림 클릭"
 						value={formatNumber(dashboard.summary.proClicks)}
-						description={`CTR ${dashboard.summary.ctaCtr}%`}
+						description={`클릭률 ${dashboard.summary.ctaCtr}%`}
 					/>
 					<MetricCard
 						label="AI 호출"
@@ -110,7 +110,7 @@ export default async function AdminExperimentDashboardPage() {
 							최근 14일 추이
 						</h2>
 						<p className="typo-body-2 text-dnd-label-alternative">
-							초록: 모달 노출 · 보라: CTA 클릭 · 회색: AI 호출
+							초록: 모달 노출 · 보라: Pro 알림 클릭 · 회색: AI 호출
 						</p>
 					</div>
 					<div className="flex h-64 items-end gap-3 overflow-x-auto border-dnd-line-normal border-b pb-4 sm:h-72">
@@ -140,8 +140,8 @@ export default async function AdminExperimentDashboardPage() {
 								<tr className="border-dnd-line-normal border-b">
 									<th className="py-3 pr-4">기능</th>
 									<th className="py-3 pr-4">부족 노출</th>
-									<th className="py-3 pr-4">CTA 클릭</th>
-									<th className="py-3 pr-4">CTR</th>
+									<th className="py-3 pr-4">Pro 알림 클릭</th>
+									<th className="py-3 pr-4">클릭률</th>
 									<th className="py-3 pr-4">AI 호출</th>
 									<th className="py-3 pr-4">예상 비용</th>
 									<th className="py-3">차감 크레딧</th>
@@ -263,7 +263,7 @@ function FeatureMetricCard({ item }: { item: FeatureMetric }) {
 					{item.feature}
 				</h3>
 				<span className="shrink-0 typo-body-2 font-semibold text-dnd-primary">
-					CTR {item.ctaCtr}%
+					클릭률 {item.ctaCtr}%
 				</span>
 			</div>
 			<dl className="mt-4 grid grid-cols-2 gap-3 typo-body-2">
@@ -272,7 +272,7 @@ function FeatureMetricCard({ item }: { item: FeatureMetric }) {
 					value={formatNumber(item.shortageViews)}
 				/>
 				<FeatureMetricValue
-					label="CTA 클릭"
+					label="Pro 알림 클릭"
 					value={formatNumber(item.proClicks)}
 				/>
 				<FeatureMetricValue
