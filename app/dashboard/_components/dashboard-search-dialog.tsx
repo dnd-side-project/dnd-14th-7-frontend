@@ -265,10 +265,10 @@ export function DashboardSearchDialog() {
 			<DialogContent
 				showCloseButton={false}
 				aria-describedby={undefined}
-				className="top-24 max-w-2xl translate-y-0 gap-0 overflow-hidden rounded-2xl bg-white p-0 ring-0 shadow-dnd-heavy sm:max-w-2xl"
+				className="top-16 max-h-[calc(100svh-5rem)] w-[calc(100vw-1rem)] max-w-2xl translate-y-0 gap-0 overflow-hidden rounded-2xl bg-white p-0 ring-0 shadow-dnd-heavy sm:top-24 sm:w-full sm:max-w-2xl"
 			>
 				<DialogTitle className="sr-only">검색</DialogTitle>
-				<div className="flex items-center gap-3 border-b border-dnd-line-normal px-5 py-4">
+				<div className="flex items-center gap-3 border-b border-dnd-line-normal px-4 py-3 sm:px-5 sm:py-4">
 					<Search className="size-5 shrink-0 text-dnd-label-alternative" />
 					<input
 						id={searchInputId}
@@ -300,7 +300,7 @@ export function DashboardSearchDialog() {
 					ref={resultListRef}
 					role="listbox"
 					aria-labelledby={searchInputId}
-					className="max-h-120 overflow-y-auto p-3"
+					className="max-h-[calc(100svh-9rem)] overflow-y-auto p-2 sm:max-h-120 sm:p-3"
 				>
 					{isWaitingForSearchTerm ? (
 						<output className="block px-3 py-8 text-center typo-body-2 text-dnd-label-alternative">

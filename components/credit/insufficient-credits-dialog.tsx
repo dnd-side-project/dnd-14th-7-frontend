@@ -74,7 +74,10 @@ export function InsufficientCreditsDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
-			<DialogContent className="max-w-110 rounded-3xl bg-white p-8">
+			<DialogContent
+				showCloseButton={false}
+				className="max-h-[calc(100svh-2rem)] w-[calc(100vw-2rem)] max-w-110 overflow-y-auto rounded-3xl bg-white p-5 sm:p-8"
+			>
 				<DialogHeader className="gap-4 text-center">
 					<div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-dnd-bg-mint text-dnd-primary">
 						<Bell className="size-7" />

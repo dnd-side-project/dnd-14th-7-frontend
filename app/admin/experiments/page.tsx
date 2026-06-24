@@ -70,15 +70,15 @@ export default async function AdminExperimentDashboardPage() {
 	);
 
 	return (
-		<main className="min-h-screen bg-dnd-bg-alternative px-6 py-10">
-			<div className="mx-auto flex max-w-7xl flex-col gap-8">
+		<main className="min-h-screen bg-dnd-bg-alternative px-4 py-6 sm:px-6 sm:py-10">
+			<div className="mx-auto flex max-w-7xl flex-col gap-6 sm:gap-8">
 				<header className="flex flex-col gap-2">
 					<p className="typo-label-1 font-semibold text-dnd-primary">Admin</p>
 					<h1 className="typo-title-1 font-bold text-dnd-label-normal">
 						크레딧 실험 대시보드
 					</h1>
 					<p className="typo-body-1 text-dnd-label-alternative">
-						크레딧 부족 모달 노출, Pro 알림 CTA 클릭률, AI 사용량을 확인해요.
+						크레딧 부족 모달 노출, Pro 알림 신청 클릭률, AI 사용량을 확인해요.
 					</p>
 				</header>
 
@@ -88,9 +88,9 @@ export default async function AdminExperimentDashboardPage() {
 						value={formatNumber(dashboard.summary.shortageViews)}
 					/>
 					<MetricCard
-						label="Pro CTA 클릭"
+						label="Pro 알림 클릭"
 						value={formatNumber(dashboard.summary.proClicks)}
-						description={`CTR ${dashboard.summary.ctaCtr}%`}
+						description={`클릭률 ${dashboard.summary.ctaCtr}%`}
 					/>
 					<MetricCard
 						label="AI 호출"
@@ -104,23 +104,23 @@ export default async function AdminExperimentDashboardPage() {
 					/>
 				</section>
 
-				<section className="rounded-3xl bg-white p-6 shadow-dnd-light">
+				<section className="rounded-3xl bg-white p-4 shadow-dnd-light sm:p-6">
 					<div className="mb-6 flex flex-col gap-1">
 						<h2 className="typo-heading-1 font-bold text-dnd-label-normal">
 							최근 14일 추이
 						</h2>
 						<p className="typo-body-2 text-dnd-label-alternative">
-							초록: 모달 노출 · 보라: CTA 클릭 · 회색: AI 호출
+							초록: 모달 노출 · 보라: Pro 알림 클릭 · 회색: AI 호출
 						</p>
 					</div>
-					<div className="flex h-72 items-end gap-3 overflow-x-auto border-dnd-line-normal border-b pb-4">
+					<div className="flex h-64 items-end gap-3 overflow-x-auto border-dnd-line-normal border-b pb-4 sm:h-72">
 						{dashboard.daily.map((item) => (
 							<DailyBars key={item.date} item={item} maxValue={maxDailyValue} />
 						))}
 					</div>
 				</section>
 
-				<section className="rounded-3xl bg-white p-6 shadow-dnd-light">
+				<section className="rounded-3xl bg-white p-4 shadow-dnd-light sm:p-6">
 					<div className="mb-6 flex flex-col gap-1">
 						<h2 className="typo-heading-1 font-bold text-dnd-label-normal">
 							기능별 전환
@@ -129,14 +129,19 @@ export default async function AdminExperimentDashboardPage() {
 							기능별 부족 모달 노출 대비 Pro 알림 클릭률을 확인해요.
 						</p>
 					</div>
-					<div className="overflow-x-auto">
+					<div className="flex flex-col gap-3 md:hidden">
+						{dashboard.features.map((item) => (
+							<FeatureMetricCard key={item.feature} item={item} />
+						))}
+					</div>
+					<div className="hidden overflow-x-auto md:block">
 						<table className="w-full min-w-220 text-left">
 							<thead className="typo-label-2 text-dnd-label-alternative">
 								<tr className="border-dnd-line-normal border-b">
 									<th className="py-3 pr-4">기능</th>
 									<th className="py-3 pr-4">부족 노출</th>
-									<th className="py-3 pr-4">CTA 클릭</th>
-									<th className="py-3 pr-4">CTR</th>
+									<th className="py-3 pr-4">Pro 알림 클릭</th>
+									<th className="py-3 pr-4">클릭률</th>
 									<th className="py-3 pr-4">AI 호출</th>
 									<th className="py-3 pr-4">예상 비용</th>
 									<th className="py-3">차감 크레딧</th>
@@ -194,8 +199,8 @@ export default async function AdminExperimentDashboardPage() {
 
 function AdminAccessDenied() {
 	return (
-		<main className="min-h-screen bg-dnd-bg-alternative px-6 py-10">
-			<section className="mx-auto flex max-w-3xl flex-col gap-4 rounded-3xl bg-white p-8 shadow-dnd-light">
+		<main className="min-h-screen bg-dnd-bg-alternative px-4 py-6 sm:px-6 sm:py-10">
+			<section className="mx-auto flex max-w-3xl flex-col gap-4 rounded-3xl bg-white p-5 shadow-dnd-light sm:p-8">
 				<h1 className="typo-title-2 font-bold text-dnd-label-normal">
 					접근할 수 없어요
 				</h1>
@@ -209,8 +214,8 @@ function AdminAccessDenied() {
 
 function AdminDashboardLoadError() {
 	return (
-		<main className="min-h-screen bg-dnd-bg-alternative px-6 py-10">
-			<section className="mx-auto flex max-w-3xl flex-col gap-4 rounded-3xl bg-white p-8 shadow-dnd-light">
+		<main className="min-h-screen bg-dnd-bg-alternative px-4 py-6 sm:px-6 sm:py-10">
+			<section className="mx-auto flex max-w-3xl flex-col gap-4 rounded-3xl bg-white p-5 shadow-dnd-light sm:p-8">
 				<h1 className="typo-title-2 font-bold text-dnd-label-normal">
 					대시보드를 불러오지 못했어요
 				</h1>
@@ -238,7 +243,7 @@ function MetricCard({
 	description?: string;
 }) {
 	return (
-		<div className="rounded-3xl bg-white p-6 shadow-dnd-light">
+		<div className="rounded-3xl bg-white p-5 shadow-dnd-light sm:p-6">
 			<p className="typo-label-1 text-dnd-label-alternative">{label}</p>
 			<p className="mt-3 typo-title-1 font-bold text-dnd-label-normal">
 				{value}
@@ -246,6 +251,58 @@ function MetricCard({
 			{description && (
 				<p className="mt-2 typo-body-2 text-dnd-label-neutral">{description}</p>
 			)}
+		</div>
+	);
+}
+
+function FeatureMetricCard({ item }: { item: FeatureMetric }) {
+	return (
+		<article className="rounded-2xl border border-dnd-line-normal bg-white p-4">
+			<div className="flex items-start justify-between gap-3">
+				<h3 className="min-w-0 truncate typo-body-1 font-semibold text-dnd-label-normal">
+					{item.feature}
+				</h3>
+				<span className="shrink-0 typo-body-2 font-semibold text-dnd-primary">
+					클릭률 {item.ctaCtr}%
+				</span>
+			</div>
+			<dl className="mt-4 grid grid-cols-2 gap-3 typo-body-2">
+				<FeatureMetricValue
+					label="부족 노출"
+					value={formatNumber(item.shortageViews)}
+				/>
+				<FeatureMetricValue
+					label="Pro 알림 클릭"
+					value={formatNumber(item.proClicks)}
+				/>
+				<FeatureMetricValue
+					label="AI 호출"
+					value={formatNumber(item.aiCalls)}
+				/>
+				<FeatureMetricValue
+					label="예상 비용"
+					value={`$${item.estimatedCost.toFixed(4)}`}
+				/>
+				<FeatureMetricValue
+					label="차감 크레딧"
+					value={formatNumber(item.spentCredits)}
+				/>
+			</dl>
+		</article>
+	);
+}
+
+function FeatureMetricValue({
+	label,
+	value,
+}: {
+	label: string;
+	value: string;
+}) {
+	return (
+		<div>
+			<dt className="text-dnd-label-alternative">{label}</dt>
+			<dd className="mt-1 font-semibold text-dnd-label-neutral">{value}</dd>
 		</div>
 	);
 }
