@@ -30,6 +30,18 @@ export async function middleware(request: NextRequest) {
 		return supabaseResponse;
 	}
 
+	const redirectHome = () => {
+		const redirectResponse = NextResponse.redirect(new URL("/", request.url));
+		for (const {
+			name,
+			value,
+			...options
+		} of supabaseResponse.cookies.getAll()) {
+			redirectResponse.cookies.set(name, value, options);
+		}
+		return redirectResponse;
+	};
+
 	try {
 		// 보호 라우트 접근 또는 기존 세션이 있는 경우에만 세션 확인/갱신
 		let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -50,12 +62,12 @@ export async function middleware(request: NextRequest) {
 		});
 
 		if (isDashboard && !user) {
-			return NextResponse.redirect(new URL("/", request.url));
+			return redirectHome();
 		}
 	} catch (error) {
 		console.error("Auth middleware failed:", error);
 		if (isDashboard) {
-			return NextResponse.redirect(new URL("/", request.url));
+			return redirectHome();
 		}
 	}
 
