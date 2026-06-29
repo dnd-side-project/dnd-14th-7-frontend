@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 import { getSupabaseAnonKey, getSupabaseUrl } from "./lib/supabase/env";
 
+const AUTH_TIMEOUT_MS = 5_000;
+
 export async function middleware(request: NextRequest) {
 	let supabaseResponse = NextResponse.next({ request });
 
@@ -20,12 +22,25 @@ export async function middleware(request: NextRequest) {
 		},
 	});
 
-	// 세션 갱신 — getUser()는 반드시 호출해야 세션이 리프레시됨
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
+	try {
+		// /dashboard 보호 라우트에서만 세션 확인/갱신
+		const {
+			data: { user },
+		} = await Promise.race([
+			supabase.auth.getUser(),
+			new Promise<never>((_, reject) =>
+				setTimeout(
+					() => reject(new Error("Supabase auth check timed out")),
+					AUTH_TIMEOUT_MS,
+				),
+			),
+		]);
 
-	if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+		if (!user) {
+			return NextResponse.redirect(new URL("/", request.url));
+		}
+	} catch (error) {
+		console.error("Dashboard auth middleware failed:", error);
 		return NextResponse.redirect(new URL("/", request.url));
 	}
 
@@ -33,7 +48,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-	matcher: [
-		"/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-	],
+	matcher: ["/dashboard/:path*"],
 };
