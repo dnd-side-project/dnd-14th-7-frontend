@@ -6,6 +6,10 @@ const AUTH_TIMEOUT_MS = 5_000;
 
 export async function middleware(request: NextRequest) {
 	let supabaseResponse = NextResponse.next({ request });
+	const isDashboard = request.nextUrl.pathname.startsWith("/dashboard");
+	const hasSessionCookie = request.cookies
+		.getAll()
+		.some((cookie) => cookie.name.startsWith("sb-"));
 
 	const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
 		cookies: {
@@ -22,31 +26,44 @@ export async function middleware(request: NextRequest) {
 		},
 	});
 
+	if (!isDashboard && !hasSessionCookie) {
+		return supabaseResponse;
+	}
+
 	try {
-		// /dashboard 보호 라우트에서만 세션 확인/갱신
+		// 보호 라우트 접근 또는 기존 세션이 있는 경우에만 세션 확인/갱신
+		let timeoutId: ReturnType<typeof setTimeout> | undefined;
 		const {
 			data: { user },
 		} = await Promise.race([
 			supabase.auth.getUser(),
-			new Promise<never>((_, reject) =>
-				setTimeout(
+			new Promise<never>((_, reject) => {
+				timeoutId = setTimeout(
 					() => reject(new Error("Supabase auth check timed out")),
 					AUTH_TIMEOUT_MS,
-				),
-			),
-		]);
+				);
+			}),
+		]).finally(() => {
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+			}
+		});
 
-		if (!user) {
+		if (isDashboard && !user) {
 			return NextResponse.redirect(new URL("/", request.url));
 		}
 	} catch (error) {
-		console.error("Dashboard auth middleware failed:", error);
-		return NextResponse.redirect(new URL("/", request.url));
+		console.error("Auth middleware failed:", error);
+		if (isDashboard) {
+			return NextResponse.redirect(new URL("/", request.url));
+		}
 	}
 
 	return supabaseResponse;
 }
 
 export const config = {
-	matcher: ["/dashboard/:path*"],
+	matcher: [
+		"/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+	],
 };
