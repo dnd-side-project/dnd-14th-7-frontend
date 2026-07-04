@@ -62,7 +62,7 @@ export async function askOpenAIWithUsage(
 					{
 						role: "system",
 						content:
-							"너는 사용자의 업무·학습·경험 메모를 깊은 질문과 실용적인 인사이트로 정리하는 한국어 AI 어시스턴트야. 반드시 유효한 JSON만 출력해.",
+							"너는 사용자의 메모를 실용적인 인사이트로 정리하는 한국어 AI 어시스턴트야. 반드시 유효한 JSON만 출력해.",
 					},
 					{ role: "user", content: prompt },
 				],
