@@ -172,7 +172,7 @@ function RefreshQuestionsButton({ insightId }: { insightId: number }) {
 					<span className="typo-caption-1 font-medium text-dnd-label-neutral">
 						{isPending
 							? "질문 생성 중..."
-							: `새로운 질문 받기 · ${AI_CREDIT_COSTS.QUESTION_REFRESH} 크레딧`}
+							: `다른 관점의 질문 받기 · ${AI_CREDIT_COSTS.QUESTION_REFRESH} 크레딧`}
 					</span>
 				</div>
 			</button>
@@ -193,7 +193,7 @@ function RefreshQuestionsButton({ insightId }: { insightId: number }) {
 				open={isInsufficientCreditsDialogOpen}
 				onOpenChange={setIsInsufficientCreditsDialogOpen}
 				feature="QUESTION_REFRESH"
-				featureLabel="새로운 질문 받기"
+				featureLabel="다른 관점의 질문 받기"
 				requiredCredits={AI_CREDIT_COSTS.QUESTION_REFRESH}
 			/>
 		</div>

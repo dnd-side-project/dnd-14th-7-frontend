@@ -32,7 +32,7 @@ export function AnswerCardsSection({ insightId }: AnswerCardsSectionProps) {
 	if (answerCards.length === 0) {
 		return (
 			<div className="flex min-h-40 items-center justify-center rounded-3xl bg-white px-6 text-center typo-body-2 text-dnd-label-alternative">
-				제안된 질문에 답변하고, 답변 카드를 만들어보세요.
+				질문에 답하며 경험을 더 선명한 인사이트로 확장해보세요.
 			</div>
 		);
 	}

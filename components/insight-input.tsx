@@ -28,20 +28,29 @@ const PLACEHOLDER_BY_POSITION: Record<
 	{ title: string; placeholder: string }
 > = {
 	DEV: {
-		title: "방금 겪은 문제나 깨달음을 한 줄로 적어보세요",
-		placeholder: "예: 로그 안 남겨서 디버깅이 너무 힘들었다",
+		title: "오늘 겪은 개발 경험을 성장 기록으로 남겨보세요",
+		placeholder:
+			"예: React Query staleTime 때문에 데이터가 갱신되지 않았고, 원인을 찾는 데 오래 걸렸다",
 	},
 	DESIGN: {
-		title: "작업 중 떠오른 UX/디자인 인사이트를 남겨보세요",
-		placeholder: "예: 버튼 위치 하나로 전환율이 달라진다",
+		title: "오늘의 디자인 고민을 더 선명한 인사이트로 정리해보세요",
+		placeholder:
+			"예: CTA 버튼 위치를 바꾸니 사용자가 다음 행동을 더 쉽게 이해했다",
 	},
 	PROMOTER: {
-		title: "방금 정리된 기획 포인트를 입력해주세요",
-		placeholder: "예: 문제 정의가 기능보다 먼저다",
+		title: "오늘의 기획 고민을 명확한 판단 기준으로 정리해보세요",
+		placeholder:
+			"예: 기능 요구사항보다 사용자가 겪는 상황을 먼저 정의해야 했다",
+	},
+	OTHER: {
+		title: "오늘의 경험과 생각을 깊은 질문으로 확장해보세요",
+		placeholder:
+			"예: 오늘 반복해서 막힌 지점이 있었고, 그 이유를 더 깊게 생각해보고 싶다",
 	},
 	DEFAULT: {
-		title: "지금 막 떠오른 생각을 한 줄로 적어보세요.",
-		placeholder: "예: 반복되는 문제에는 항상 이유가 있다",
+		title: "오늘의 경험과 생각을 깊은 질문으로 확장해보세요",
+		placeholder:
+			"예: 오늘 반복해서 막힌 지점이 있었고, 그 이유를 더 깊게 생각해보고 싶다",
 	},
 };
 
@@ -234,8 +243,8 @@ function AuthenticatedInsightInput({
 						onClick={handleSubmit}
 					>
 						{isPending
-							? "생성 중..."
-							: `인사이트 생성 · ${AI_CREDIT_COSTS.INSIGHT_CREATE} 크레딧`}
+							? "정리 중..."
+							: `인사이트로 정리하기 · ${AI_CREDIT_COSTS.INSIGHT_CREATE} 크레딧`}
 					</Button>
 				}
 			/>

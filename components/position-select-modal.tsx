@@ -20,25 +20,25 @@ const POSITIONS: PositionOption[] = [
 	{
 		value: "DEV",
 		label: "개발",
-		description: "개발 중 겪은 문제나\n깨달음을 기록해요",
+		description: "버그, 학습, 기술 선택을\n회고해요",
 		illust: "/developer.png",
 	},
 	{
 		value: "DESIGN",
 		label: "디자인",
-		description: "디자인에서 떠오른\n인사이트를 정리해요",
+		description: "사용자 관찰과\n디자인 판단을 정리해요",
 		illust: "/designer.png",
 	},
 	{
 		value: "PROMOTER",
 		label: "기획",
-		description: "기획 아이디어와\n복잡한 기준을 정리해요",
+		description: "문제 정의와\n의사결정 기준을 정리해요",
 		illust: "/promoter.png",
 	},
 	{
 		value: "OTHER",
 		label: "기타",
-		description: "지금 떠오른 생각을\n자유롭게 기록해요",
+		description: "일하며 얻은 생각을\n자유롭게 확장해요",
 		illust: "/others.png",
 	},
 ];
@@ -80,10 +80,10 @@ function PositionSelectHeader() {
 	return (
 		<div className="flex flex-col items-center gap-3 text-center sm:gap-4">
 			<p className="typo-heading-1 font-bold text-dnd-label-normal sm:typo-title-1">
-				어떤 생각을 기록해볼까요?
+				어떤 경험을 더 깊게 남겨볼까요?
 			</p>
 			<p className="typo-body-1 text-dnd-label-neutral sm:typo-heading-2">
-				선택한 분야에 맞는 인사이트 예시를 보여드릴게요.
+				선택한 분야에 맞는 질문과 인사이트를 제안해드릴게요.
 			</p>
 		</div>
 	);

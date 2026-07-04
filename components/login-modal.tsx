@@ -35,7 +35,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 								로그인하고 아하이브에서
 							</p>
 							<p className="typo-heading-1 font-medium text-dnd-label-neutral text-center">
-								나만의 인사이트를 정리해보세요!
+								내 경험을 인사이트로 쌓아보세요
 							</p>
 						</div>
 						<p className="rounded-full bg-dnd-bg-mint px-4 py-2 typo-body-2 font-semibold text-dnd-primary">

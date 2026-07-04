@@ -92,7 +92,7 @@ function QuestionSectionHeader({
 		<div className="flex items-center justify-between rounded-t-3xl bg-[var(--dnd-bg-question)] px-4 py-4 sm:rounded-t-4xl sm:px-8">
 			<button type="button" className="text-left" onClick={onExpand}>
 				<h2 className="typo-headline-1 font-medium text-[var(--dnd-label-normal)]">
-					{isHistoryMode ? "질문 히스토리" : "제안된 질문"}
+					{isHistoryMode ? "질문 히스토리" : "더 깊게 생각해볼 질문"}
 				</h2>
 			</button>
 			<div className="relative group/history">
