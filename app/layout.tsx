@@ -12,7 +12,7 @@ const pretendard = localFont({
 
 export const metadata: Metadata = {
 	title: "Aha!ve",
-	description: "아하의 순간들을 모아 나만의 인사이트 자산으로, 아하이브",
+	description: "경험을 질문으로 확장하다, 아하이브",
 };
 
 export default function RootLayout({

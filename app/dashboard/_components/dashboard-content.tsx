@@ -217,7 +217,7 @@ function HomePage() {
 								: [
 										<EmptyHomeCard
 											key="empty-insights"
-											message="아직 생성한 인사이트가 없어요."
+											message="아직 남긴 인사이트가 없어요. 오늘의 경험이나 고민을 한 줄로 적어보세요."
 										/>,
 									]}
 				</HomeInsightList>
